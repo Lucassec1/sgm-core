@@ -11,6 +11,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { CorCirculo, SituacaoFicha } from '@prisma/client';
+import { EmptyToUndefined } from '../../../common/transformers/empty-to-undefined.transformer';
 
 // TODO: paroquiaId deve vir do usuário autenticado (guard), não do body —
 // provisório até o módulo Auth existir (ver docs/arquitetura.md, seção 1).
@@ -31,7 +32,7 @@ export class CreateFichaDto {
   @IsString()
   telefone!: string;
 
-  @IsOptional() @IsEmail() email?: string;
+  @EmptyToUndefined() @IsOptional() @IsEmail() email?: string;
   @IsOptional() @IsString() fotoUrl?: string;
 
   // Endereço
