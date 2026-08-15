@@ -2,6 +2,11 @@
   "extends": ["next/core-web-vitals", "next/typescript"],
   "rules": {
     "quotes": ["error", "single", { "avoidEscape": true }],
-    "eol-last": ["error", "always"]
+    "eol-last": ["error", "always"],
+    "semi": ["error", "always"],
+    "comma-dangle": ["error", "always-multiline"],
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
+    "no-var": "error",
+    "prefer-const": "error"
   }
 }
