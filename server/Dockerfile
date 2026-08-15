@@ -1,11 +1,12 @@
 # Dockerfile simples para desenvolvimento — evoluir para multi-stage quando for para produção real
-# Prisma 5 no Alpine recente pode falhar por incompatibilidade de OpenSSL (libssl.so.1.1).
-# Debian slim evita esse problema no ambiente de dev do Compose.
+# Debian slim (em vez de Alpine) evita problemas de compatibilidade de OpenSSL com o Prisma.
 FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+# procps: `nest start --watch` chama `ps` internamente pra reiniciar o processo a cada
+# mudança de arquivo — sem isso, o restart falha aleatoriamente com "ps not found".
+RUN apt-get update -y && apt-get install -y openssl procps && rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
 RUN npm install

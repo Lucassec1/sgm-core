@@ -10,7 +10,8 @@ Stack: Next.js · NestJS · PostgreSQL · Docker
 docker-compose up
 ```
 
-(ajustar conforme o setup real assim que o esqueleto do projeto existir)
+Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de dentro de `/server`:
+`npx prisma migrate dev` e `npm run prisma:seed` (popula fichas + casais fake pra testar).
 
 ## Documentação
 
@@ -32,8 +33,22 @@ docker-compose up
 
 ## Estado atual
 
-_(atualizar conforme o projeto avança — ex.: "módulo Fichas: CRUD pronto, falta upload de foto")_
+- **Módulo Fichas: pronto** — CRUD completo de Ficha do Jovem e Ficha do Casal (server +
+  client), Sidebar de navegação, dashboard. Falta upload real de foto (hoje é só campo de
+  URL) e Situação/histórico de equipes (fica pro módulo Montagem).
+- **Módulo Montagem: não iniciado** — nem schema, nem backend, nem frontend.
+- **Auth: stub** — `AuthController`/`AuthService`/`JwtAuthGuard` existem como esqueleto, sem
+  lógica real. `/login` no client é uma página vazia.
+- **CI**: GitHub Actions rodando lint + typecheck + build (server e client) em push/PR pra `main`.
 
 ## Isolamento por paróquia
 
-O sistema atende múltiplas paróquias (13, ver `docs/requisitos.md`). Toda tabela relevante deve ter isolamento por paróquia (ex.: coluna `paroquia_id` + filtro obrigatório nas queries) — dado de uma paróquia nunca pode vazar pra outra.
+**Decisão atual (conversa com o Lucas): manter o sistema numa paróquia só por enquanto.**
+Multi-paróquia + Conselho (ver `docs/requisitos.md`, seção 5-6) é a expansão planejada pra
+depois que o protótipo da paróquia do Lucas estiver validado — não é prioridade agora.
+
+Por isso, hoje: `paroquia_id` já existe em toda tabela relevante (Ficha, FichaCasal) e é
+passado manualmente pelo client (`PAROQUIA_ID_PROVISORIA`), mas o `ParoquiaScopeGuard` é só
+um stub (`return true`) — não há isolamento real aplicado ainda. **Não é uma falha a ser
+corrigida com urgência**: só passa a importar quando o Auth entrar de verdade e o sistema for
+expandido pra mais de uma paróquia. Não tratar isso como bloqueador do módulo Montagem.
