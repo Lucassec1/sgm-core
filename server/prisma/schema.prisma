@@ -1,0 +1,139 @@
+// Schema do Prisma — SGM Core
+// Ainda sem models: o schema da Ficha (e demais entidades) é código de negócio
+// e entra numa etapa seguinte, junto com o CRUD do módulo Fichas.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Paroquia {
+  id        String   @id @default(uuid())
+  nome      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fichas       Ficha[]
+  fichasCasais FichaCasal[]
+}
+
+enum CorCirculo {
+  VERMELHO
+  AZUL
+  VERDE
+  AMARELO
+  ROSA
+  LARANJA
+}
+
+enum SituacaoFicha {
+  ATIVA
+  INATIVA
+}
+
+// Ficha do Jovem — ver docs/requisitos.md, seção 2.1.
+// Histórico de equipes servidas e Avaliação ficam para o módulo Montagem (dados gerados lá, não aqui).
+model Ficha {
+  id         String   @id @default(uuid())
+  paroquiaId String
+  paroquia   Paroquia @relation(fields: [paroquiaId], references: [id])
+
+  // Identificação
+  nomeCompleto   String
+  dataNascimento DateTime
+  naturalidade   String?
+  telefone       String
+  email          String?
+  fotoUrl        String?
+
+  // Endereço
+  logradouro  String?
+  numero      String?
+  complemento String?
+  bairro      String?
+  cidade      String?
+  estado      String?
+  cep         String?
+
+  // Filiação
+  nomePai String?
+  nomeMae String?
+
+  // Escolaridade
+  grauEscolaridade String?
+  curso            String?
+  instituicao      String?
+  situacaoEscolar  String?
+
+  // Religião
+  religiao                String?
+  igrejaQueFrequenta      String?
+  participaOutroMovimento Boolean @default(false)
+  qualMovimento           String?
+  sacramentoBatismo       Boolean @default(false)
+  sacramentoEucaristia    Boolean @default(false)
+  sacramentoCrisma        Boolean @default(false)
+
+  // Convite
+  nomeConvidante     String?
+  telefoneConvidante String?
+  enderecoConvidante String?
+
+  observacoes String?
+
+  numeroEncontro Int
+  corCirculo     CorCirculo
+
+  situacao          SituacaoFicha @default(ATIVA)
+  motivoDesativacao String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paroquiaId])
+}
+
+// Ficha do Casal — ver docs/requisitos.md, seção 2.1. Casais vêm do ECC (Encontro de Casais
+// com Cristo) e servem as equipes do encontro; não "vivenciam" um encontro do Segue-me, por
+// isso não têm numeroEncontro/corCirculo. Histórico de equipes servidas e Avaliação ficam
+// para o módulo Montagem, igual à Ficha do Jovem.
+model FichaCasal {
+  id         String   @id @default(uuid())
+  paroquiaId String
+  paroquia   Paroquia @relation(fields: [paroquiaId], references: [id])
+
+  // Identificação
+  nomeEle           String
+  nomeEla           String
+  dataNascimentoEle DateTime?
+  dataNascimentoEla DateTime?
+  telefoneEle       String
+  telefoneEla       String
+  emailEle          String?
+  emailEla          String?
+  fotoUrl           String?
+
+  // Endereço
+  logradouro  String?
+  numero      String?
+  complemento String?
+  bairro      String?
+  cidade      String?
+  estado      String?
+  cep         String?
+
+  temFilhosNoSegueMe Boolean @default(false)
+  observacoesFilhos  String?
+  observacoes        String?
+
+  situacao          SituacaoFicha @default(ATIVA)
+  motivoDesativacao String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paroquiaId])
+}
