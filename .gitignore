@@ -1,0 +1,11 @@
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Env files (cada pacote tem o próprio .env.example versionado)
+.env
+.env.*
+!.env.example
