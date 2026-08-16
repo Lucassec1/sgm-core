@@ -5,6 +5,9 @@ import { Providers } from './providers';
 export const metadata: Metadata = {
   title: 'SGM Core',
   description: 'Gestão de Fichas e Montagem — Segue-me, diocese de Crato',
+  icons: {
+    icon: '/logo-segue-me.png',
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
