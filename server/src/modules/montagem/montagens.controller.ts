@@ -29,4 +29,19 @@ export class MontagensController {
   update(@Param('id') id: string, @Body() dto: UpdateMontagemDto) {
     return this.montagensService.update(id, dto);
   }
+
+  @Get(':id/equipes/:equipeId/coordenadores-sugeridos')
+  coordenadoresSugeridos(@Param('id') id: string, @Param('equipeId') equipeId: string) {
+    return this.montagensService.coordenadoresSugeridos(id, equipeId);
+  }
+
+  @Get(':id/candidatos-jovens')
+  candidatosJovens(@Param('id') id: string) {
+    return this.montagensService.candidatosJovens(id);
+  }
+
+  @Get(':id/log')
+  listarLog(@Param('id') id: string) {
+    return this.montagensService.listarLog(id);
+  }
 }

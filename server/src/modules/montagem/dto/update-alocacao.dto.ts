@@ -20,4 +20,7 @@ export class UpdateAlocacaoDto {
   @IsOptional() @IsString() observacoesAvaliacao?: string;
 
   @EmptyToUndefined() @IsOptional() @IsUUID() substituidaPorId?: string;
+
+  // R9 — quem fez a ação, pro log de atividade (sem Auth real ainda, digitado manualmente).
+  @IsOptional() @IsString() usuario?: string;
 }

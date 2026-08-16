@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { seedEquipesECargos } from './seed-equipes';
+import { seedMontagemExemplo } from './seed-montagem-exemplo';
 
 // Dados fake pra popular a única paróquia em uso agora (ver docs/arquitetura.md, seção 5 —
 // "seed de dados fake para testar a lógica de montagem antes de importar dados reais").
@@ -145,9 +146,11 @@ async function main() {
   const totalFichas = await seedFichas();
   const totalCasais = await seedFichasCasais();
   const { totalEquipes, totalCargos } = await seedEquipesECargos(prisma);
+  const { totalVagas, totalAlocacoes } = await seedMontagemExemplo(prisma, PAROQUIA_ID);
 
   console.log(`Seed concluído: ${totalFichas} fichas (jovens) + ${totalCasais} casais na paróquia "${PAROQUIA_NOME}".`);
   console.log(`Catálogo de Montagem: ${totalEquipes} equipes, ${totalCargos} cargos.`);
+  console.log(`Montagem de exemplo: ${totalVagas} vagas, ${totalAlocacoes} alocações.`);
 }
 
 main()

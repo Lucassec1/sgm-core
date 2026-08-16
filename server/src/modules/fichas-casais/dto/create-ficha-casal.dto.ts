@@ -54,4 +54,7 @@ export class CreateFichaCasalDto {
 
   @IsOptional() @IsEnum(SituacaoFicha) situacao?: SituacaoFicha;
   @IsOptional() @IsString() motivoDesativacao?: string;
+
+  // R3, Grupo B (módulo Montagem) — marcado manualmente até o Auth existir de verdade.
+  @IsOptional() @IsBoolean() jaFoiEquipeDirigente?: boolean;
 }
