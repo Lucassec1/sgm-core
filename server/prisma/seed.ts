@@ -75,6 +75,7 @@ async function seedFichas() {
     return {
       paroquiaId: PAROQUIA_ID,
       nomeCompleto: nomeCompleto(seed, genero),
+      sexo: genero === 'M' ? ('RAPAZ' as const) : ('MOCA' as const),
       dataNascimento: new Date(1998 + (seed % 10), seed % 12, 1 + (seed % 27)),
       naturalidade: 'Crato/CE',
       telefone: telefone(seed),

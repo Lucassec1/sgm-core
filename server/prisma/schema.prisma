@@ -37,6 +37,14 @@ enum SituacaoFicha {
   INATIVA
 }
 
+// Vagas da Montagem têm quantidade separada por sexo (VagaMontagem.quantidadeRapazes/
+// quantidadeMocas — ver docs/requisitos.md, seção 2.2) — precisa desse campo pra filtrar
+// candidatos compatíveis com a vaga.
+enum Sexo {
+  RAPAZ
+  MOCA
+}
+
 // Ficha do Jovem — ver docs/requisitos.md, seção 2.1.
 // Histórico de equipes servidas e Avaliação ficam para o módulo Montagem (dados gerados lá, não aqui).
 model Ficha {
@@ -46,6 +54,7 @@ model Ficha {
 
   // Identificação
   nomeCompleto   String
+  sexo           Sexo
   dataNascimento DateTime
   naturalidade   String?
   telefone       String

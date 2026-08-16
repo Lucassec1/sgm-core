@@ -10,7 +10,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import { CorCirculo, SituacaoFicha } from '@prisma/client';
+import { CorCirculo, SituacaoFicha, Sexo } from '@prisma/client';
 import { EmptyToUndefined } from '../../../common/transformers/empty-to-undefined.transformer';
 
 // TODO: paroquiaId deve vir do usuário autenticado (guard), não do body —
@@ -23,6 +23,9 @@ export class CreateFichaDto {
   @IsString()
   @MinLength(3)
   nomeCompleto!: string;
+
+  @IsEnum(Sexo)
+  sexo!: Sexo;
 
   @IsDateString()
   dataNascimento!: string;
