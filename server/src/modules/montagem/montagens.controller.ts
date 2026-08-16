@@ -36,8 +36,8 @@ export class MontagensController {
   }
 
   @Get(':id/candidatos-jovens')
-  candidatosJovens(@Param('id') id: string) {
-    return this.montagensService.candidatosJovens(id);
+  candidatosJovens(@Param('id') id: string, @Query('vagaMontagemId') vagaMontagemId?: string) {
+    return this.montagensService.candidatosJovens(id, vagaMontagemId);
   }
 
   @Get(':id/log')
