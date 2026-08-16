@@ -27,6 +27,10 @@ type EquipeSeed = {
   slug: string;
   ordem: number;
   ehCirculos?: boolean;
+  // R4: false só pra Círculos e Comando Geral (podem convidar sem esperar os Círculos fecharem).
+  bloqueiaConvitePosCirculos?: boolean;
+  // R2: true só pra Visitação (aviso de repetição nunca bloqueia lá, mesmo passando de 3x).
+  repeticaoLimiteFlexivel?: boolean;
   cargos: CargoSeed[];
 };
 
@@ -35,6 +39,7 @@ export const EQUIPES: EquipeSeed[] = [
     nome: 'Comando Geral',
     slug: 'comando-geral',
     ordem: 1,
+    bloqueiaConvitePosCirculos: false,
     cargos: [
       { nome: 'Comandantes Gerais', ordem: 1, quantidadeCasais: 1, ehCoordenacao: true },
       { nome: 'Comandantes Jovens', ordem: 2, quantidadeRapazes: 1, quantidadeMocas: 1, ehCoordenacao: true },
@@ -45,6 +50,7 @@ export const EQUIPES: EquipeSeed[] = [
     slug: 'circulos',
     ordem: 2,
     ehCirculos: true,
+    bloqueiaConvitePosCirculos: false,
     cargos: [
       { nome: 'Coordenação', ordem: 1, quantidadeCasais: 1, ehCoordenacao: true },
       { nome: 'Componentes', ordem: 2, quantidadeCasais: 6, quantidadeRapazes: 6, quantidadeMocas: 6 },
@@ -188,6 +194,7 @@ export const EQUIPES: EquipeSeed[] = [
     nome: 'Eq. da Visitação',
     slug: 'visitacao',
     ordem: 16,
+    repeticaoLimiteFlexivel: true,
     cargos: [
       { nome: 'Coordenação', ordem: 1, quantidadeCasais: 1, ehCoordenacao: true },
       { nome: 'Componentes', ordem: 2, quantidadeDinamica: true },
@@ -202,12 +209,20 @@ export async function seedEquipesECargos(prisma: PrismaClient) {
   for (const equipeSeed of EQUIPES) {
     const equipe = await prisma.equipe.upsert({
       where: { slug: equipeSeed.slug },
-      update: { nome: equipeSeed.nome, ordem: equipeSeed.ordem, ehCirculos: equipeSeed.ehCirculos ?? false },
+      update: {
+        nome: equipeSeed.nome,
+        ordem: equipeSeed.ordem,
+        ehCirculos: equipeSeed.ehCirculos ?? false,
+        bloqueiaConvitePosCirculos: equipeSeed.bloqueiaConvitePosCirculos ?? true,
+        repeticaoLimiteFlexivel: equipeSeed.repeticaoLimiteFlexivel ?? false,
+      },
       create: {
         nome: equipeSeed.nome,
         slug: equipeSeed.slug,
         ordem: equipeSeed.ordem,
         ehCirculos: equipeSeed.ehCirculos ?? false,
+        bloqueiaConvitePosCirculos: equipeSeed.bloqueiaConvitePosCirculos ?? true,
+        repeticaoLimiteFlexivel: equipeSeed.repeticaoLimiteFlexivel ?? false,
       },
     });
     totalEquipes += 1;

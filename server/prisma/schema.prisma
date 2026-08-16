@@ -93,6 +93,10 @@ model Ficha {
   situacao          SituacaoFicha @default(ATIVA)
   motivoDesativacao String?
 
+  // R3, Grupo B: já foi Equipe Dirigente da paróquia — marcado manualmente até o Auth existir
+  // de verdade (Equipe Dirigente é grupo pequeno, eleito anualmente, sem ligação com Auth hoje).
+  jaFoiEquipeDirigente Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -137,6 +141,9 @@ model FichaCasal {
   situacao          SituacaoFicha @default(ATIVA)
   motivoDesativacao String?
 
+  // R3, Grupo B — ver comentário equivalente em Ficha.
+  jaFoiEquipeDirigente Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -160,6 +167,11 @@ model Equipe {
   slug       String  @unique
   ordem      Int
   ehCirculos Boolean @default(false)
+
+  // R2: aviso de repetição nunca bloqueia nessa equipe, mesmo passando de 3x (só a Visitação).
+  repeticaoLimiteFlexivel Boolean @default(false)
+  // R4: só false pra Círculos e Comando Geral — as outras 14 só convidam depois dos Círculos fechados.
+  bloqueiaConvitePosCirculos Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -225,6 +237,7 @@ model Montagem {
   updatedAt DateTime @updatedAt
 
   vagas VagaMontagem[]
+  logs  LogAtividade[]
 
   @@unique([paroquiaId, numeroEncontro])
   @@index([paroquiaId])
@@ -311,4 +324,20 @@ model Alocacao {
   @@index([vagaMontagemId])
   @@index([fichaId])
   @@index([fichaCasalId])
+}
+
+// Log de atividade da Montagem (R9). Sem Auth real ainda, `usuario` é digitado manualmente
+// (mesmo provisório do paroquiaId nos outros módulos) — ver plano da etapa "regras R1-R9".
+model LogAtividade {
+  id String @id @default(uuid())
+
+  montagemId String
+  montagem   Montagem @relation(fields: [montagemId], references: [id])
+
+  usuario   String
+  acao      String
+  detalhes  String?
+  createdAt DateTime @default(now())
+
+  @@index([montagemId])
 }

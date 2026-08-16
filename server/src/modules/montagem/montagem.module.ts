@@ -5,10 +5,11 @@ import { MontagensController } from './montagens.controller';
 import { MontagensService } from './montagens.service';
 import { AlocacoesController } from './alocacoes.controller';
 import { AlocacoesService } from './alocacoes.service';
+import { LogAtividadeService } from './log-atividade.service';
 
 @Module({
   controllers: [EquipesController, MontagensController, AlocacoesController],
-  providers: [EquipesService, MontagensService, AlocacoesService],
-  exports: [EquipesService, MontagensService, AlocacoesService],
+  providers: [EquipesService, MontagensService, AlocacoesService, LogAtividadeService],
+  exports: [EquipesService, MontagensService, AlocacoesService, LogAtividadeService],
 })
 export class MontagemModule {}
