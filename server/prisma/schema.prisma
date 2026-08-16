@@ -18,6 +18,9 @@ model Paroquia {
 
   fichas       Ficha[]
   fichasCasais FichaCasal[]
+  montagens    Montagem[]
+
+  montagensSementeira Montagem[] @relation("Sementeira")
 }
 
 enum CorCirculo {
@@ -93,6 +96,8 @@ model Ficha {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  alocacoes Alocacao[]
+
   @@index([paroquiaId])
 }
 
@@ -135,5 +140,175 @@ model FichaCasal {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  alocacoes Alocacao[]
+
   @@index([paroquiaId])
+}
+
+// ---------------------------------------------------------------------------
+// Módulo Montagem — ver docs/requisitos.md (seção 2.2), docs/regras-imutaveis.md
+// (R1-R9) e docs/ux-e-fluxos.md (seção 3). Esta etapa modela o schema e o CRUD
+// básico; as regras R1-R9 (bloqueios, avisos, sugestão de coordenadores) ainda
+// não estão implementadas na Service — ver plano da etapa.
+// ---------------------------------------------------------------------------
+
+// Catálogo das 16 equipes do encontro (Comando Geral + 15). Estrutura idêntica
+// entre paróquias (R7/R9), por isso não tem paroquiaId — é dado global, seedado.
+model Equipe {
+  id         String  @id @default(uuid())
+  nome       String  @unique
+  slug       String  @unique
+  ordem      Int
+  ehCirculos Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cargos Cargo[]
+  vagas  VagaMontagem[]
+}
+
+// Cargo dentro de uma equipe (ex.: Coordenação, Apoio, Componentes, Pilotos...).
+// quantidadeDinamica marca cargos cuja quantidade não é fixa no catálogo e
+// precisa ser calculada na criação da Montagem (hoje só o "Componentes" da
+// Eq. da Visitação, ver R6 — ~1 casal para cada 3 jovens vivenciando).
+model Cargo {
+  id       String @id @default(uuid())
+  equipeId String
+  equipe   Equipe @relation(fields: [equipeId], references: [id])
+
+  nome  String
+  ordem Int
+
+  quantidadeCasais  Int @default(0)
+  quantidadeRapazes Int @default(0)
+  quantidadeMocas   Int @default(0)
+
+  quantidadeDinamica Boolean @default(false)
+  ehCoordenacao      Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vagas VagaMontagem[]
+
+  @@unique([equipeId, nome])
+}
+
+enum StatusMontagem {
+  EM_ANDAMENTO
+  FINALIZADA
+}
+
+// Um encontro de uma paróquia. numeroEncontro é auto-incrementado por paróquia
+// (calculado na Service, não no banco).
+model Montagem {
+  id         String   @id @default(uuid())
+  paroquiaId String
+  paroquia   Paroquia @relation(fields: [paroquiaId], references: [id])
+
+  numeroEncontro    Int
+  data              DateTime
+  padroeiro         String?
+  diretorEspiritual String?
+
+  ehSementeira               Boolean   @default(false)
+  paroquiaSementeiraId       String?
+  paroquiaSementeira         Paroquia? @relation("Sementeira", fields: [paroquiaSementeiraId], references: [id])
+  quantidadeFichasSementeira Int?
+
+  numeroJovensVivenciando Int
+
+  status StatusMontagem @default(EM_ANDAMENTO)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vagas VagaMontagem[]
+
+  @@unique([paroquiaId, numeroEncontro])
+  @@index([paroquiaId])
+}
+
+// Instância de um Cargo dentro de uma Montagem específica — quantidades
+// concretas (cópia do Cargo pra maioria das equipes; calculada dinamicamente
+// pra Eq. da Visitação no momento da criação da Montagem).
+model VagaMontagem {
+  id String @id @default(uuid())
+
+  montagemId String
+  montagem   Montagem @relation(fields: [montagemId], references: [id])
+
+  equipeId String
+  equipe   Equipe @relation(fields: [equipeId], references: [id])
+
+  cargoId String
+  cargo   Cargo  @relation(fields: [cargoId], references: [id])
+
+  quantidadeCasais  Int
+  quantidadeRapazes Int
+  quantidadeMocas   Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  alocacoes Alocacao[]
+
+  @@index([montagemId])
+  @@index([equipeId])
+}
+
+enum TipoPessoa {
+  JOVEM
+  CASAL
+}
+
+enum StatusConvite {
+  RASCUNHO
+  CONVIDADO
+  ACEITO
+  RECUSADO
+  DESISTIU
+  SUBSTITUIDO
+}
+
+// Pessoa (Ficha ou FichaCasal) atribuída a uma VagaMontagem. A atribuição em
+// si (criar a Alocacao) é sempre livre — o bloqueio do R4 (Círculos primeiro)
+// e as regras R1-R3, quando implementadas, vão validar a transição de
+// `status`, não a criação da Alocacao (ver nota de "montagem volátil" no
+// plano desta etapa).
+model Alocacao {
+  id String @id @default(uuid())
+
+  vagaMontagemId String
+  vagaMontagem   VagaMontagem @relation(fields: [vagaMontagemId], references: [id])
+
+  tipoPessoa TipoPessoa
+
+  fichaId String?
+  ficha   Ficha?  @relation(fields: [fichaId], references: [id])
+
+  fichaCasalId String?
+  fichaCasal   FichaCasal? @relation(fields: [fichaCasalId], references: [id])
+
+  status       StatusConvite @default(RASCUNHO)
+  dataConvite  DateTime?
+  dataResposta DateTime?
+  motivoRecusa String?
+
+  // Avaliação (alimenta o Histórico da Ficha — ver docs/requisitos.md, seção 2.1)
+  podeCoordenar         Boolean?
+  podePalestrar         Boolean?
+  observacoesAvaliacao  String?
+
+  substituidaPorId String?   @unique
+  substituidaPor   Alocacao? @relation("Substituicao", fields: [substituidaPorId], references: [id])
+  substitutaDe     Alocacao? @relation("Substituicao")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vagaMontagemId])
+  @@index([fichaId])
+  @@index([fichaCasalId])
 }

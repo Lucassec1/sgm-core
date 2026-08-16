@@ -5,6 +5,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ParoquiasModule } from './modules/paroquias/paroquias.module';
 import { FichasModule } from './modules/fichas/fichas.module';
 import { FichasCasaisModule } from './modules/fichas-casais/fichas-casais.module';
+import { MontagemModule } from './modules/montagem/montagem.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { FichasCasaisModule } from './modules/fichas-casais/fichas-casais.module
     ParoquiasModule,
     FichasModule,
     FichasCasaisModule,
+    MontagemModule,
   ],
 })
 export class AppModule {}
