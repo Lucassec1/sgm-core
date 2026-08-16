@@ -29,4 +29,7 @@ export class CreateMontagemDto {
   @IsInt()
   @Min(1)
   numeroJovensVivenciando!: number;
+
+  // R9 — quem fez a ação, pro log de atividade (sem Auth real ainda, digitado manualmente).
+  @IsOptional() @IsString() usuario?: string;
 }

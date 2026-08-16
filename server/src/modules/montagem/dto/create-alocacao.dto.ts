@@ -1,4 +1,4 @@
-import { IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsBoolean, IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import { StatusConvite, TipoPessoa } from '@prisma/client';
 import { EmptyToUndefined } from '../../../common/transformers/empty-to-undefined.transformer';
 
@@ -18,4 +18,10 @@ export class CreateAlocacaoDto {
   @IsOptional() @IsEnum(StatusConvite) status?: StatusConvite;
   @IsOptional() @IsDateString() dataConvite?: string;
   @IsOptional() @IsString() motivoRecusa?: string;
+
+  // R2 — confirma consciente a repetição de equipe avisada pela Service (não bypassa o limite de 3x).
+  @IsOptional() @IsBoolean() confirmarRepeticao?: boolean;
+
+  // R9 — quem fez a ação, pro log de atividade (sem Auth real ainda, digitado manualmente).
+  @IsOptional() @IsString() usuario?: string;
 }
