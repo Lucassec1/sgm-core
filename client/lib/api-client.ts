@@ -1,4 +1,13 @@
-import type { Ficha, FichaCasal, FichaCasalListResponse, FichaListResponse } from './types';
+import type {
+  Alocacao,
+  Equipe,
+  Ficha,
+  FichaCasal,
+  FichaCasalListResponse,
+  FichaListResponse,
+  Montagem,
+  MontagemListResponse,
+} from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -30,6 +39,13 @@ export interface ListFichasCasaisParams {
   paroquiaId: string;
   nome?: string;
   situacao?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ListMontagensParams {
+  paroquiaId: string;
+  status?: string;
   page?: number;
   pageSize?: number;
 }
@@ -87,5 +103,29 @@ export const apiClient = {
 
   deleteFichaCasal(id: string) {
     return request<void>(`/fichas-casais/${id}`, { method: 'DELETE' });
+  },
+
+  listEquipes() {
+    return request<Equipe[]>('/equipes');
+  },
+
+  listMontagens(params: ListMontagensParams) {
+    return request<MontagemListResponse>(`/montagens?${buildQuery(params)}`);
+  },
+
+  getMontagem(id: string) {
+    return request<Montagem>(`/montagens/${id}`);
+  },
+
+  createMontagem(data: Partial<Montagem> & { usuario?: string }) {
+    return request<Montagem>('/montagens', { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  updateMontagem(id: string, data: Partial<Montagem> & { usuario?: string }) {
+    return request<Montagem>(`/montagens/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  },
+
+  listAlocacoes(montagemId: string) {
+    return request<Alocacao[]>(`/montagens/${montagemId}/alocacoes`);
   },
 };

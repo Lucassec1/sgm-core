@@ -86,6 +86,91 @@ export interface FichaCasalListResponse {
   pageSize: number;
 }
 
+// --- Módulo Montagem ---------------------------------------------------
+
+export type StatusMontagem = 'EM_ANDAMENTO' | 'FINALIZADA';
+export type TipoPessoa = 'JOVEM' | 'CASAL';
+export type StatusConvite = 'RASCUNHO' | 'CONVIDADO' | 'ACEITO' | 'RECUSADO' | 'DESISTIU' | 'SUBSTITUIDO';
+
+export interface Equipe {
+  id: string;
+  nome: string;
+  slug: string;
+  ordem: number;
+  ehCirculos: boolean;
+  repeticaoLimiteFlexivel: boolean;
+  bloqueiaConvitePosCirculos: boolean;
+}
+
+export interface Cargo {
+  id: string;
+  equipeId: string;
+  nome: string;
+  ordem: number;
+  quantidadeCasais: number;
+  quantidadeRapazes: number;
+  quantidadeMocas: number;
+  quantidadeDinamica: boolean;
+  ehCoordenacao: boolean;
+}
+
+export interface VagaMontagem {
+  id: string;
+  montagemId: string;
+  equipeId: string;
+  equipe: Equipe;
+  cargoId: string;
+  cargo: Cargo;
+  quantidadeCasais: number;
+  quantidadeRapazes: number;
+  quantidadeMocas: number;
+}
+
+export interface Montagem {
+  id: string;
+  paroquiaId: string;
+  numeroEncontro: number;
+  data: string;
+  padroeiro?: string | null;
+  diretorEspiritual?: string | null;
+  ehSementeira: boolean;
+  paroquiaSementeiraId?: string | null;
+  quantidadeFichasSementeira?: number | null;
+  numeroJovensVivenciando: number;
+  status: StatusMontagem;
+  vagas: VagaMontagem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MontagemListResponse {
+  items: Omit<Montagem, 'vagas'>[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface Alocacao {
+  id: string;
+  vagaMontagemId: string;
+  vagaMontagem: VagaMontagem;
+  tipoPessoa: TipoPessoa;
+  fichaId?: string | null;
+  ficha?: Ficha | null;
+  fichaCasalId?: string | null;
+  fichaCasal?: FichaCasal | null;
+  status: StatusConvite;
+  dataConvite?: string | null;
+  dataResposta?: string | null;
+  motivoRecusa?: string | null;
+  podeCoordenar?: boolean | null;
+  podePalestrar?: boolean | null;
+  observacoesAvaliacao?: string | null;
+  substituidaPorId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Paleta fixa dos círculos — ver docs/design-system.md, seção 1.
 export const CORES_CIRCULO: { value: CorCirculo; label: string; hex: string }[] = [
   { value: 'VERMELHO', label: 'Vermelho', hex: '#f40606' },

@@ -70,11 +70,12 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton disabled tooltip="Montagem — em breve">
-                  <LayoutGrid />
-                  <span>Montagem</span>
+                <SidebarMenuButton asChild isActive={pathname.startsWith('/montagem')} tooltip="Montagem">
+                  <Link href="/montagem">
+                    <LayoutGrid />
+                    <span>Montagem</span>
+                  </Link>
                 </SidebarMenuButton>
-                <SidebarMenuBadge>em breve</SidebarMenuBadge>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton disabled tooltip="Exportação — em breve">
