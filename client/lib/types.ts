@@ -1,10 +1,12 @@
 export type CorCirculo = 'VERMELHO' | 'AZUL' | 'VERDE' | 'AMARELO' | 'ROSA' | 'LARANJA';
 export type SituacaoFicha = 'ATIVA' | 'INATIVA';
+export type Sexo = 'RAPAZ' | 'MOCA';
 
 export interface Ficha {
   id: string;
   paroquiaId: string;
   nomeCompleto: string;
+  sexo: Sexo;
   dataNascimento: string;
   naturalidade?: string | null;
   telefone: string;

@@ -24,6 +24,7 @@ import { nullsToUndefined } from '@/lib/utils';
 // Aba Histórico fica de fora por enquanto — é gerada pelo módulo Montagem, ainda não implementado.
 const fichaSchema = z.object({
   nomeCompleto: z.string().min(3, 'Informe o nome completo'),
+  sexo: z.enum(['RAPAZ', 'MOCA'], { required_error: 'Selecione o sexo' }),
   dataNascimento: z.string().min(1, 'Informe a data de nascimento'),
   naturalidade: z.string().optional(),
   telefone: z.string().min(1, 'Informe o telefone'),
@@ -158,6 +159,19 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
             <Label htmlFor="nomeCompleto">Nome completo</Label>
             <Input id="nomeCompleto" {...register('nomeCompleto')} />
             {errors.nomeCompleto && <p className="text-xs text-red-600 mt-1">{errors.nomeCompleto.message}</p>}
+          </div>
+          <div>
+            <Label>Sexo</Label>
+            <Select value={watch('sexo')} onValueChange={(v) => setValue('sexo', v as FichaFormValues['sexo'])}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="RAPAZ">Rapaz</SelectItem>
+                <SelectItem value="MOCA">Moça</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.sexo && <p className="text-xs text-red-600 mt-1">{errors.sexo.message}</p>}
           </div>
           <div>
             <Label htmlFor="dataNascimento">Data de nascimento</Label>

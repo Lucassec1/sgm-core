@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { StatusConvite } from '@prisma/client';
+import { Sexo, StatusConvite } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LogAtividadeService } from './log-atividade.service';
 import { CreateMontagemDto } from './dto/create-montagem.dto';
@@ -176,9 +176,22 @@ export class MontagensService {
 
   // R5 — prioridade de convite: 1º jovens do encontro imediatamente anterior, depois os
   // demais em ordem decrescente. Fichas inativas ou já recusadas/desistentes nesta montagem
-  // não entram.
-  async candidatosJovens(montagemId: string) {
+  // não entram. `vagaMontagemId`, quando informado, filtra também por sexo compatível com a
+  // vaga (VagaMontagem.quantidadeRapazes/quantidadeMocas — ver docs/requisitos.md, 2.2).
+  async candidatosJovens(montagemId: string, vagaMontagemId?: string) {
     const montagem = await this.findOne(montagemId);
+
+    let sexos: Sexo[] | undefined;
+    if (vagaMontagemId) {
+      const vaga = montagem.vagas.find((v) => v.id === vagaMontagemId);
+      if (!vaga) {
+        throw new BadRequestException(`Vaga ${vagaMontagemId} não pertence à montagem ${montagemId}`);
+      }
+      sexos = [
+        ...(vaga.quantidadeRapazes > 0 ? [Sexo.RAPAZ] : []),
+        ...(vaga.quantidadeMocas > 0 ? [Sexo.MOCA] : []),
+      ];
+    }
 
     const excluidos = await this.prisma.alocacao.findMany({
       where: {
@@ -195,6 +208,7 @@ export class MontagensService {
         paroquiaId: montagem.paroquiaId,
         situacao: 'ATIVA',
         id: { notIn: idsExcluidos },
+        ...(sexos && { sexo: { in: sexos } }),
       },
     });
 

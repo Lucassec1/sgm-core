@@ -139,6 +139,42 @@ describe('MontagensService', () => {
         expect.objectContaining({ where: expect.objectContaining({ id: { notIn: ['f-excluida'] }, situacao: 'ATIVA' }) }),
       );
     });
+
+    it('sem vagaMontagemId, não filtra por sexo', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({ id: MONTAGEM_ID, paroquiaId: PAROQUIA_ID, numeroEncontro: 7, vagas: [] });
+      prisma.alocacao.findMany.mockResolvedValue([]);
+      prisma.ficha.findMany.mockResolvedValue([]);
+
+      await service.candidatosJovens(MONTAGEM_ID);
+
+      expect(prisma.ficha.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.not.objectContaining({ sexo: expect.anything() }) }),
+      );
+    });
+
+    it('com vagaMontagemId de vaga só de rapazes, filtra sexo RAPAZ', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        numeroEncontro: 7,
+        vagas: [{ id: 'vaga-1', quantidadeRapazes: 2, quantidadeMocas: 0 }],
+      });
+      prisma.alocacao.findMany.mockResolvedValue([]);
+      prisma.ficha.findMany.mockResolvedValue([]);
+
+      await service.candidatosJovens(MONTAGEM_ID, 'vaga-1');
+
+      expect(prisma.ficha.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ sexo: { in: ['RAPAZ'] } }) }),
+      );
+    });
+
+    it('rejeita vagaMontagemId que não pertence à montagem', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({ id: MONTAGEM_ID, paroquiaId: PAROQUIA_ID, numeroEncontro: 7, vagas: [] });
+
+      await expect(service.candidatosJovens(MONTAGEM_ID, 'vaga-inexistente')).rejects.toThrow(BadRequestException);
+      expect(prisma.ficha.findMany).not.toHaveBeenCalled();
+    });
   });
 
   describe('coordenadoresSugeridos — filtro de fichas ATIVA', () => {
