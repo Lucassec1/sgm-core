@@ -109,7 +109,8 @@ model Ficha {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  alocacoes Alocacao[]
+  alocacoes          Alocacao[]
+  listasSubstituicao ListaSubstituicao[]
 
   @@index([paroquiaId])
 }
@@ -156,7 +157,8 @@ model FichaCasal {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  alocacoes Alocacao[]
+  alocacoes          Alocacao[]
+  listasSubstituicao ListaSubstituicao[]
 
   @@index([paroquiaId])
 }
@@ -178,7 +180,7 @@ model Equipe {
   ehCirculos Boolean @default(false)
 
   // R2: aviso de repetição nunca bloqueia nessa equipe, mesmo passando de 3x (só a Visitação).
-  repeticaoLimiteFlexivel Boolean @default(false)
+  repeticaoLimiteFlexivel    Boolean @default(false)
   // R4: só false pra Círculos e Comando Geral — as outras 14 só convidam depois dos Círculos fechados.
   bloqueiaConvitePosCirculos Boolean @default(true)
 
@@ -245,8 +247,9 @@ model Montagem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  vagas VagaMontagem[]
-  logs  LogAtividade[]
+  vagas             VagaMontagem[]
+  logs              LogAtividade[]
+  listaSubstituicao ListaSubstituicao[]
 
   @@unique([paroquiaId, numeroEncontro])
   @@index([paroquiaId])
@@ -319,9 +322,9 @@ model Alocacao {
   motivoRecusa String?
 
   // Avaliação (alimenta o Histórico da Ficha — ver docs/requisitos.md, seção 2.1)
-  podeCoordenar         Boolean?
-  podePalestrar         Boolean?
-  observacoesAvaliacao  String?
+  podeCoordenar        Boolean?
+  podePalestrar        Boolean?
+  observacoesAvaliacao String?
 
   substituidaPorId String?   @unique
   substituidaPor   Alocacao? @relation("Substituicao", fields: [substituidaPorId], references: [id])
@@ -333,6 +336,33 @@ model Alocacao {
   @@index([vagaMontagemId])
   @@index([fichaId])
   @@index([fichaCasalId])
+}
+
+// Lista geral de substituição — "banco de backups" da Montagem (ver docs/ux-e-fluxos.md,
+// seção 3). Independente de vaga/equipe: pessoas cotadas como boa opção pra entrar em
+// qualquer lugar que precisar. Por montagem — não carrega automaticamente de um encontro
+// pro outro.
+model ListaSubstituicao {
+  id String @id @default(uuid())
+
+  montagemId String
+  montagem   Montagem @relation(fields: [montagemId], references: [id])
+
+  tipoPessoa TipoPessoa
+
+  fichaId String?
+  ficha   Ficha?  @relation(fields: [fichaId], references: [id])
+
+  fichaCasalId String?
+  fichaCasal   FichaCasal? @relation(fields: [fichaCasalId], references: [id])
+
+  nota String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([montagemId, fichaId])
+  @@unique([montagemId, fichaCasalId])
+  @@index([montagemId])
 }
 
 // Log de atividade da Montagem (R9). Sem Auth real ainda, `usuario` é digitado manualmente
