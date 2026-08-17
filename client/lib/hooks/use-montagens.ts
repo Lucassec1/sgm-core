@@ -64,3 +64,12 @@ export function useDeleteAlocacao(montagemId: string) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['montagens', montagemId, 'alocacoes'] }),
   });
 }
+
+export function useUpdateAlocacao(montagemId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: string } & Parameters<typeof apiClient.updateAlocacao>[2]) =>
+      apiClient.updateAlocacao(montagemId, id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['montagens', montagemId, 'alocacoes'] }),
+  });
+}

@@ -79,6 +79,7 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
           montagemId={id}
           vagas={gruposPorEquipe.find((vagas) => vagas[0].equipeId === equipeSelecionadaId) ?? []}
           alocacoesPorVaga={alocacoesPorVaga}
+          circulosFechado={circulosFechado}
           open={!!equipeSelecionadaId}
           onOpenChange={(open) => !open && setEquipeSelecionadaId(null)}
         />

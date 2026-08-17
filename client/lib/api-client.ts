@@ -162,6 +162,14 @@ export const apiClient = {
     return request<Alocacao>(`/montagens/${montagemId}/alocacoes/${id}`, { method: 'DELETE' });
   },
 
+  updateAlocacao(
+    montagemId: string,
+    id: string,
+    data: { status?: 'CONVIDADO' | 'ACEITO' | 'RECUSADO' | 'DESISTIU'; motivoRecusa?: string; usuario?: string },
+  ) {
+    return request<Alocacao>(`/montagens/${montagemId}/alocacoes/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  },
+
   listCandidatosJovens(montagemId: string, vagaMontagemId: string) {
     return request<Ficha[]>(`/montagens/${montagemId}/candidatos-jovens?${buildQuery({ vagaMontagemId })}`);
   },
