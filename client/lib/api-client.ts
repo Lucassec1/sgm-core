@@ -126,6 +126,10 @@ export const apiClient = {
     return request<void>(`/fichas-casais/${id}`, { method: 'DELETE' });
   },
 
+  historicoEquipesFichaCasal(id: string) {
+    return request<HistoricoEquipeItem[]>(`/fichas-casais/${id}/historico-equipes`);
+  },
+
   listEquipes() {
     return request<Equipe[]>('/equipes');
   },

@@ -34,6 +34,11 @@ export class FichasCasaisController {
     return this.fichasCasaisService.findOne(id);
   }
 
+  @Get(':id/historico-equipes')
+  historicoEquipes(@Param('id') id: string) {
+    return this.fichasCasaisService.historicoEquipes(id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateFichaCasalDto) {
     return this.fichasCasaisService.update(id, dto);

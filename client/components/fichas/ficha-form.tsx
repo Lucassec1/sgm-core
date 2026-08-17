@@ -109,10 +109,11 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
   const fotoUrl = watch('fotoUrl');
   const nomeCompleto = watch('nomeCompleto');
 
-  // Depois de criada, só endereço/telefone/email mudam com frequência — o resto é dado de
+  // Depois de criada, só o que muda com frequência continua editável: endereço, telefone,
+  // email, observações (nota prática — alergia, sem transporte, etc. — que pode mudar ou
+  // deixar de valer com o tempo) e situação/motivo de desativação. O resto é dado de
   // identificação (nome, sexo, data de nasc., encontro, círculo, filiação, escolaridade,
-  // religião, convite, foto) e vira somente leitura pra evitar edição por engano. Situação/
-  // motivo de desativação continuam editáveis: é a única forma de desativar uma ficha.
+  // religião, convite, foto) e vira somente leitura pra evitar edição por engano.
   const bloqueado = isEdit;
 
   return (
@@ -361,7 +362,7 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
 
       <div>
         <Label htmlFor="observacoes">Observações</Label>
-        <Textarea id="observacoes" disabled={bloqueado} {...register('observacoes')} />
+        <Textarea id="observacoes" placeholder="Ex.: alergia a amendoim, não possui transporte próprio..." {...register('observacoes')} />
       </div>
 
       <Button type="submit" disabled={isSubmitting}>

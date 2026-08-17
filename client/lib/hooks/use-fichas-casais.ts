@@ -36,3 +36,11 @@ export function useUpdateFichaCasal(id: string) {
     },
   });
 }
+
+export function useHistoricoEquipesCasal(fichaCasalId: string | undefined) {
+  return useQuery({
+    queryKey: ['fichas-casais', fichaCasalId, 'historico-equipes'],
+    queryFn: () => apiClient.historicoEquipesFichaCasal(fichaCasalId as string),
+    enabled: !!fichaCasalId,
+  });
+}
