@@ -5,6 +5,7 @@ import type {
   FichaCasal,
   FichaCasalListResponse,
   FichaListResponse,
+  HistoricoEquipeItem,
   ListaSubstituicaoItem,
   Montagem,
   MontagemListResponse,
@@ -97,6 +98,10 @@ export const apiClient = {
     return request<void>(`/fichas/${id}`, { method: 'DELETE' });
   },
 
+  historicoEquipesFicha(id: string) {
+    return request<HistoricoEquipeItem[]>(`/fichas/${id}/historico-equipes`);
+  },
+
   listEncontros(paroquiaId: string) {
     return request<number[]>(`/fichas/encontros?${buildQuery({ paroquiaId })}`);
   },
@@ -167,7 +172,14 @@ export const apiClient = {
   updateAlocacao(
     montagemId: string,
     id: string,
-    data: { status?: 'CONVIDADO' | 'ACEITO' | 'RECUSADO' | 'DESISTIU'; motivoRecusa?: string; usuario?: string },
+    data: {
+      status?: 'CONVIDADO' | 'ACEITO' | 'RECUSADO' | 'DESISTIU';
+      motivoRecusa?: string;
+      podeCoordenar?: boolean;
+      podePalestrar?: boolean;
+      observacoesAvaliacao?: string;
+      usuario?: string;
+    },
   ) {
     return request<Alocacao>(`/montagens/${montagemId}/alocacoes/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
   },

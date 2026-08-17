@@ -72,4 +72,20 @@ export class FichasService {
     await this.findOne(id);
     return this.prisma.ficha.delete({ where: { id } });
   }
+
+  // Histórico de equipes servidas — dado gerado pelo módulo Montagem (Alocacao), não
+  // armazenado na Ficha (ver docs/requisitos.md, 2.1). Cobre qualquer status, não só
+  // ACEITO, pra também mostrar convites em aberto/recusas no histórico.
+  async historicoEquipes(id: string) {
+    await this.findOne(id);
+    return this.prisma.alocacao.findMany({
+      where: { fichaId: id },
+      include: {
+        vagaMontagem: {
+          include: { equipe: true, cargo: true, montagem: { select: { numeroEncontro: true, data: true, status: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

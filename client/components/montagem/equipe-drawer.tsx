@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ApiError } from '@/lib/api-client';
 import { useDeleteAlocacao, useUpdateAlocacao } from '@/lib/hooks/use-montagens';
+import { AlocacaoAvaliacaoPopover } from './alocacao-avaliacao-popover';
 import { AlocacaoRowActions } from './alocacao-row-actions';
 import { AlocacaoStatusBadge } from './alocacao-status-badge';
 import { AlocarPessoaCombobox } from './alocar-pessoa-combobox';
@@ -131,6 +132,9 @@ export function EquipeDrawer({
                         <div className="flex items-center gap-2">
                           <AlocacaoStatusBadge status={alocacao.status} />
                           <AlocacaoRowActions montagemId={montagemId} alocacao={alocacao} />
+                          {alocacao.status === 'ACEITO' && (
+                            <AlocacaoAvaliacaoPopover montagemId={montagemId} alocacao={alocacao} />
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"

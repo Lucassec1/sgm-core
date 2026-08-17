@@ -42,3 +42,11 @@ export function useUpdateFicha(id: string) {
     },
   });
 }
+
+export function useHistoricoEquipes(fichaId: string | undefined) {
+  return useQuery({
+    queryKey: ['fichas', fichaId, 'historico-equipes'],
+    queryFn: () => apiClient.historicoEquipesFicha(fichaId as string),
+    enabled: !!fichaId,
+  });
+}

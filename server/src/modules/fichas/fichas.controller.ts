@@ -39,6 +39,11 @@ export class FichasController {
     return this.fichasService.findOne(id);
   }
 
+  @Get(':id/historico-equipes')
+  historicoEquipes(@Param('id') id: string) {
+    return this.fichasService.historicoEquipes(id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateFichaDto) {
     return this.fichasService.update(id, dto);
