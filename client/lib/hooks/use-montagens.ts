@@ -73,3 +73,38 @@ export function useUpdateAlocacao(montagemId: string) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['montagens', montagemId, 'alocacoes'] }),
   });
 }
+
+// Sem vagaMontagemId: candidatos gerais (todos os jovens ATIVA elegíveis, sem filtro de
+// sexo) — usado na lista de substituição, que não é presa a uma vaga específica.
+export function useCandidatosJovensGeral(montagemId: string | undefined) {
+  return useQuery({
+    queryKey: ['montagens', montagemId, 'candidatos-jovens', 'geral'],
+    queryFn: () => apiClient.listCandidatosJovens(montagemId as string),
+    enabled: !!montagemId,
+  });
+}
+
+export function useListaSubstituicao(montagemId: string | undefined) {
+  return useQuery({
+    queryKey: ['montagens', montagemId, 'lista-substituicao'],
+    queryFn: () => apiClient.listListaSubstituicao(montagemId as string),
+    enabled: !!montagemId,
+  });
+}
+
+export function useCreateListaSubstituicaoItem(montagemId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof apiClient.createListaSubstituicaoItem>[1]) =>
+      apiClient.createListaSubstituicaoItem(montagemId, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['montagens', montagemId, 'lista-substituicao'] }),
+  });
+}
+
+export function useDeleteListaSubstituicaoItem(montagemId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiClient.deleteListaSubstituicaoItem(montagemId, id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['montagens', montagemId, 'lista-substituicao'] }),
+  });
+}
