@@ -96,8 +96,9 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
   const fotoUrl = watch('fotoUrl');
   const nomeEle = watch('nomeEle');
 
-  // Mesmo critério da Ficha do Jovem: depois de criada, só endereço/telefone/email mudam
-  // com frequência — o resto vira somente leitura. Situação/motivo continuam editáveis.
+  // Mesmo critério da Ficha do Jovem: depois de criada, só endereço/telefone/email,
+  // observações (notas práticas — teve bebê recentemente, sem transporte, etc.) e
+  // situação/motivo continuam editáveis. O resto vira somente leitura.
   const bloqueado = isEdit;
 
   return (
@@ -194,7 +195,7 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
           {watch('temFilhosNoSegueMe') && (
             <div className="col-span-2">
               <Label htmlFor="observacoesFilhos">Quais / observações</Label>
-              <Textarea id="observacoesFilhos" disabled={bloqueado} {...register('observacoesFilhos')} />
+              <Textarea id="observacoesFilhos" {...register('observacoesFilhos')} />
             </div>
           )}
         </TabsContent>
@@ -233,7 +234,7 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
 
       <div>
         <Label htmlFor="observacoes">Observações</Label>
-        <Textarea id="observacoes" disabled={bloqueado} {...register('observacoes')} />
+        <Textarea id="observacoes" placeholder="Ex.: teve bebê recentemente, não possui transporte próprio..." {...register('observacoes')} />
       </div>
 
       <Button type="submit" disabled={isSubmitting}>

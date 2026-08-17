@@ -1,14 +1,14 @@
 import { Badge } from '@/components/ui/badge';
 import { AlocacaoStatusBadge } from '@/components/montagem/alocacao-status-badge';
 import { useHistoricoEquipes } from '@/lib/hooks/use-fichas';
+import { useHistoricoEquipesCasal } from '@/lib/hooks/use-fichas-casais';
+import type { HistoricoEquipeItem } from '@/lib/types';
 
 // Histórico de equipes servidas + avaliação (docs/requisitos.md, 2.1) — um registro por
 // Alocacao (por equipe/encontro que a pessoa serviu), com o mesmo critério da ficha física
 // do Segue-me: pode coordenar/palestrar são específicos daquela equipe, não um selo geral.
 // Dado gerado pelo módulo Montagem, não editável aqui.
-export function HistoricoEquipesSection({ fichaId }: { fichaId: string }) {
-  const { data: historico, isLoading } = useHistoricoEquipes(fichaId);
-
+function HistoricoEquipesLista({ historico, isLoading }: { historico?: HistoricoEquipeItem[]; isLoading: boolean }) {
   if (isLoading) return <p className="text-sm text-muted-foreground">Carregando...</p>;
   if (!historico || historico.length === 0) {
     return <p className="text-sm text-muted-foreground">Ainda não serviu em nenhuma equipe.</p>;
@@ -49,4 +49,14 @@ export function HistoricoEquipesSection({ fichaId }: { fichaId: string }) {
       ))}
     </ul>
   );
+}
+
+export function HistoricoEquipesSection({ fichaId }: { fichaId: string }) {
+  const { data: historico, isLoading } = useHistoricoEquipes(fichaId);
+  return <HistoricoEquipesLista historico={historico} isLoading={isLoading} />;
+}
+
+export function HistoricoEquipesCasalSection({ fichaCasalId }: { fichaCasalId: string }) {
+  const { data: historico, isLoading } = useHistoricoEquipesCasal(fichaCasalId);
+  return <HistoricoEquipesLista historico={historico} isLoading={isLoading} />;
 }

@@ -65,4 +65,20 @@ export class FichasCasaisService {
     await this.findOne(id);
     return this.prisma.fichaCasal.delete({ where: { id } });
   }
+
+  // Histórico de equipes servidas — mesmo critério da Ficha do Jovem (ver
+  // FichasService.historicoEquipes): dado gerado pelo módulo Montagem (Alocacao), não
+  // armazenado na FichaCasal.
+  async historicoEquipes(id: string) {
+    await this.findOne(id);
+    return this.prisma.alocacao.findMany({
+      where: { fichaCasalId: id },
+      include: {
+        vagaMontagem: {
+          include: { equipe: true, cargo: true, montagem: { select: { numeroEncontro: true, data: true, status: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }
