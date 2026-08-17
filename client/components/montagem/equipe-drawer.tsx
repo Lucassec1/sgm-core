@@ -1,6 +1,5 @@
 'use client';
 
-import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -8,12 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ApiError } from '@/lib/api-client';
-import { useDeleteAlocacao, useUpdateAlocacao } from '@/lib/hooks/use-montagens';
-import { AlocacaoAvaliacaoPopover } from './alocacao-avaliacao-popover';
-import { AlocacaoRowActions } from './alocacao-row-actions';
-import { AlocacaoStatusBadge } from './alocacao-status-badge';
-import { AlocarPessoaCombobox } from './alocar-pessoa-combobox';
-import { PessoaPreviewPopover } from './pessoa-preview-popover';
+import { useUpdateAlocacao } from '@/lib/hooks/use-montagens';
+import { VagaAlocacoes } from './vaga-alocacoes';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
 
 function nomeAlocacao(alocacao: Alocacao) {
@@ -21,8 +16,8 @@ function nomeAlocacao(alocacao: Alocacao) {
 }
 
 // Drawer lateral de distribuição de uma equipe (docs/ux-e-fluxos.md, seção 3) — mantém o
-// Quadro das 16 Equipes visível atrás dele. Cada vaga (cargo) lista quem já está alocado
-// e um combobox de busca pra preencher o que falta.
+// Quadro das 16 Equipes visível atrás dele. Cada vaga (cargo) usa VagaAlocacoes, o mesmo
+// bloco reaproveitado na Lista completa.
 export function EquipeDrawer({
   montagemId,
   vagas,
@@ -30,6 +25,7 @@ export function EquipeDrawer({
   circulosFechado,
   todasVagas,
   todasAlocacoes,
+  encontroAnterior,
   open,
   onOpenChange,
 }: {
@@ -39,21 +35,12 @@ export function EquipeDrawer({
   circulosFechado: boolean;
   todasVagas: VagaMontagem[];
   todasAlocacoes: Alocacao[];
+  encontroAnterior: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const equipe = vagas[0]?.equipe;
-  const deleteAlocacao = useDeleteAlocacao(montagemId);
   const updateAlocacao = useUpdateAlocacao(montagemId);
-
-  async function remover(id: string) {
-    try {
-      await deleteAlocacao.mutateAsync(id);
-      toast.success('Alocação removida.');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Não foi possível remover.');
-    }
-  }
 
   const emRascunho = vagas.flatMap((v) => alocacoesPorVaga.get(v.id) ?? []).filter((a) => a.status === 'RASCUNHO');
   const convitesBloqueados = !!equipe?.bloqueiaConvitePosCirculos && !circulosFechado;
@@ -100,89 +87,19 @@ export function EquipeDrawer({
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
-          {vagas.map((vaga) => {
-            const alocacoes = alocacoesPorVaga.get(vaga.id) ?? [];
-            const ativas = alocacoes.filter((a) => !['RECUSADO', 'DESISTIU', 'SUBSTITUIDO'].includes(a.status));
-            const idsJaAlocados = new Set(ativas.map((a) => a.fichaId ?? a.fichaCasalId ?? ''));
-
-            const precisaJovem = vaga.quantidadeRapazes > 0 || vaga.quantidadeMocas > 0;
-            const precisaCasal = vaga.quantidadeCasais > 0;
-            const totalVaga = vaga.quantidadeCasais + vaga.quantidadeRapazes + vaga.quantidadeMocas;
-            const cheia = ativas.length >= totalVaga;
-
-            return (
-              <div key={vaga.id} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium">{vaga.cargo.nome}</h3>
-                  <span className="text-xs text-muted-foreground">
-                    {ativas.length} / {totalVaga}
-                    {vaga.quantidadeCasais > 0 && ' casais'}
-                    {(vaga.quantidadeRapazes > 0 || vaga.quantidadeMocas > 0) &&
-                      ` (${vaga.quantidadeRapazes} rapazes, ${vaga.quantidadeMocas} moças)`}
-                  </span>
-                </div>
-
-                {alocacoes.length > 0 && (
-                  <ul className="space-y-1">
-                    {alocacoes.map((alocacao) => (
-                      <li key={alocacao.id} className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm">
-                        <div className="min-w-0 flex-1 truncate">
-                          <PessoaPreviewPopover ficha={alocacao.ficha} fichaCasal={alocacao.fichaCasal}>
-                            {nomeAlocacao(alocacao)}
-                          </PessoaPreviewPopover>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          <AlocacaoStatusBadge status={alocacao.status} />
-                          <AlocacaoRowActions montagemId={montagemId} alocacao={alocacao} />
-                          {alocacao.status === 'ACEITO' && (
-                            <AlocacaoAvaliacaoPopover montagemId={montagemId} alocacao={alocacao} />
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={() => remover(alocacao.id)}
-                            aria-label="Remover alocação"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {!cheia && (
-                  <div className="flex gap-2">
-                    {precisaJovem && (
-                      <AlocarPessoaCombobox
-                        montagemId={montagemId}
-                        vagaMontagemId={vaga.id}
-                        tipoPessoa="JOVEM"
-                        label="Adicionar jovem"
-                        idsJaAlocados={idsJaAlocados}
-                        todasVagas={todasVagas}
-                        todasAlocacoes={todasAlocacoes}
-                      />
-                    )}
-                    {precisaCasal && (
-                      <AlocarPessoaCombobox
-                        montagemId={montagemId}
-                        vagaMontagemId={vaga.id}
-                        tipoPessoa="CASAL"
-                        label="Adicionar casal"
-                        idsJaAlocados={idsJaAlocados}
-                        todasVagas={todasVagas}
-                        todasAlocacoes={todasAlocacoes}
-                      />
-                    )}
-                  </div>
-                )}
-
-                <Separator className="mt-4" />
-              </div>
-            );
-          })}
+          {vagas.map((vaga) => (
+            <div key={vaga.id}>
+              <VagaAlocacoes
+                montagemId={montagemId}
+                vaga={vaga}
+                alocacoes={alocacoesPorVaga.get(vaga.id) ?? []}
+                todasVagas={todasVagas}
+                todasAlocacoes={todasAlocacoes}
+                encontroAnterior={encontroAnterior}
+              />
+              <Separator className="mt-4" />
+            </div>
+          ))}
         </div>
       </SheetContent>
     </Sheet>

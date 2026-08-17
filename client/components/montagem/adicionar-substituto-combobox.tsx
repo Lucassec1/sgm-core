@@ -68,15 +68,15 @@ export function AdicionarSubstitutoCombobox({ montagemId, idsJaNaLista }: { mont
           Adicionar à lista
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0 w-80" align="start">
+      <PopoverContent className="w-96 p-0" align="start">
         {!selecionada ? (
           <Command>
             <CommandInput placeholder="Buscar por nome..." />
-            <CommandList>
+            <CommandList className="max-h-[360px]">
               <CommandEmpty>Ninguém encontrado.</CommandEmpty>
               <CommandGroup>
                 {opcoes.map((pessoa) => (
-                  <CommandItem key={pessoa.id} value={pessoa.nome} onSelect={() => setSelecionada(pessoa)}>
+                  <CommandItem key={pessoa.id} value={pessoa.nome} onSelect={() => setSelecionada(pessoa)} className="py-2">
                     {pessoa.nome}
                   </CommandItem>
                 ))}
