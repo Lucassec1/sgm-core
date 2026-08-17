@@ -87,7 +87,14 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
         </TabsContent>
 
         <TabsContent value="lista">
-          <ListaCompletaEquipes gruposPorEquipe={gruposPorEquipe} alocacoesPorVaga={alocacoesPorVaga} />
+          <ListaCompletaEquipes
+            montagemId={id}
+            gruposPorEquipe={gruposPorEquipe}
+            alocacoesPorVaga={alocacoesPorVaga}
+            todasVagas={montagem.vagas}
+            todasAlocacoes={alocacoes ?? []}
+            encontroAnterior={montagem.numeroEncontro - 1}
+          />
         </TabsContent>
 
         <TabsContent value="substituicoes">
@@ -103,6 +110,7 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
           circulosFechado={circulosFechado}
           todasVagas={montagem.vagas}
           todasAlocacoes={alocacoes ?? []}
+          encontroAnterior={montagem.numeroEncontro - 1}
           open={!!equipeSelecionadaId}
           onOpenChange={(open) => !open && setEquipeSelecionadaId(null)}
         />
