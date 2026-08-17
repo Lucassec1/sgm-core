@@ -15,5 +15,5 @@ const ESTILOS: Record<StatusConvite, { label: string; className: string }> = {
 
 export function AlocacaoStatusBadge({ status }: { status: StatusConvite }) {
   const estilo = ESTILOS[status];
-  return <Badge variant="outline" className={cn('border-transparent font-medium', estilo.className)}>{estilo.label}</Badge>;
+  return <Badge variant="outline" className={cn('border-transparent whitespace-nowrap font-medium', estilo.className)}>{estilo.label}</Badge>;
 }

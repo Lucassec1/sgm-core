@@ -24,7 +24,7 @@ export function PessoaPreviewPopover({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" className="text-left hover:underline underline-offset-2">
+        <button type="button" className="block w-full truncate text-left hover:underline underline-offset-2">
           {children}
         </button>
       </PopoverTrigger>
