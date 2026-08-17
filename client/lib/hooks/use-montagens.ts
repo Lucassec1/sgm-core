@@ -40,3 +40,27 @@ export function useCreateMontagem() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['montagens'] }),
   });
 }
+
+export function useCandidatosJovens(montagemId: string | undefined, vagaMontagemId: string | undefined) {
+  return useQuery({
+    queryKey: ['montagens', montagemId, 'candidatos-jovens', vagaMontagemId],
+    queryFn: () => apiClient.listCandidatosJovens(montagemId as string, vagaMontagemId as string),
+    enabled: !!montagemId && !!vagaMontagemId,
+  });
+}
+
+export function useCreateAlocacao(montagemId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof apiClient.createAlocacao>[1]) => apiClient.createAlocacao(montagemId, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['montagens', montagemId, 'alocacoes'] }),
+  });
+}
+
+export function useDeleteAlocacao(montagemId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiClient.deleteAlocacao(montagemId, id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['montagens', montagemId, 'alocacoes'] }),
+  });
+}

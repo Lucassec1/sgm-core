@@ -1,9 +1,10 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useAlocacoes, useMontagem } from '@/lib/hooks/use-montagens';
 import { EquipeCard } from '@/components/montagem/equipe-card';
+import { EquipeDrawer } from '@/components/montagem/equipe-drawer';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
 
 function agruparPorEquipe(vagas: VagaMontagem[]) {
@@ -20,6 +21,7 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
   const { id } = use(params);
   const { data: montagem, isLoading, isError } = useMontagem(id);
   const { data: alocacoes } = useAlocacoes(id);
+  const [equipeSelecionadaId, setEquipeSelecionadaId] = useState<string | null>(null);
 
   if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando...</p>;
   if (isError || !montagem) return <p className="p-6 text-sm text-red-600">Não foi possível carregar a montagem.</p>;
@@ -67,9 +69,20 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
             key={vagas[0].equipeId}
             vagas={vagas}
             alocacoes={vagas.flatMap((v) => alocacoesPorVaga.get(v.id) ?? [])}
+            onClick={() => setEquipeSelecionadaId(vagas[0].equipeId)}
           />
         ))}
       </div>
+
+      {equipeSelecionadaId && (
+        <EquipeDrawer
+          montagemId={id}
+          vagas={gruposPorEquipe.find((vagas) => vagas[0].equipeId === equipeSelecionadaId) ?? []}
+          alocacoesPorVaga={alocacoesPorVaga}
+          open={!!equipeSelecionadaId}
+          onOpenChange={(open) => !open && setEquipeSelecionadaId(null)}
+        />
+      )}
     </div>
   );
 }

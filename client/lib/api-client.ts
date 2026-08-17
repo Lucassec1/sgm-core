@@ -11,6 +11,20 @@ import type {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
+// 409 de repetição de equipe (R2) chega com um body estruturado (code, vezesServidas,
+// equipeNome) — o front precisa distinguir isso de um erro genérico pra oferecer o
+// Alert Dialog de confirmação em vez de só mostrar a mensagem.
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public body: unknown,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     headers: { 'Content-Type': 'application/json' },
@@ -19,7 +33,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.message ?? `Erro ${res.status} ao chamar ${path}`);
+    const message = (body?.message as string) ?? `Erro ${res.status} ao chamar ${path}`;
+    throw new ApiError(Array.isArray(message) ? message.join(', ') : message, res.status, body);
   }
 
   if (res.status === 204) return undefined as T;
@@ -127,5 +142,27 @@ export const apiClient = {
 
   listAlocacoes(montagemId: string) {
     return request<Alocacao[]>(`/montagens/${montagemId}/alocacoes`);
+  },
+
+  createAlocacao(
+    montagemId: string,
+    data: {
+      vagaMontagemId: string;
+      tipoPessoa: 'JOVEM' | 'CASAL';
+      fichaId?: string;
+      fichaCasalId?: string;
+      confirmarRepeticao?: boolean;
+      usuario?: string;
+    },
+  ) {
+    return request<Alocacao>(`/montagens/${montagemId}/alocacoes`, { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  deleteAlocacao(montagemId: string, id: string) {
+    return request<Alocacao>(`/montagens/${montagemId}/alocacoes/${id}`, { method: 'DELETE' });
+  },
+
+  listCandidatosJovens(montagemId: string, vagaMontagemId: string) {
+    return request<Ficha[]>(`/montagens/${montagemId}/candidatos-jovens?${buildQuery({ vagaMontagemId })}`);
   },
 };
