@@ -171,6 +171,18 @@ export interface Alocacao {
   updatedAt: string;
 }
 
+export interface HistoricoEquipeItem {
+  id: string;
+  status: StatusConvite;
+  motivoRecusa?: string | null;
+  createdAt: string;
+  vagaMontagem: {
+    equipe: Equipe;
+    cargo: Cargo;
+    montagem: { numeroEncontro: number; data: string; status: StatusMontagem };
+  };
+}
+
 export interface ListaSubstituicaoItem {
   id: string;
   montagemId: string;

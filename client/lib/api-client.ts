@@ -5,6 +5,7 @@ import type {
   FichaCasal,
   FichaCasalListResponse,
   FichaListResponse,
+  HistoricoEquipeItem,
   ListaSubstituicaoItem,
   Montagem,
   MontagemListResponse,
@@ -95,6 +96,10 @@ export const apiClient = {
 
   deleteFicha(id: string) {
     return request<void>(`/fichas/${id}`, { method: 'DELETE' });
+  },
+
+  historicoEquipesFicha(id: string) {
+    return request<HistoricoEquipeItem[]>(`/fichas/${id}/historico-equipes`);
   },
 
   listEncontros(paroquiaId: string) {

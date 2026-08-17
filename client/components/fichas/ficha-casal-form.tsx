@@ -96,6 +96,10 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
   const fotoUrl = watch('fotoUrl');
   const nomeEle = watch('nomeEle');
 
+  // Mesmo critério da Ficha do Jovem: depois de criada, só endereço/telefone/email mudam
+  // com frequência — o resto vira somente leitura. Situação/motivo continuam editáveis.
+  const bloqueado = isEdit;
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="flex items-center gap-4">
@@ -105,7 +109,7 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
         </Avatar>
         <div className="flex-1">
           <Label htmlFor="fotoUrl">Foto (URL)</Label>
-          <Input id="fotoUrl" placeholder="https://..." {...register('fotoUrl')} />
+          <Input id="fotoUrl" placeholder="https://..." disabled={bloqueado} {...register('fotoUrl')} />
         </div>
       </div>
 
@@ -141,21 +145,21 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
         <TabsContent value="identificacao" className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="nomeEle">Nome (dele)</Label>
-            <Input id="nomeEle" {...register('nomeEle')} />
+            <Input id="nomeEle" disabled={bloqueado} {...register('nomeEle')} />
             {errors.nomeEle && <p className="text-xs text-red-600 mt-1">{errors.nomeEle.message}</p>}
           </div>
           <div>
             <Label htmlFor="nomeEla">Nome (dela)</Label>
-            <Input id="nomeEla" {...register('nomeEla')} />
+            <Input id="nomeEla" disabled={bloqueado} {...register('nomeEla')} />
             {errors.nomeEla && <p className="text-xs text-red-600 mt-1">{errors.nomeEla.message}</p>}
           </div>
           <div>
             <Label htmlFor="dataNascimentoEle">Data de nascimento (dele)</Label>
-            <Input id="dataNascimentoEle" type="date" {...register('dataNascimentoEle')} />
+            <Input id="dataNascimentoEle" type="date" disabled={bloqueado} {...register('dataNascimentoEle')} />
           </div>
           <div>
             <Label htmlFor="dataNascimentoEla">Data de nascimento (dela)</Label>
-            <Input id="dataNascimentoEla" type="date" {...register('dataNascimentoEla')} />
+            <Input id="dataNascimentoEla" type="date" disabled={bloqueado} {...register('dataNascimentoEla')} />
           </div>
           <div>
             <Label htmlFor="telefoneEle">Telefone (dele)</Label>
@@ -183,13 +187,14 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
               id="temFilhosNoSegueMe"
               checked={watch('temFilhosNoSegueMe')}
               onCheckedChange={(v) => setValue('temFilhosNoSegueMe', !!v)}
+              disabled={bloqueado}
             />
             <Label htmlFor="temFilhosNoSegueMe">Tem filho(s) no Segue-me</Label>
           </div>
           {watch('temFilhosNoSegueMe') && (
             <div className="col-span-2">
               <Label htmlFor="observacoesFilhos">Quais / observações</Label>
-              <Textarea id="observacoesFilhos" {...register('observacoesFilhos')} />
+              <Textarea id="observacoesFilhos" disabled={bloqueado} {...register('observacoesFilhos')} />
             </div>
           )}
         </TabsContent>
@@ -228,7 +233,7 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
 
       <div>
         <Label htmlFor="observacoes">Observações</Label>
-        <Textarea id="observacoes" {...register('observacoes')} />
+        <Textarea id="observacoes" disabled={bloqueado} {...register('observacoes')} />
       </div>
 
       <Button type="submit" disabled={isSubmitting}>
