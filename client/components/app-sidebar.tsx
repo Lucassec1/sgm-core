@@ -29,13 +29,13 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-1.5">
+        <div className="flex items-center gap-2 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <Image
             src="/logo-segue-me.png"
             alt="Segue-me"
             width={32}
             height={32}
-            className="h-8 w-8 shrink-0"
+            className="h-8 w-8 shrink-0 object-contain"
           />
           <span className="text-sm font-semibold group-data-[collapsible=icon]:hidden">SGM Core</span>
         </div>

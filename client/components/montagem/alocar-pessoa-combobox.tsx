@@ -28,6 +28,12 @@ interface RepeticaoConflito {
   message: string;
 }
 
+interface MovimentacaoPendente {
+  pessoaId: string;
+  nome: string;
+  equipeAtual: string;
+}
+
 const STATUS_ATIVO = ['RASCUNHO', 'CONVIDADO', 'ACEITO'];
 
 // Preserva o status ao mover — "moveu de equipe" não deveria resetar um convite já aceito
@@ -38,12 +44,13 @@ function statusParaCriar(status?: StatusConvite) {
 
 // Busca de pessoa pra vaga (Command combobox) — ver docs/ux-e-fluxos.md, seção 3.
 //
-// - Se a pessoa já está alocada em OUTRA vaga desse encontro, a ação vira um remanejamento:
-//   cria na vaga nova (preservando o status), remove da antiga, e avisa por Toast com Desfazer
-//   — nunca um Alert Dialog, esse fluxo é comum e tem que ser leve.
+// - Se a pessoa já está alocada em OUTRA vaga desse encontro, pede confirmação explícita
+//   antes de mover (mostra de onde pra onde) — depois de confirmado, cria na vaga nova
+//   (preservando o status), remove da antiga, e ainda avisa por Toast com Desfazer.
 // - R2 (repetição de equipe) chega como 409 estruturado e vira um Alert Dialog de confirmação
 //   consciente — essa sim é uma regra imutável, exige decisão explícita.
 // - R1/R3 (bloqueio real) e outros erros chegam como 403/outros e só avisam por toast.
+// - Sugestões priorizam quem ainda não está em nenhuma equipe desse encontro.
 export function AlocarPessoaCombobox({
   montagemId,
   vagaMontagemId,
@@ -63,6 +70,7 @@ export function AlocarPessoaCombobox({
 }) {
   const [open, setOpen] = useState(false);
   const [conflito, setConflito] = useState<RepeticaoConflito | null>(null);
+  const [movimentacaoPendente, setMovimentacaoPendente] = useState<MovimentacaoPendente | null>(null);
 
   const createAlocacao = useCreateAlocacao(montagemId);
   const deleteAlocacao = useDeleteAlocacao(montagemId);
@@ -72,15 +80,6 @@ export function AlocarPessoaCombobox({
     { enabled: tipoPessoa === 'CASAL' },
   );
 
-  const opcoes =
-    tipoPessoa === 'JOVEM'
-      ? (candidatosJovens.data ?? [])
-          .filter((f) => !idsJaAlocados.has(f.id))
-          .map((f) => ({ id: f.id, nome: f.nomeCompleto }))
-      : (candidatosCasais.data?.items ?? [])
-          .filter((c) => !idsJaAlocados.has(c.id))
-          .map((c) => ({ id: c.id, nome: `${c.nomeEle} e ${c.nomeEla}` }));
-
   function alocacaoAtualDaPessoa(pessoaId: string) {
     return todasAlocacoes.find(
       (a) =>
@@ -89,6 +88,19 @@ export function AlocarPessoaCombobox({
         (tipoPessoa === 'JOVEM' ? a.fichaId === pessoaId : a.fichaCasalId === pessoaId),
     );
   }
+
+  // Quem ainda não está em nenhuma equipe desse encontro aparece primeiro na lista — é
+  // quem mais precisa de vaga; ordenação por prioridade (R5) e busca por texto continuam
+  // valendo dentro de cada grupo (sort é estável).
+  const opcoes = (
+    tipoPessoa === 'JOVEM'
+      ? (candidatosJovens.data ?? [])
+          .filter((f) => !idsJaAlocados.has(f.id))
+          .map((f) => ({ id: f.id, nome: f.nomeCompleto }))
+      : (candidatosCasais.data?.items ?? [])
+          .filter((c) => !idsJaAlocados.has(c.id))
+          .map((c) => ({ id: c.id, nome: `${c.nomeEle} e ${c.nomeEla}` }))
+  ).sort((a, b) => Number(!!alocacaoAtualDaPessoa(a.id)) - Number(!!alocacaoAtualDaPessoa(b.id)));
 
   function nomeEquipeDaVaga(vId: string) {
     return todasVagas.find((v) => v.id === vId)?.equipe.nome ?? 'outra equipe';
@@ -110,6 +122,16 @@ export function AlocarPessoaCombobox({
     }
   }
 
+  function selecionar(pessoaId: string, nome: string) {
+    const antiga = alocacaoAtualDaPessoa(pessoaId);
+    if (antiga) {
+      setMovimentacaoPendente({ pessoaId, nome, equipeAtual: nomeEquipeDaVaga(antiga.vagaMontagemId) });
+      setOpen(false);
+      return;
+    }
+    alocar(pessoaId, nome);
+  }
+
   async function alocar(pessoaId: string, nome: string, confirmarRepeticao?: boolean) {
     const antiga = alocacaoAtualDaPessoa(pessoaId);
 
@@ -122,6 +144,7 @@ export function AlocarPessoaCombobox({
         ...(confirmarRepeticao && { confirmarRepeticao }),
       });
       setConflito(null);
+      setMovimentacaoPendente(null);
       setOpen(false);
 
       if (antiga) {
@@ -154,16 +177,21 @@ export function AlocarPessoaCombobox({
             {label}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="p-0 w-72" align="start">
+        <PopoverContent className="w-96 p-0" align="start">
           <Command>
             <CommandInput placeholder="Buscar por nome..." />
-            <CommandList>
+            <CommandList className="max-h-[360px]">
               <CommandEmpty>Ninguém encontrado.</CommandEmpty>
               <CommandGroup>
                 {opcoes.map((pessoa) => {
                   const jaAlocadaEm = alocacaoAtualDaPessoa(pessoa.id);
                   return (
-                    <CommandItem key={pessoa.id} value={pessoa.nome} onSelect={() => alocar(pessoa.id, pessoa.nome)}>
+                    <CommandItem
+                      key={pessoa.id}
+                      value={pessoa.nome}
+                      onSelect={() => selecionar(pessoa.id, pessoa.nome)}
+                      className="py-2"
+                    >
                       <div className="flex flex-col">
                         <span>{pessoa.nome}</span>
                         {jaAlocadaEm && (
@@ -180,6 +208,28 @@ export function AlocarPessoaCombobox({
           </Command>
         </PopoverContent>
       </Popover>
+
+      <AlertDialog open={!!movimentacaoPendente} onOpenChange={(v) => !v && setMovimentacaoPendente(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mover pessoa de equipe?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {movimentacaoPendente?.nome} já está em {movimentacaoPendente?.equipeAtual}. Confirmar vai mover essa pessoa
+              pra cá, tirando de lá.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (movimentacaoPendente) alocar(movimentacaoPendente.pessoaId, movimentacaoPendente.nome);
+              }}
+            >
+              Mover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!conflito} onOpenChange={(v) => !v && setConflito(null)}>
         <AlertDialogContent>

@@ -125,11 +125,13 @@ export function EquipeDrawer({
                 {alocacoes.length > 0 && (
                   <ul className="space-y-1">
                     {alocacoes.map((alocacao) => (
-                      <li key={alocacao.id} className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm">
-                        <PessoaPreviewPopover ficha={alocacao.ficha} fichaCasal={alocacao.fichaCasal}>
-                          {nomeAlocacao(alocacao)}
-                        </PessoaPreviewPopover>
-                        <div className="flex items-center gap-2">
+                      <li key={alocacao.id} className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm">
+                        <div className="min-w-0 flex-1 truncate">
+                          <PessoaPreviewPopover ficha={alocacao.ficha} fichaCasal={alocacao.fichaCasal}>
+                            {nomeAlocacao(alocacao)}
+                          </PessoaPreviewPopover>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
                           <AlocacaoStatusBadge status={alocacao.status} />
                           <AlocacaoRowActions montagemId={montagemId} alocacao={alocacao} />
                           {alocacao.status === 'ACEITO' && (

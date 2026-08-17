@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlocacoes, useMontagem } from '@/lib/hooks/use-montagens';
 import { EquipeCard } from '@/components/montagem/equipe-card';
 import { EquipeDrawer } from '@/components/montagem/equipe-drawer';
+import { ListaCompletaEquipes } from '@/components/montagem/lista-completa-equipes';
 import { ListaSubstituicaoSection } from '@/components/montagem/lista-substituicao-section';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
 
@@ -62,6 +63,7 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
       <Tabs defaultValue="equipes">
         <TabsList>
           <TabsTrigger value="equipes">Quadro de Equipes</TabsTrigger>
+          <TabsTrigger value="lista">Lista completa</TabsTrigger>
           <TabsTrigger value="substituicoes">Substituições</TabsTrigger>
         </TabsList>
 
@@ -82,6 +84,10 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
               />
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="lista">
+          <ListaCompletaEquipes gruposPorEquipe={gruposPorEquipe} alocacoesPorVaga={alocacoesPorVaga} />
         </TabsContent>
 
         <TabsContent value="substituicoes">
