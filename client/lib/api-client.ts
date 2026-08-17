@@ -172,7 +172,14 @@ export const apiClient = {
   updateAlocacao(
     montagemId: string,
     id: string,
-    data: { status?: 'CONVIDADO' | 'ACEITO' | 'RECUSADO' | 'DESISTIU'; motivoRecusa?: string; usuario?: string },
+    data: {
+      status?: 'CONVIDADO' | 'ACEITO' | 'RECUSADO' | 'DESISTIU';
+      motivoRecusa?: string;
+      podeCoordenar?: boolean;
+      podePalestrar?: boolean;
+      observacoesAvaliacao?: string;
+      usuario?: string;
+    },
   ) {
     return request<Alocacao>(`/montagens/${montagemId}/alocacoes/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
   },

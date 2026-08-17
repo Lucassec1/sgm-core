@@ -175,6 +175,9 @@ export interface HistoricoEquipeItem {
   id: string;
   status: StatusConvite;
   motivoRecusa?: string | null;
+  podeCoordenar?: boolean | null;
+  podePalestrar?: boolean | null;
+  observacoesAvaliacao?: string | null;
   createdAt: string;
   vagaMontagem: {
     equipe: Equipe;

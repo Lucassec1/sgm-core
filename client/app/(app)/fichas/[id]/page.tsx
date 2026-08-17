@@ -15,16 +15,18 @@ export default function FichaDetailPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="p-6 max-w-3xl space-y-8">
+      <h1 className="text-lg font-semibold">{ficha.nomeCompleto}</h1>
+
       <div>
-        <h1 className="text-lg font-semibold mb-6">{ficha.nomeCompleto}</h1>
-        <FichaForm ficha={ficha} />
+        <h2 className="text-sm font-medium mb-3">Histórico de Equipes</h2>
+        <HistoricoEquipesSection fichaId={ficha.id} />
       </div>
 
       <Separator />
 
       <div>
-        <h2 className="text-sm font-medium mb-3">Histórico de Equipes</h2>
-        <HistoricoEquipesSection fichaId={ficha.id} />
+        <h2 className="text-sm font-medium mb-3">Dados cadastrais</h2>
+        <FichaForm ficha={ficha} />
       </div>
     </div>
   );

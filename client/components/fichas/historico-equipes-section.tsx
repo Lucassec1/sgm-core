@@ -1,9 +1,11 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { AlocacaoStatusBadge } from '@/components/montagem/alocacao-status-badge';
 import { useHistoricoEquipes } from '@/lib/hooks/use-fichas';
 
-// Histórico de equipes servidas (docs/requisitos.md, 2.1) — dado gerado pelo módulo
-// Montagem (Alocacao), não editável aqui.
+// Histórico de equipes servidas + avaliação (docs/requisitos.md, 2.1) — um registro por
+// Alocacao (por equipe/encontro que a pessoa serviu), com o mesmo critério da ficha física
+// do Segue-me: pode coordenar/palestrar são específicos daquela equipe, não um selo geral.
+// Dado gerado pelo módulo Montagem, não editável aqui.
 export function HistoricoEquipesSection({ fichaId }: { fichaId: string }) {
   const { data: historico, isLoading } = useHistoricoEquipes(fichaId);
 
@@ -13,29 +15,38 @@ export function HistoricoEquipesSection({ fichaId }: { fichaId: string }) {
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Encontro</TableHead>
-          <TableHead>Equipe</TableHead>
-          <TableHead>Cargo</TableHead>
-          <TableHead>Status</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {historico.map((item) => (
-          <TableRow key={item.id}>
-            <TableCell>
-              {item.vagaMontagem.montagem.numeroEncontro}º ({new Date(item.vagaMontagem.montagem.data).toLocaleDateString('pt-BR')})
-            </TableCell>
-            <TableCell>{item.vagaMontagem.equipe.nome}</TableCell>
-            <TableCell>{item.vagaMontagem.cargo.nome}</TableCell>
-            <TableCell>
-              <AlocacaoStatusBadge status={item.status} />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <ul className="space-y-3">
+      {historico.map((item) => (
+        <li key={item.id} className="rounded-md border p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-sm font-medium">{item.vagaMontagem.equipe.nome}</p>
+              <p className="text-xs text-muted-foreground">
+                {item.vagaMontagem.cargo.nome} · {item.vagaMontagem.montagem.numeroEncontro}º Encontro (
+                {new Date(item.vagaMontagem.montagem.data).toLocaleDateString('pt-BR')})
+              </p>
+            </div>
+            <AlocacaoStatusBadge status={item.status} />
+          </div>
+
+          {(item.podeCoordenar || item.podePalestrar) && (
+            <div className="flex gap-2">
+              {item.podeCoordenar && (
+                <Badge variant="outline" className="border-transparent bg-green-50 text-green-700 font-medium">
+                  Pode coordenar essa equipe
+                </Badge>
+              )}
+              {item.podePalestrar && (
+                <Badge variant="outline" className="border-transparent bg-blue-50 text-blue-700 font-medium">
+                  Pode palestrar
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {item.observacoesAvaliacao && <p className="text-sm text-muted-foreground">{item.observacoesAvaliacao}</p>}
+        </li>
+      ))}
+    </ul>
   );
 }
