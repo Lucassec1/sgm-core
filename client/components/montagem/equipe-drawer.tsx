@@ -12,6 +12,7 @@ import { useDeleteAlocacao, useUpdateAlocacao } from '@/lib/hooks/use-montagens'
 import { AlocacaoRowActions } from './alocacao-row-actions';
 import { AlocacaoStatusBadge } from './alocacao-status-badge';
 import { AlocarPessoaCombobox } from './alocar-pessoa-combobox';
+import { PessoaPreviewPopover } from './pessoa-preview-popover';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
 
 function nomeAlocacao(alocacao: Alocacao) {
@@ -26,6 +27,8 @@ export function EquipeDrawer({
   vagas,
   alocacoesPorVaga,
   circulosFechado,
+  todasVagas,
+  todasAlocacoes,
   open,
   onOpenChange,
 }: {
@@ -33,6 +36,8 @@ export function EquipeDrawer({
   vagas: VagaMontagem[];
   alocacoesPorVaga: Map<string, Alocacao[]>;
   circulosFechado: boolean;
+  todasVagas: VagaMontagem[];
+  todasAlocacoes: Alocacao[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -120,7 +125,9 @@ export function EquipeDrawer({
                   <ul className="space-y-1">
                     {alocacoes.map((alocacao) => (
                       <li key={alocacao.id} className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm">
-                        <span>{nomeAlocacao(alocacao)}</span>
+                        <PessoaPreviewPopover ficha={alocacao.ficha} fichaCasal={alocacao.fichaCasal}>
+                          {nomeAlocacao(alocacao)}
+                        </PessoaPreviewPopover>
                         <div className="flex items-center gap-2">
                           <AlocacaoStatusBadge status={alocacao.status} />
                           <AlocacaoRowActions montagemId={montagemId} alocacao={alocacao} />
@@ -148,6 +155,8 @@ export function EquipeDrawer({
                         tipoPessoa="JOVEM"
                         label="Adicionar jovem"
                         idsJaAlocados={idsJaAlocados}
+                        todasVagas={todasVagas}
+                        todasAlocacoes={todasAlocacoes}
                       />
                     )}
                     {precisaCasal && (
@@ -157,6 +166,8 @@ export function EquipeDrawer({
                         tipoPessoa="CASAL"
                         label="Adicionar casal"
                         idsJaAlocados={idsJaAlocados}
+                        todasVagas={todasVagas}
+                        todasAlocacoes={todasAlocacoes}
                       />
                     )}
                   </div>

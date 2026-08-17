@@ -2,9 +2,11 @@
 
 import { use, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlocacoes, useMontagem } from '@/lib/hooks/use-montagens';
 import { EquipeCard } from '@/components/montagem/equipe-card';
 import { EquipeDrawer } from '@/components/montagem/equipe-drawer';
+import { ListaSubstituicaoSection } from '@/components/montagem/lista-substituicao-section';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
 
 function agruparPorEquipe(vagas: VagaMontagem[]) {
@@ -57,22 +59,35 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
         </Badge>
       </div>
 
-      {!circulosFechado && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
-          Aguardando a Eq. dos Círculos fechar (todos aceitos) — as outras equipes já podem ser rascunhadas, mas o convite delas só é liberado depois.
-        </div>
-      )}
+      <Tabs defaultValue="equipes">
+        <TabsList>
+          <TabsTrigger value="equipes">Quadro de Equipes</TabsTrigger>
+          <TabsTrigger value="substituicoes">Substituições</TabsTrigger>
+        </TabsList>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {gruposPorEquipe.map((vagas) => (
-          <EquipeCard
-            key={vagas[0].equipeId}
-            vagas={vagas}
-            alocacoes={vagas.flatMap((v) => alocacoesPorVaga.get(v.id) ?? [])}
-            onClick={() => setEquipeSelecionadaId(vagas[0].equipeId)}
-          />
-        ))}
-      </div>
+        <TabsContent value="equipes" className="space-y-4">
+          {!circulosFechado && (
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+              Aguardando a Eq. dos Círculos fechar (todos aceitos) — as outras equipes já podem ser rascunhadas, mas o convite delas só é liberado depois.
+            </div>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {gruposPorEquipe.map((vagas) => (
+              <EquipeCard
+                key={vagas[0].equipeId}
+                vagas={vagas}
+                alocacoes={vagas.flatMap((v) => alocacoesPorVaga.get(v.id) ?? [])}
+                onClick={() => setEquipeSelecionadaId(vagas[0].equipeId)}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="substituicoes">
+          <ListaSubstituicaoSection montagemId={id} />
+        </TabsContent>
+      </Tabs>
 
       {equipeSelecionadaId && (
         <EquipeDrawer
@@ -80,6 +95,8 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
           vagas={gruposPorEquipe.find((vagas) => vagas[0].equipeId === equipeSelecionadaId) ?? []}
           alocacoesPorVaga={alocacoesPorVaga}
           circulosFechado={circulosFechado}
+          todasVagas={montagem.vagas}
+          todasAlocacoes={alocacoes ?? []}
           open={!!equipeSelecionadaId}
           onOpenChange={(open) => !open && setEquipeSelecionadaId(null)}
         />

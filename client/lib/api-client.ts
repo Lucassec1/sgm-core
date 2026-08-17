@@ -5,6 +5,7 @@ import type {
   FichaCasal,
   FichaCasalListResponse,
   FichaListResponse,
+  ListaSubstituicaoItem,
   Montagem,
   MontagemListResponse,
 } from './types';
@@ -151,6 +152,7 @@ export const apiClient = {
       tipoPessoa: 'JOVEM' | 'CASAL';
       fichaId?: string;
       fichaCasalId?: string;
+      status?: 'RASCUNHO' | 'CONVIDADO' | 'ACEITO';
       confirmarRepeticao?: boolean;
       usuario?: string;
     },
@@ -170,7 +172,25 @@ export const apiClient = {
     return request<Alocacao>(`/montagens/${montagemId}/alocacoes/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
   },
 
-  listCandidatosJovens(montagemId: string, vagaMontagemId: string) {
+  listCandidatosJovens(montagemId: string, vagaMontagemId?: string) {
     return request<Ficha[]>(`/montagens/${montagemId}/candidatos-jovens?${buildQuery({ vagaMontagemId })}`);
+  },
+
+  listListaSubstituicao(montagemId: string) {
+    return request<ListaSubstituicaoItem[]>(`/montagens/${montagemId}/lista-substituicao`);
+  },
+
+  createListaSubstituicaoItem(
+    montagemId: string,
+    data: { tipoPessoa: 'JOVEM' | 'CASAL'; fichaId?: string; fichaCasalId?: string; nota?: string; usuario?: string },
+  ) {
+    return request<ListaSubstituicaoItem>(`/montagens/${montagemId}/lista-substituicao`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteListaSubstituicaoItem(montagemId: string, id: string) {
+    return request<ListaSubstituicaoItem>(`/montagens/${montagemId}/lista-substituicao/${id}`, { method: 'DELETE' });
   },
 };
