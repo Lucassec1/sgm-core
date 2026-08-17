@@ -2,10 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient, type ListFichasCasaisParams } from '../api-client';
 import type { FichaCasal } from '../types';
 
-export function useFichasCasais(params: ListFichasCasaisParams) {
+export function useFichasCasais(params: ListFichasCasaisParams, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['fichas-casais', params],
     queryFn: () => apiClient.listFichasCasais(params),
+    enabled: options?.enabled ?? true,
   });
 }
 

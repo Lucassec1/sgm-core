@@ -1,6 +1,29 @@
-import type { Ficha, FichaCasal, FichaCasalListResponse, FichaListResponse } from './types';
+import type {
+  Alocacao,
+  Equipe,
+  Ficha,
+  FichaCasal,
+  FichaCasalListResponse,
+  FichaListResponse,
+  Montagem,
+  MontagemListResponse,
+} from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+
+// 409 de repetição de equipe (R2) chega com um body estruturado (code, vezesServidas,
+// equipeNome) — o front precisa distinguir isso de um erro genérico pra oferecer o
+// Alert Dialog de confirmação em vez de só mostrar a mensagem.
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public body: unknown,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
@@ -10,7 +33,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.message ?? `Erro ${res.status} ao chamar ${path}`);
+    const message = (body?.message as string) ?? `Erro ${res.status} ao chamar ${path}`;
+    throw new ApiError(Array.isArray(message) ? message.join(', ') : message, res.status, body);
   }
 
   if (res.status === 204) return undefined as T;
@@ -30,6 +54,13 @@ export interface ListFichasCasaisParams {
   paroquiaId: string;
   nome?: string;
   situacao?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ListMontagensParams {
+  paroquiaId: string;
+  status?: string;
   page?: number;
   pageSize?: number;
 }
@@ -87,5 +118,59 @@ export const apiClient = {
 
   deleteFichaCasal(id: string) {
     return request<void>(`/fichas-casais/${id}`, { method: 'DELETE' });
+  },
+
+  listEquipes() {
+    return request<Equipe[]>('/equipes');
+  },
+
+  listMontagens(params: ListMontagensParams) {
+    return request<MontagemListResponse>(`/montagens?${buildQuery(params)}`);
+  },
+
+  getMontagem(id: string) {
+    return request<Montagem>(`/montagens/${id}`);
+  },
+
+  createMontagem(data: Partial<Montagem> & { usuario?: string }) {
+    return request<Montagem>('/montagens', { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  updateMontagem(id: string, data: Partial<Montagem> & { usuario?: string }) {
+    return request<Montagem>(`/montagens/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  },
+
+  listAlocacoes(montagemId: string) {
+    return request<Alocacao[]>(`/montagens/${montagemId}/alocacoes`);
+  },
+
+  createAlocacao(
+    montagemId: string,
+    data: {
+      vagaMontagemId: string;
+      tipoPessoa: 'JOVEM' | 'CASAL';
+      fichaId?: string;
+      fichaCasalId?: string;
+      confirmarRepeticao?: boolean;
+      usuario?: string;
+    },
+  ) {
+    return request<Alocacao>(`/montagens/${montagemId}/alocacoes`, { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  deleteAlocacao(montagemId: string, id: string) {
+    return request<Alocacao>(`/montagens/${montagemId}/alocacoes/${id}`, { method: 'DELETE' });
+  },
+
+  updateAlocacao(
+    montagemId: string,
+    id: string,
+    data: { status?: 'CONVIDADO' | 'ACEITO' | 'RECUSADO' | 'DESISTIU'; motivoRecusa?: string; usuario?: string },
+  ) {
+    return request<Alocacao>(`/montagens/${montagemId}/alocacoes/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  },
+
+  listCandidatosJovens(montagemId: string, vagaMontagemId: string) {
+    return request<Ficha[]>(`/montagens/${montagemId}/candidatos-jovens?${buildQuery({ vagaMontagemId })}`);
   },
 };
