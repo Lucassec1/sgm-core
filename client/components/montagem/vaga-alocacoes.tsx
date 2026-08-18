@@ -103,6 +103,8 @@ export function VagaAlocacoes({
             <AlocarPessoaCombobox
               montagemId={montagemId}
               vagaMontagemId={vaga.id}
+              equipeId={vaga.equipeId}
+              ehCoordenacao={vaga.cargo.ehCoordenacao}
               tipoPessoa="JOVEM"
               label="Adicionar jovem"
               idsJaAlocados={idsJaAlocados}
@@ -114,6 +116,8 @@ export function VagaAlocacoes({
             <AlocarPessoaCombobox
               montagemId={montagemId}
               vagaMontagemId={vaga.id}
+              equipeId={vaga.equipeId}
+              ehCoordenacao={vaga.cargo.ehCoordenacao}
               tipoPessoa="CASAL"
               label="Adicionar casal"
               idsJaAlocados={idsJaAlocados}

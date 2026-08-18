@@ -186,6 +186,11 @@ export interface HistoricoEquipeItem {
   };
 }
 
+export interface CoordenadoresSugeridos {
+  grupoA: { fichas: Ficha[]; fichasCasais: FichaCasal[] };
+  grupoB: { fichas: Ficha[]; fichasCasais: FichaCasal[] };
+}
+
 export interface ListaSubstituicaoItem {
   id: string;
   montagemId: string;
