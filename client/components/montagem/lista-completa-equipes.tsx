@@ -20,6 +20,7 @@ export function ListaCompletaEquipes({
   todasVagas,
   todasAlocacoes,
   encontroAnterior,
+  readOnly = false,
 }: {
   montagemId: string;
   gruposPorEquipe: VagaMontagem[][];
@@ -27,6 +28,7 @@ export function ListaCompletaEquipes({
   todasVagas: VagaMontagem[];
   todasAlocacoes: Alocacao[];
   encontroAnterior: number;
+  readOnly?: boolean;
 }) {
   const [busca, setBusca] = useState('');
   const buscaNormalizada = busca.trim().toLowerCase();
@@ -77,6 +79,7 @@ export function ListaCompletaEquipes({
                     todasVagas={todasVagas}
                     todasAlocacoes={todasAlocacoes}
                     encontroAnterior={encontroAnterior}
+                    readOnly={readOnly}
                   />
                 ))}
               </div>

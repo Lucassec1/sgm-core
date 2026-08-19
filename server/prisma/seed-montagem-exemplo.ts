@@ -12,6 +12,7 @@ export async function seedMontagemExemplo(prisma: PrismaClient, paroquiaId: stri
   const idsAntigas = antigas.map((m) => m.id);
   if (idsAntigas.length) {
     await prisma.logAtividade.deleteMany({ where: { montagemId: { in: idsAntigas } } });
+    await prisma.listaSubstituicao.deleteMany({ where: { montagemId: { in: idsAntigas } } });
     await prisma.alocacao.deleteMany({ where: { vagaMontagem: { montagemId: { in: idsAntigas } } } });
     await prisma.vagaMontagem.deleteMany({ where: { montagemId: { in: idsAntigas } } });
     await prisma.montagem.deleteMany({ where: { id: { in: idsAntigas } } });

@@ -41,6 +41,17 @@ export function useCreateMontagem() {
   });
 }
 
+export function useUpdateMontagem(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Montagem> & { usuario?: string }) => apiClient.updateMontagem(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['montagens'] });
+      queryClient.invalidateQueries({ queryKey: ['montagens', id] });
+    },
+  });
+}
+
 export function useCandidatosJovens(montagemId: string | undefined, vagaMontagemId: string | undefined) {
   return useQuery({
     queryKey: ['montagens', montagemId, 'candidatos-jovens', vagaMontagemId],
