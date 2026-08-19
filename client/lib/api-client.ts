@@ -1,5 +1,6 @@
 import type {
   Alocacao,
+  CoordenadoresSugeridos,
   Equipe,
   Ficha,
   FichaCasal,
@@ -190,6 +191,10 @@ export const apiClient = {
 
   listCandidatosJovens(montagemId: string, vagaMontagemId?: string) {
     return request<Ficha[]>(`/montagens/${montagemId}/candidatos-jovens?${buildQuery({ vagaMontagemId })}`);
+  },
+
+  coordenadoresSugeridos(montagemId: string, equipeId: string) {
+    return request<CoordenadoresSugeridos>(`/montagens/${montagemId}/equipes/${equipeId}/coordenadores-sugeridos`);
   },
 
   listListaSubstituicao(montagemId: string) {

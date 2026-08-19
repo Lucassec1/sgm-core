@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlocacoes, useMontagem } from '@/lib/hooks/use-montagens';
 import { EquipeCard } from '@/components/montagem/equipe-card';
 import { EquipeDrawer } from '@/components/montagem/equipe-drawer';
+import { FinalizarMontagemButton } from '@/components/montagem/finalizar-montagem-button';
 import { ListaCompletaEquipes } from '@/components/montagem/lista-completa-equipes';
 import { ListaSubstituicaoSection } from '@/components/montagem/lista-substituicao-section';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
@@ -55,9 +56,17 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
             {montagem.padroeiro && ` · ${montagem.padroeiro}`}
           </p>
         </div>
-        <Badge variant={montagem.status === 'EM_ANDAMENTO' ? 'default' : 'outline'}>
-          {montagem.status === 'EM_ANDAMENTO' ? 'Em andamento' : 'Finalizada'}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={montagem.status === 'EM_ANDAMENTO' ? 'default' : 'outline'}>
+            {montagem.status === 'EM_ANDAMENTO' ? 'Em andamento' : 'Finalizada'}
+          </Badge>
+          <FinalizarMontagemButton
+            montagemId={id}
+            status={montagem.status}
+            vagas={montagem.vagas}
+            alocacoes={alocacoes ?? []}
+          />
+        </div>
       </div>
 
       <Tabs defaultValue="equipes">
@@ -94,6 +103,7 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
             todasVagas={montagem.vagas}
             todasAlocacoes={alocacoes ?? []}
             encontroAnterior={montagem.numeroEncontro - 1}
+            readOnly={montagem.status === 'FINALIZADA'}
           />
         </TabsContent>
 
@@ -111,6 +121,7 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
           todasVagas={montagem.vagas}
           todasAlocacoes={alocacoes ?? []}
           encontroAnterior={montagem.numeroEncontro - 1}
+          readOnly={montagem.status === 'FINALIZADA'}
           open={!!equipeSelecionadaId}
           onOpenChange={(open) => !open && setEquipeSelecionadaId(null)}
         />

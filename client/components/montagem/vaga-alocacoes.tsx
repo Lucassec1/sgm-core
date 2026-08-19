@@ -26,6 +26,7 @@ export function VagaAlocacoes({
   todasVagas,
   todasAlocacoes,
   encontroAnterior,
+  readOnly = false,
 }: {
   montagemId: string;
   vaga: VagaMontagem;
@@ -33,6 +34,7 @@ export function VagaAlocacoes({
   todasVagas: VagaMontagem[];
   todasAlocacoes: Alocacao[];
   encontroAnterior: number;
+  readOnly?: boolean;
 }) {
   const deleteAlocacao = useDeleteAlocacao(montagemId);
 
@@ -85,11 +87,15 @@ export function VagaAlocacoes({
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <AlocacaoStatusBadge status={alocacao.status} />
-                  <AlocacaoRowActions montagemId={montagemId} alocacao={alocacao} />
-                  {alocacao.status === 'ACEITO' && <AlocacaoAvaliacaoPopover montagemId={montagemId} alocacao={alocacao} />}
-                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => remover(alocacao.id)} aria-label="Remover alocação">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  {!readOnly && (
+                    <>
+                      <AlocacaoRowActions montagemId={montagemId} alocacao={alocacao} />
+                      {alocacao.status === 'ACEITO' && <AlocacaoAvaliacaoPopover montagemId={montagemId} alocacao={alocacao} />}
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => remover(alocacao.id)} aria-label="Remover alocação">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
+                  )}
                 </div>
               </li>
             );
@@ -97,12 +103,14 @@ export function VagaAlocacoes({
         </ul>
       )}
 
-      {!cheia && (
+      {!cheia && !readOnly && (
         <div className="flex gap-2">
           {precisaJovem && (
             <AlocarPessoaCombobox
               montagemId={montagemId}
               vagaMontagemId={vaga.id}
+              equipeId={vaga.equipeId}
+              ehCoordenacao={vaga.cargo.ehCoordenacao}
               tipoPessoa="JOVEM"
               label="Adicionar jovem"
               idsJaAlocados={idsJaAlocados}
@@ -114,6 +122,8 @@ export function VagaAlocacoes({
             <AlocarPessoaCombobox
               montagemId={montagemId}
               vagaMontagemId={vaga.id}
+              equipeId={vaga.equipeId}
+              ehCoordenacao={vaga.cargo.ehCoordenacao}
               tipoPessoa="CASAL"
               label="Adicionar casal"
               idsJaAlocados={idsJaAlocados}

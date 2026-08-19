@@ -41,11 +41,33 @@ export function useCreateMontagem() {
   });
 }
 
+export function useUpdateMontagem(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Montagem> & { usuario?: string }) => apiClient.updateMontagem(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['montagens'] });
+      queryClient.invalidateQueries({ queryKey: ['montagens', id] });
+    },
+  });
+}
+
 export function useCandidatosJovens(montagemId: string | undefined, vagaMontagemId: string | undefined) {
   return useQuery({
     queryKey: ['montagens', montagemId, 'candidatos-jovens', vagaMontagemId],
     queryFn: () => apiClient.listCandidatosJovens(montagemId as string, vagaMontagemId as string),
     enabled: !!montagemId && !!vagaMontagemId,
+  });
+}
+
+// R3 — Grupo A (já serviu como equipista naquela equipe) + Grupo B (já foi Equipe
+// Dirigente/Comando Geral). Usado pra restringir a busca em vagas de Coordenação, já que
+// quem não se encaixa em nenhum dos dois grupos nem aparece como opção (bloqueio, não aviso).
+export function useCoordenadoresSugeridos(montagemId: string | undefined, equipeId: string | undefined) {
+  return useQuery({
+    queryKey: ['montagens', montagemId, 'coordenadores-sugeridos', equipeId],
+    queryFn: () => apiClient.coordenadoresSugeridos(montagemId as string, equipeId as string),
+    enabled: !!montagemId && !!equipeId,
   });
 }
 

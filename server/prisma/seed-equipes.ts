@@ -4,10 +4,10 @@ import { PrismaClient } from '@prisma/client';
 // passados pelo Lucas (composição de coordenação/apoio/componentes por equipe). Ver
 // docs/regras-imutaveis.md (R4, R6) e docs/requisitos.md (seção 3).
 //
-// Eq. dos Círculos é sempre a primeira a ser convidada (R4) — ordem 2, logo depois do
+// Equipe dos Círculos é sempre a primeira a ser convidada (R4) — ordem 2, logo depois do
 // Comando Geral (que cuida das outras 15 equipes na prática, por isso vem primeiro).
 //
-// Eq. da Visitação: coordenação é fixa (1 casal), mas o cargo "Componentes" tem
+// Equipe da Visitação: coordenação é fixa (1 casal), mas o cargo "Componentes" tem
 // quantidadeDinamica=true — sua quantidade real de casais é calculada na criação da
 // Montagem, proporcional a numeroJovensVivenciando (~1 casal para cada 3 jovens, R6),
 // não um número fixo de catálogo.
@@ -46,7 +46,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. dos Círculos',
+    nome: 'Equipe dos Círculos',
     slug: 'circulos',
     ordem: 2,
     ehCirculos: true,
@@ -57,7 +57,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. Espiritualizadora',
+    nome: 'Equipe Espiritualizadora',
     slug: 'espiritualizadora',
     ordem: 3,
     cargos: [
@@ -66,7 +66,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. da Animação',
+    nome: 'Equipe da Animação',
     slug: 'animacao',
     ordem: 4,
     cargos: [
@@ -76,7 +76,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. do Canto',
+    nome: 'Equipe do Canto',
     slug: 'canto',
     ordem: 5,
     cargos: [
@@ -86,7 +86,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. da Cozinha',
+    nome: 'Equipe da Cozinha',
     slug: 'cozinha',
     ordem: 6,
     cargos: [
@@ -96,7 +96,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. do Estacionamento',
+    nome: 'Equipe do Estacionamento',
     slug: 'estacionamento',
     ordem: 7,
     cargos: [
@@ -106,7 +106,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. da Faxina',
+    nome: 'Equipe da Faxina',
     slug: 'faxina',
     ordem: 8,
     cargos: [
@@ -116,7 +116,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. da Gráfica',
+    nome: 'Equipe da Gráfica',
     slug: 'grafica',
     ordem: 9,
     cargos: [
@@ -126,7 +126,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. do Lanche',
+    nome: 'Equipe do Lanche',
     slug: 'lanche',
     ordem: 10,
     cargos: [
@@ -136,7 +136,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. da Liturgia e Vigília',
+    nome: 'Equipe da Liturgia e Vigília',
     slug: 'liturgia-e-vigilia',
     ordem: 11,
     cargos: [
@@ -146,7 +146,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. do Minimercado',
+    nome: 'Equipe do Minimercado',
     slug: 'minimercado',
     ordem: 12,
     cargos: [
@@ -156,7 +156,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. do Prover',
+    nome: 'Equipe do Prover',
     slug: 'prover',
     ordem: 13,
     cargos: [
@@ -165,7 +165,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. da Sala',
+    nome: 'Equipe da Sala',
     slug: 'sala',
     ordem: 14,
     cargos: [
@@ -179,7 +179,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. da Vigília Paroquial',
+    nome: 'Equipe da Vigília Paroquial',
     slug: 'vigilia-paroquial',
     ordem: 15,
     cargos: [
@@ -191,7 +191,7 @@ export const EQUIPES: EquipeSeed[] = [
     ],
   },
   {
-    nome: 'Eq. da Visitação',
+    nome: 'Equipe da Visitação',
     slug: 'visitacao',
     ordem: 16,
     repeticaoLimiteFlexivel: true,

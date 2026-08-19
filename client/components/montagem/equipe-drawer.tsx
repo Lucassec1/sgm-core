@@ -26,6 +26,7 @@ export function EquipeDrawer({
   todasVagas,
   todasAlocacoes,
   encontroAnterior,
+  readOnly = false,
   open,
   onOpenChange,
 }: {
@@ -36,6 +37,7 @@ export function EquipeDrawer({
   todasVagas: VagaMontagem[];
   todasAlocacoes: Alocacao[];
   encontroAnterior: number;
+  readOnly?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -66,7 +68,7 @@ export function EquipeDrawer({
         <SheetHeader>
           <div className="flex items-center justify-between gap-2">
             <SheetTitle>{equipe?.nome}</SheetTitle>
-            {emRascunho.length > 0 && (
+            {!readOnly && emRascunho.length > 0 && (
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -96,6 +98,7 @@ export function EquipeDrawer({
                 todasVagas={todasVagas}
                 todasAlocacoes={todasAlocacoes}
                 encontroAnterior={encontroAnterior}
+                readOnly={readOnly}
               />
               <Separator className="mt-4" />
             </div>

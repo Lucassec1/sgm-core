@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ApiError } from '@/lib/api-client';
 import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
-import { useCandidatosJovens, useCreateAlocacao, useDeleteAlocacao } from '@/lib/hooks/use-montagens';
+import { useCandidatosJovens, useCoordenadoresSugeridos, useCreateAlocacao, useDeleteAlocacao } from '@/lib/hooks/use-montagens';
 import { useFichasCasais } from '@/lib/hooks/use-fichas-casais';
 import type { Alocacao, StatusConvite, VagaMontagem } from '@/lib/types';
 
@@ -49,11 +49,15 @@ function statusParaCriar(status?: StatusConvite) {
 //   (preservando o status), remove da antiga, e ainda avisa por Toast com Desfazer.
 // - R2 (repetição de equipe) chega como 409 estruturado e vira um Alert Dialog de confirmação
 //   consciente — essa sim é uma regra imutável, exige decisão explícita.
-// - R1/R3 (bloqueio real) e outros erros chegam como 403/outros e só avisam por toast.
+// - R1/R3 (bloqueio real) e outros erros chegam como 403/outros e só avisam por toast. Pra
+//   vaga de Coordenação, a busca já mostra só quem pode coordenar (Grupo A/B do R3) — não dá
+//   pra escolher alguém que a regra vai barrar de qualquer jeito.
 // - Sugestões priorizam quem ainda não está em nenhuma equipe desse encontro.
 export function AlocarPessoaCombobox({
   montagemId,
   vagaMontagemId,
+  equipeId,
+  ehCoordenacao,
   tipoPessoa,
   label,
   idsJaAlocados,
@@ -62,6 +66,8 @@ export function AlocarPessoaCombobox({
 }: {
   montagemId: string;
   vagaMontagemId: string;
+  equipeId: string;
+  ehCoordenacao: boolean;
   tipoPessoa: 'JOVEM' | 'CASAL';
   label: string;
   idsJaAlocados: Set<string>;
@@ -74,11 +80,15 @@ export function AlocarPessoaCombobox({
 
   const createAlocacao = useCreateAlocacao(montagemId);
   const deleteAlocacao = useDeleteAlocacao(montagemId);
-  const candidatosJovens = useCandidatosJovens(montagemId, tipoPessoa === 'JOVEM' ? vagaMontagemId : undefined);
+  const candidatosJovens = useCandidatosJovens(
+    montagemId,
+    tipoPessoa === 'JOVEM' && !ehCoordenacao ? vagaMontagemId : undefined,
+  );
   const candidatosCasais = useFichasCasais(
     { paroquiaId: PAROQUIA_ID_PROVISORIA, situacao: 'ATIVA', pageSize: 200 },
-    { enabled: tipoPessoa === 'CASAL' },
+    { enabled: tipoPessoa === 'CASAL' && !ehCoordenacao },
   );
+  const coordenadores = useCoordenadoresSugeridos(montagemId, ehCoordenacao ? equipeId : undefined);
 
   function alocacaoAtualDaPessoa(pessoaId: string) {
     return todasAlocacoes.find(
@@ -89,18 +99,37 @@ export function AlocarPessoaCombobox({
     );
   }
 
+  // Vaga de Coordenação: só Grupo A (já serviu nessa equipe) / Grupo B (já foi Equipe
+  // Dirigente/Comando Geral) aparecem — R3 é bloqueio real, não vale oferecer quem a regra
+  // vai barrar de qualquer jeito. Fora disso, lista normal de candidatos da vaga.
+  const opcoesBase = ehCoordenacao
+    ? tipoPessoa === 'JOVEM'
+      ? [
+          ...(coordenadores.data?.grupoA.fichas ?? []).map((f) => ({ id: f.id, nome: f.nomeCompleto, grupo: 'A' as const })),
+          ...(coordenadores.data?.grupoB.fichas ?? []).map((f) => ({ id: f.id, nome: f.nomeCompleto, grupo: 'B' as const })),
+        ]
+      : [
+          ...(coordenadores.data?.grupoA.fichasCasais ?? []).map((c) => ({
+            id: c.id,
+            nome: `${c.nomeEle} e ${c.nomeEla}`,
+            grupo: 'A' as const,
+          })),
+          ...(coordenadores.data?.grupoB.fichasCasais ?? []).map((c) => ({
+            id: c.id,
+            nome: `${c.nomeEle} e ${c.nomeEla}`,
+            grupo: 'B' as const,
+          })),
+        ]
+    : tipoPessoa === 'JOVEM'
+      ? (candidatosJovens.data ?? []).map((f) => ({ id: f.id, nome: f.nomeCompleto, grupo: undefined }))
+      : (candidatosCasais.data?.items ?? []).map((c) => ({ id: c.id, nome: `${c.nomeEle} e ${c.nomeEla}`, grupo: undefined }));
+
   // Quem ainda não está em nenhuma equipe desse encontro aparece primeiro na lista — é
   // quem mais precisa de vaga; ordenação por prioridade (R5) e busca por texto continuam
   // valendo dentro de cada grupo (sort é estável).
-  const opcoes = (
-    tipoPessoa === 'JOVEM'
-      ? (candidatosJovens.data ?? [])
-          .filter((f) => !idsJaAlocados.has(f.id))
-          .map((f) => ({ id: f.id, nome: f.nomeCompleto }))
-      : (candidatosCasais.data?.items ?? [])
-          .filter((c) => !idsJaAlocados.has(c.id))
-          .map((c) => ({ id: c.id, nome: `${c.nomeEle} e ${c.nomeEla}` }))
-  ).sort((a, b) => Number(!!alocacaoAtualDaPessoa(a.id)) - Number(!!alocacaoAtualDaPessoa(b.id)));
+  const opcoes = opcoesBase
+    .filter((p, i, arr) => !idsJaAlocados.has(p.id) && arr.findIndex((o) => o.id === p.id) === i)
+    .sort((a, b) => Number(!!alocacaoAtualDaPessoa(a.id)) - Number(!!alocacaoAtualDaPessoa(b.id)));
 
   function nomeEquipeDaVaga(vId: string) {
     return todasVagas.find((v) => v.id === vId)?.equipe.nome ?? 'outra equipe';
@@ -181,7 +210,11 @@ export function AlocarPessoaCombobox({
           <Command>
             <CommandInput placeholder="Buscar por nome..." />
             <CommandList className="max-h-[360px]">
-              <CommandEmpty>Ninguém encontrado.</CommandEmpty>
+              <CommandEmpty>
+                {ehCoordenacao
+                  ? 'Ninguém pode coordenar essa equipe ainda (precisa já ter servido aqui ou sido Equipe Dirigente/Comando Geral).'
+                  : 'Ninguém encontrado.'}
+              </CommandEmpty>
               <CommandGroup>
                 {opcoes.map((pessoa) => {
                   const jaAlocadaEm = alocacaoAtualDaPessoa(pessoa.id);
@@ -194,6 +227,9 @@ export function AlocarPessoaCombobox({
                     >
                       <div className="flex flex-col">
                         <span>{pessoa.nome}</span>
+                        {pessoa.grupo === 'B' && (
+                          <span className="text-xs text-muted-foreground">Já foi Equipe Dirigente/Comando Geral</span>
+                        )}
                         {jaAlocadaEm && (
                           <span className="text-xs text-muted-foreground">
                             Já em: {nomeEquipeDaVaga(jaAlocadaEm.vagaMontagemId)}
