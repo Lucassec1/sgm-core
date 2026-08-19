@@ -19,12 +19,14 @@
 
 ## R3 — Coordenação de equipe
 
-- Só pode coordenar uma equipe quem **já serviu como equipista naquela equipe específica**.
-- **Exceção:** quem já foi Equipe Dirigente ou Comando Geral pode coordenar **qualquer** equipe.
-- Na sugestão de coordenadores, o sistema separa dois grupos:
-  - **Grupo A** (destaque, origem preferencial): já serviu como equipista naquela equipe.
-  - **Grupo B** (alternativa): foi Equipe Dirigente/Comando Geral.
-- Quem não se encaixa em nenhum dos dois grupos **não aparece como opção de coordenador** — é bloqueio, não aviso.
+- **Coordenação por jovem:** só pode coordenar uma equipe quem **já serviu como equipista naquela equipe específica**.
+  - **Exceção:** quem já foi Equipe Dirigente ou Comando Geral pode coordenar **qualquer** equipe.
+  - Na sugestão de coordenadores, o sistema separa dois grupos:
+    - **Grupo A** (destaque, origem preferencial): já serviu como equipista naquela equipe.
+    - **Grupo B** (alternativa): foi Equipe Dirigente/Comando Geral.
+  - Quem não se encaixa em nenhum dos dois grupos **não aparece como opção de coordenador** — é bloqueio, não aviso.
+- **Coordenação por casal:** a regra acima (Grupo A/B) **não se aplica** — qualquer casal ativo pode coordenar qualquer equipe, sem precisar de histórico ali.
+  - **Exceção — Eq. da Visitação:** por ter muitos casais (proporção alta pra sustentar a demanda de vagas, ver R6), os coordenadores de lá tradicionalmente sempre vêm de quem já serviu na própria equipe. Por isso, só pra essa equipe, a coordenação por casal segue a mesma regra de Grupo A/B da coordenação por jovem (histórico na equipe OU Equipe Dirigente/Comando Geral).
 
 ## R4 — Prioridade da Eq. dos Círculos
 

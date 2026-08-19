@@ -180,9 +180,13 @@ model Equipe {
   ehCirculos Boolean @default(false)
 
   // R2: aviso de repetição nunca bloqueia nessa equipe, mesmo passando de 3x (só a Visitação).
-  repeticaoLimiteFlexivel    Boolean @default(false)
+  repeticaoLimiteFlexivel        Boolean @default(false)
   // R4: só false pra Círculos e Comando Geral — as outras 14 só convidam depois dos Círculos fechados.
-  bloqueiaConvitePosCirculos Boolean @default(true)
+  bloqueiaConvitePosCirculos     Boolean @default(true)
+  // R3, coordenação de CASAL: por padrão qualquer casal ativo pode coordenar qualquer equipe,
+  // sem precisar de histórico (diferente da coordenação por jovem, que sempre exige Grupo
+  // A/B). Só a Visitação exige — tem tantos casais que os coordenadores sempre vêm de lá.
+  coordenacaoCasalExigeHistorico Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

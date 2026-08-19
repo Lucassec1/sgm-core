@@ -100,6 +100,7 @@ export interface Equipe {
   ehCirculos: boolean;
   repeticaoLimiteFlexivel: boolean;
   bloqueiaConvitePosCirculos: boolean;
+  coordenacaoCasalExigeHistorico: boolean;
 }
 
 export interface Cargo {
