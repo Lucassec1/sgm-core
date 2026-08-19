@@ -4,6 +4,7 @@ import { use, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlocacoes, useMontagem } from '@/lib/hooks/use-montagens';
+import { EditarTamanhoEncontroDialog } from '@/components/montagem/editar-tamanho-encontro-dialog';
 import { EquipeCard } from '@/components/montagem/equipe-card';
 import { EquipeDrawer } from '@/components/montagem/equipe-drawer';
 import { FinalizarMontagemButton } from '@/components/montagem/finalizar-montagem-button';
@@ -53,13 +54,15 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
           <h1 className="text-lg font-semibold">{montagem.numeroEncontro}º Encontro</h1>
           <p className="text-sm text-muted-foreground">
             {new Date(montagem.data).toLocaleDateString('pt-BR')}
-            {montagem.padroeiro && ` · ${montagem.padroeiro}`}
+            {montagem.padroeiro && ` · ${montagem.padroeiro}`} · {montagem.numeroJovensVivenciando} jovens vivenciando
+            {montagem.ehImplantacao && ` (implantação${montagem.paroquiaAfilhadaNome ? ` — ${montagem.paroquiaAfilhadaNome}` : ''})`}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={montagem.status === 'EM_ANDAMENTO' ? 'default' : 'outline'}>
             {montagem.status === 'EM_ANDAMENTO' ? 'Em andamento' : 'Finalizada'}
           </Badge>
+          {montagem.status === 'EM_ANDAMENTO' && <EditarTamanhoEncontroDialog montagem={montagem} />}
           <FinalizarMontagemButton
             montagemId={id}
             status={montagem.status}

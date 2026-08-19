@@ -19,8 +19,6 @@ model Paroquia {
   fichas       Ficha[]
   fichasCasais FichaCasal[]
   montagens    Montagem[]
-
-  montagensSementeira Montagem[] @relation("Sementeira")
 }
 
 enum CorCirculo {
@@ -239,10 +237,15 @@ model Montagem {
   padroeiro         String?
   diretorEspiritual String?
 
-  ehSementeira               Boolean   @default(false)
-  paroquiaSementeiraId       String?
-  paroquiaSementeira         Paroquia? @relation("Sementeira", fields: [paroquiaSementeiraId], references: [id])
-  quantidadeFichasSementeira Int?
+  // Implantação: encontro que lança o Segue-me numa paróquia afilhada. Traz sempre 12
+  // jovens "sementeiras" da paróquia afilhada (somados aos jovens locais, até 60) e exige
+  // 4 casais da Visitação vindos de lá também — ver docs/regras-imutaveis.md, R6.
+  // quantidadeJovensSementeira e quantidadeCasaisAfilhada não são digitados pelo usuário:
+  // a Service preenche com os valores fixos (12 e 4) sempre que ehImplantacao = true.
+  ehImplantacao              Boolean @default(false)
+  paroquiaAfilhadaNome       String?
+  quantidadeJovensSementeira Int?
+  quantidadeCasaisAfilhada   Int?
 
   numeroJovensVivenciando Int
 

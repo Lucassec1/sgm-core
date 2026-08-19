@@ -42,8 +42,12 @@
 ## R6 — Tamanho e composição do encontro
 
 - O encontro conta com **233 pessoas** no total nas 16 equipes + Comando Geral, **mais o diretor espiritual** (que não é contabilizado dentro da soma das 16 equipes).
-- Número de jovens vivenciando: **mínimo 40, máximo 60**, ou **até 72 em caso de sementeira** — mas esse número **não precisa fechar exatamente** 60 ou 72 (ex.: pode dar 62), inclusive por causa de desistências de última hora.
-- **Eq. da Visitação — tamanho variável (não é uma tabela fixa de 42/50):** a proporção é de aproximadamente **1 casal para cada 3 jovens vivenciando**, com distribuição não uniforme quando o número não é múltiplo de 3 (ex.: para 40 jovens, ~14 casais — a maioria levando 3, alguns levando 2 ou 1). O sistema deve calcular esse número **dinamicamente** a partir do total de jovens vivenciando informado, não buscar em uma tabela fixa.
+- Número de jovens vivenciando **locais**: **mínimo 40, máximo 60** — não precisa fechar exatamente 60, inclusive por causa de desistências de última hora.
+- **Eq. da Visitação — tamanho variável (não é uma tabela fixa de 42/50):** a proporção é de aproximadamente **1 casal para cada 3 jovens vivenciando locais**, com distribuição não uniforme quando o número não é múltiplo de 3 (ex.: para 40 jovens, ~14 casais — a maioria levando 3, alguns levando 2 ou 1). O sistema deve calcular esse número **dinamicamente** a partir do total de jovens vivenciando informado, não buscar em uma tabela fixa.
+- **Implantação** — encontro que lança o Segue-me numa **paróquia afilhada**. Quando marcada:
+  - Soma-se **12 jovens "sementeira"** vindos da paróquia afilhada aos jovens locais (mínimo 40, máximo 60) — total do encontro entre 52 e 72 jovens. Esses 12 são fixos, não digitados livremente.
+  - A Eq. da Visitação ganha **4 casais fixos da paróquia afilhada**, somados ao cálculo proporcional de casais locais (que continua sendo ~1 casal para cada 3 jovens **locais**, sem contar os 12 sementeira). Ex.: 60 jovens locais + 12 sementeira = 72 total → 20 casais locais (60/3) + 4 afilhados = 24 casais no total da Visitação.
+  - O sistema deve permitir marcar/desmarcar Implantação numa Montagem a qualquer momento (não só na criação) e recalcular a Visitação de acordo, já que o número final de jovens vivenciando costuma só fechar depois que o encontro já foi montado.
 
 ## R7 — Escala e isolamento entre paróquias
 
