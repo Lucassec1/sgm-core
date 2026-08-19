@@ -66,8 +66,8 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
           <FinalizarMontagemButton
             montagemId={id}
             status={montagem.status}
-            vagas={montagem.vagas}
-            alocacoes={alocacoes ?? []}
+            gruposPorEquipe={gruposPorEquipe}
+            alocacoesPorVaga={alocacoesPorVaga}
           />
         </div>
       </div>
