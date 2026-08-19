@@ -31,6 +31,8 @@ type EquipeSeed = {
   bloqueiaConvitePosCirculos?: boolean;
   // R2: true só pra Visitação (aviso de repetição nunca bloqueia lá, mesmo passando de 3x).
   repeticaoLimiteFlexivel?: boolean;
+  // R3, coordenação de casal: true só pra Visitação (as demais não exigem histórico pra casal coordenar).
+  coordenacaoCasalExigeHistorico?: boolean;
   cargos: CargoSeed[];
 };
 
@@ -195,6 +197,7 @@ export const EQUIPES: EquipeSeed[] = [
     slug: 'visitacao',
     ordem: 16,
     repeticaoLimiteFlexivel: true,
+    coordenacaoCasalExigeHistorico: true,
     cargos: [
       { nome: 'Coordenação', ordem: 1, quantidadeCasais: 1, ehCoordenacao: true },
       { nome: 'Componentes', ordem: 2, quantidadeDinamica: true },
@@ -215,6 +218,7 @@ export async function seedEquipesECargos(prisma: PrismaClient) {
         ehCirculos: equipeSeed.ehCirculos ?? false,
         bloqueiaConvitePosCirculos: equipeSeed.bloqueiaConvitePosCirculos ?? true,
         repeticaoLimiteFlexivel: equipeSeed.repeticaoLimiteFlexivel ?? false,
+        coordenacaoCasalExigeHistorico: equipeSeed.coordenacaoCasalExigeHistorico ?? false,
       },
       create: {
         nome: equipeSeed.nome,
@@ -223,6 +227,7 @@ export async function seedEquipesECargos(prisma: PrismaClient) {
         ehCirculos: equipeSeed.ehCirculos ?? false,
         bloqueiaConvitePosCirculos: equipeSeed.bloqueiaConvitePosCirculos ?? true,
         repeticaoLimiteFlexivel: equipeSeed.repeticaoLimiteFlexivel ?? false,
+        coordenacaoCasalExigeHistorico: equipeSeed.coordenacaoCasalExigeHistorico ?? false,
       },
     });
     totalEquipes += 1;

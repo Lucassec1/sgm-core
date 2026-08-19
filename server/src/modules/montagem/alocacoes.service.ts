@@ -85,7 +85,9 @@ export class AlocacoesService {
   }
 
   // R3 — só coordena quem já serviu como equipista naquela equipe (Grupo A) ou já foi
-  // Equipe Dirigente/Comando Geral (Grupo B).
+  // Equipe Dirigente/Comando Geral (Grupo B). Vale sempre pra coordenação por jovem; pra
+  // coordenação por casal só vale nas equipes com coordenacaoCasalExigeHistorico=true (hoje
+  // só a Visitação — nas demais qualquer casal ativo pode coordenar sem histórico).
   private async verificarCoordenacao(
     equipe: Equipe,
     montagemId: string,
@@ -159,7 +161,9 @@ export class AlocacoesService {
 
     await this.verificarBloqueioRecusa(montagemId, dto.fichaId, dto.fichaCasalId);
     await this.verificarRepeticaoEquipe(vaga.equipe, montagemId, dto.fichaId, dto.fichaCasalId, dto.confirmarRepeticao);
-    if (vaga.cargo.ehCoordenacao) {
+    const exigeCoordenacao =
+      vaga.cargo.ehCoordenacao && (dto.tipoPessoa === 'JOVEM' || vaga.equipe.coordenacaoCasalExigeHistorico);
+    if (exigeCoordenacao) {
       await this.verificarCoordenacao(vaga.equipe, montagemId, dto.fichaId, dto.fichaCasalId);
     }
     if (dto.status === StatusConvite.CONVIDADO) {

@@ -100,6 +100,7 @@ export interface Equipe {
   ehCirculos: boolean;
   repeticaoLimiteFlexivel: boolean;
   bloqueiaConvitePosCirculos: boolean;
+  coordenacaoCasalExigeHistorico: boolean;
 }
 
 export interface Cargo {
@@ -133,9 +134,10 @@ export interface Montagem {
   data: string;
   padroeiro?: string | null;
   diretorEspiritual?: string | null;
-  ehSementeira: boolean;
-  paroquiaSementeiraId?: string | null;
-  quantidadeFichasSementeira?: number | null;
+  ehImplantacao: boolean;
+  paroquiaAfilhadaNome?: string | null;
+  quantidadeJovensSementeira?: number | null;
+  quantidadeCasaisAfilhada?: number | null;
   numeroJovensVivenciando: number;
   status: StatusMontagem;
   vagas: VagaMontagem[];

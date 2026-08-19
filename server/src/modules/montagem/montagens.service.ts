@@ -13,10 +13,21 @@ const VAGAS_INCLUDE = {
   },
 };
 
-// Quantidade de casais da Eq. da Visitação — proporcional aos jovens vivenciando
-// (~1 casal para cada 3 jovens, distribuição não uniforme quando não é múltiplo de 3).
-// Ver docs/regras-imutaveis.md, R6.
-function calcularCasaisVisitacao(numeroJovensVivenciando: number): number {
+// Implantação: encontro que lança o Segue-me numa paróquia afilhada. Traz sempre 12 jovens
+// "sementeiras" de lá (somados aos jovens locais) e exige 4 casais afilhados na Visitação —
+// números fixos, não digitados pelo usuário. Ver docs/regras-imutaveis.md, R6.
+const JOVENS_SEMENTEIRA_IMPLANTACAO = 12;
+const CASAIS_AFILHADA_IMPLANTACAO = 4;
+
+// Quantidade de casais da Eq. da Visitação — proporcional aos jovens vivenciando LOCAIS
+// (~1 casal para cada 3 jovens, distribuição não uniforme quando não é múltiplo de 3). Numa
+// implantação, os 12 jovens sementeira não entram nessa conta (eles não são "nossos"), mas
+// somam-se 4 casais fixos da paróquia afilhada. Ver docs/regras-imutaveis.md, R6.
+function calcularCasaisVisitacao(numeroJovensVivenciando: number, ehImplantacao: boolean): number {
+  if (ehImplantacao) {
+    const jovensLocais = numeroJovensVivenciando - JOVENS_SEMENTEIRA_IMPLANTACAO;
+    return Math.ceil(jovensLocais / 3) + CASAIS_AFILHADA_IMPLANTACAO;
+  }
   return Math.ceil(numeroJovensVivenciando / 3);
 }
 
@@ -28,11 +39,13 @@ export class MontagensService {
   ) {}
 
   async create(dto: CreateMontagemDto) {
-    // R6 — mínimo 40, máximo 60, ou até 72 em caso de sementeira.
-    const maximo = dto.ehSementeira ? 72 : 60;
-    if (dto.numeroJovensVivenciando < 40 || dto.numeroJovensVivenciando > maximo) {
+    const ehImplantacao = dto.ehImplantacao ?? false;
+    // R6 — mínimo 40, máximo 60 jovens locais; numa implantação somam-se os 12 sementeira.
+    const minimo = 40 + (ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : 0);
+    const maximo = 60 + (ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : 0);
+    if (dto.numeroJovensVivenciando < minimo || dto.numeroJovensVivenciando > maximo) {
       throw new BadRequestException(
-        `numeroJovensVivenciando deve estar entre 40 e ${maximo}${dto.ehSementeira ? ' (sementeira)' : ''}`,
+        `numeroJovensVivenciando deve estar entre ${minimo} e ${maximo}${ehImplantacao ? ' (implantação: 40-60 locais + 12 sementeira)' : ''}`,
       );
     }
 
@@ -52,9 +65,10 @@ export class MontagensService {
         data: new Date(dto.data),
         padroeiro: dto.padroeiro,
         diretorEspiritual: dto.diretorEspiritual,
-        ehSementeira: dto.ehSementeira ?? false,
-        paroquiaSementeiraId: dto.paroquiaSementeiraId,
-        quantidadeFichasSementeira: dto.quantidadeFichasSementeira,
+        ehImplantacao,
+        paroquiaAfilhadaNome: dto.paroquiaAfilhadaNome,
+        quantidadeJovensSementeira: ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : undefined,
+        quantidadeCasaisAfilhada: ehImplantacao ? CASAIS_AFILHADA_IMPLANTACAO : undefined,
         numeroJovensVivenciando: dto.numeroJovensVivenciando,
       },
     });
@@ -65,7 +79,7 @@ export class MontagensService {
         equipeId: cargo.equipeId,
         cargoId: cargo.id,
         quantidadeCasais: cargo.quantidadeDinamica
-          ? calcularCasaisVisitacao(dto.numeroJovensVivenciando)
+          ? calcularCasaisVisitacao(dto.numeroJovensVivenciando, ehImplantacao)
           : cargo.quantidadeCasais,
         quantidadeRapazes: cargo.quantidadeRapazes,
         quantidadeMocas: cargo.quantidadeMocas,
@@ -113,11 +127,45 @@ export class MontagensService {
     const anterior = await this.findOne(id);
     const { usuario, ...campos } = dto;
 
+    // Recalcula a vaga dinâmica (Componentes da Visitação, R6) sempre que o nº de jovens
+    // vivenciando ou o flag de implantação mudarem — o encontro é montado aos poucos, então
+    // o número final de jovens só fecha depois de criada a Montagem (ver docs/ux-e-fluxos.md).
+    const numeroJovensVivenciando = dto.numeroJovensVivenciando ?? anterior.numeroJovensVivenciando;
+    const ehImplantacao = dto.ehImplantacao ?? anterior.ehImplantacao;
+    const precisaRecalcular = dto.numeroJovensVivenciando !== undefined || dto.ehImplantacao !== undefined;
+
+    if (precisaRecalcular) {
+      const minimo = 40 + (ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : 0);
+      const maximo = 60 + (ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : 0);
+      if (numeroJovensVivenciando < minimo || numeroJovensVivenciando > maximo) {
+        throw new BadRequestException(
+          `numeroJovensVivenciando deve estar entre ${minimo} e ${maximo}${ehImplantacao ? ' (implantação: 40-60 locais + 12 sementeira)' : ''}`,
+        );
+      }
+    }
+
     const montagem = await this.prisma.montagem.update({
       where: { id },
-      data: { ...campos, ...(dto.data && { data: new Date(dto.data) }) },
+      data: {
+        ...campos,
+        ...(dto.data && { data: new Date(dto.data) }),
+        ...(dto.ehImplantacao !== undefined && {
+          quantidadeJovensSementeira: dto.ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : null,
+          quantidadeCasaisAfilhada: dto.ehImplantacao ? CASAIS_AFILHADA_IMPLANTACAO : null,
+        }),
+      },
       include: VAGAS_INCLUDE,
     });
+
+    if (precisaRecalcular) {
+      const vagaDinamica = montagem.vagas.find((v) => v.cargo.quantidadeDinamica);
+      if (vagaDinamica) {
+        await this.prisma.vagaMontagem.update({
+          where: { id: vagaDinamica.id },
+          data: { quantidadeCasais: calcularCasaisVisitacao(numeroJovensVivenciando, ehImplantacao) },
+        });
+      }
+    }
 
     if (dto.status && dto.status !== anterior.status) {
       await this.logAtividade.registrar(id, usuario, 'MUDOU_STATUS', `${anterior.status} -> ${dto.status}`);
@@ -125,7 +173,7 @@ export class MontagensService {
       await this.logAtividade.registrar(id, usuario, 'ATUALIZOU_MONTAGEM');
     }
 
-    return montagem;
+    return precisaRecalcular ? this.findOne(id) : montagem;
   }
 
   // R3 — sugestão de coordenadores: Grupo A (já serviu como equipista naquela equipe) e

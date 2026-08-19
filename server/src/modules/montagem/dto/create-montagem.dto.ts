@@ -1,13 +1,4 @@
-import {
-  IsBoolean,
-  IsDateString,
-  IsInt,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Min,
-} from 'class-validator';
-import { EmptyToUndefined } from '../../../common/transformers/empty-to-undefined.transformer';
+import { IsBoolean, IsDateString, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 // TODO: paroquiaId deve vir do usuário autenticado (guard), não do body —
 // provisório até o módulo Auth existir (ver docs/arquitetura.md, seção 1).
@@ -22,9 +13,10 @@ export class CreateMontagemDto {
   @IsOptional() @IsString() padroeiro?: string;
   @IsOptional() @IsString() diretorEspiritual?: string;
 
-  @IsOptional() @IsBoolean() ehSementeira?: boolean;
-  @EmptyToUndefined() @IsOptional() @IsUUID() paroquiaSementeiraId?: string;
-  @IsOptional() @IsInt() @Min(1) quantidadeFichasSementeira?: number;
+  // Implantação: quantidadeJovensSementeira (12) e quantidadeCasaisAfilhada (4) NÃO vêm do
+  // body — a Service preenche com os valores fixos quando ehImplantacao = true (ver R6).
+  @IsOptional() @IsBoolean() ehImplantacao?: boolean;
+  @IsOptional() @IsString() paroquiaAfilhadaNome?: string;
 
   @IsInt()
   @Min(1)

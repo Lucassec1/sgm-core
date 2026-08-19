@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRouter } from 'next/navigation';
+import { Pencil } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -19,20 +20,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
-import { useCreateMontagem } from '@/lib/hooks/use-montagens';
+import { useUpdateMontagem } from '@/lib/hooks/use-montagens';
+import type { Montagem } from '@/lib/types';
 
-// Campos seguem docs/ux-e-fluxos.md (1.2, "Dados do encontro") e a validação de tamanho do
-// encontro é a mesma da Service (R6 — ver docs/regras-imutaveis.md): 40 a 60 jovens
-// vivenciando locais, ou 52 a 72 (soma dos 12 sementeira fixos) numa implantação.
-const montagemSchema = z
+const schema = z
   .object({
-    data: z.string().min(1, 'Informe a data do encontro'),
-    padroeiro: z.string().optional(),
-    diretorEspiritual: z.string().optional(),
+    numeroJovensVivenciando: z.coerce.number().int(),
     ehImplantacao: z.boolean().optional(),
     paroquiaAfilhadaNome: z.string().optional(),
-    numeroJovensVivenciando: z.coerce.number().int(),
   })
   .refine(
     (data) => {
@@ -46,12 +41,14 @@ const montagemSchema = z
     },
   );
 
-type MontagemFormValues = z.infer<typeof montagemSchema>;
+type FormValues = z.infer<typeof schema>;
 
-export function NovaMontagemDialog() {
+// O nº de jovens vivenciando fecha aos poucos, à medida que as fichas vão sendo cadastradas
+// (a Montagem já é aberta com uma estimativa) — esse ajuste recalcula a Eq. da Visitação
+// automaticamente (ver docs/regras-imutaveis.md, R6).
+export function EditarTamanhoEncontroDialog({ montagem }: { montagem: Montagem }) {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
-  const createMontagem = useCreateMontagem();
+  const updateMontagem = useUpdateMontagem(montagem.id);
 
   const {
     register,
@@ -60,40 +57,57 @@ export function NovaMontagemDialog() {
     setValue,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<MontagemFormValues>({
-    resolver: zodResolver(montagemSchema),
-    defaultValues: { ehImplantacao: false },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      numeroJovensVivenciando: montagem.numeroJovensVivenciando,
+      ehImplantacao: montagem.ehImplantacao,
+      paroquiaAfilhadaNome: montagem.paroquiaAfilhadaNome ?? '',
+    },
   });
-
-  const onSubmit = async (values: MontagemFormValues) => {
-    const montagem = await createMontagem.mutateAsync({ ...values, paroquiaId: PAROQUIA_ID_PROVISORIA });
-    setOpen(false);
-    reset();
-    router.push(`/montagem/${montagem.id}`);
-  };
 
   const ehImplantacao = watch('ehImplantacao');
 
+  const onSubmit = async (values: FormValues) => {
+    try {
+      await updateMontagem.mutateAsync(values);
+      toast.success('Encontro atualizado — Eq. da Visitação recalculada.');
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Não foi possível atualizar.');
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (v) {
+          reset({
+            numeroJovensVivenciando: montagem.numeroJovensVivenciando,
+            ehImplantacao: montagem.ehImplantacao,
+            paroquiaAfilhadaNome: montagem.paroquiaAfilhadaNome ?? '',
+          });
+        }
+      }}
+    >
       <DialogTrigger asChild>
-        <Button>Nova Montagem</Button>
+        <Button variant="outline" size="sm" className="gap-1">
+          <Pencil className="h-3.5 w-3.5" />
+          Ajustar tamanho
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Nova Montagem</DialogTitle>
+            <DialogTitle>Ajustar tamanho do encontro</DialogTitle>
             <DialogDescription>
-              O número do encontro é calculado automaticamente. Preencha os dados abaixo pra abrir o quadro das 16 equipes.
+              Atualiza o nº de jovens vivenciando e recalcula a quantidade de casais da Eq. da Visitação.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div>
-              <Label htmlFor="data">Data do encontro</Label>
-              <Input id="data" type="date" {...register('data')} />
-              {errors.data && <p className="text-xs text-red-600 mt-1">{errors.data.message}</p>}
-            </div>
+          <div className="space-y-4 py-4">
             <div>
               <Label htmlFor="numeroJovensVivenciando">Nº de jovens vivenciando</Label>
               <Input id="numeroJovensVivenciando" type="number" {...register('numeroJovensVivenciando')} />
@@ -104,15 +118,7 @@ export function NovaMontagemDialog() {
                 <p className="text-xs text-red-600 mt-1">{errors.numeroJovensVivenciando.message}</p>
               )}
             </div>
-            <div>
-              <Label htmlFor="padroeiro">Padroeiro</Label>
-              <Input id="padroeiro" {...register('padroeiro')} />
-            </div>
-            <div>
-              <Label htmlFor="diretorEspiritual">Diretor espiritual</Label>
-              <Input id="diretorEspiritual" {...register('diretorEspiritual')} />
-            </div>
-            <div className="col-span-2 flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Checkbox
                 id="ehImplantacao"
                 checked={ehImplantacao}
@@ -124,11 +130,10 @@ export function NovaMontagemDialog() {
             </div>
             {ehImplantacao && (
               <>
-                <div className="col-span-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                  Soma automaticamente 12 jovens sementeira da paróquia afilhada e 4 casais afilhados na Eq. da Visitação
-                  (fixo, não editável).
+                <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  Soma automaticamente 12 jovens sementeira e 4 casais afilhados na Eq. da Visitação (fixo).
                 </div>
-                <div className="col-span-2">
+                <div>
                   <Label htmlFor="paroquiaAfilhadaNome">Nome da paróquia afilhada</Label>
                   <Input id="paroquiaAfilhadaNome" {...register('paroquiaAfilhadaNome')} />
                 </div>
@@ -138,7 +143,7 @@ export function NovaMontagemDialog() {
 
           <DialogFooter>
             <Button type="submit" disabled={isSubmitting}>
-              Criar montagem
+              Salvar
             </Button>
           </DialogFooter>
         </form>

@@ -20,6 +20,7 @@ function equipeFake(overrides: Partial<Equipe> = {}): Equipe {
     ehCirculos: false,
     repeticaoLimiteFlexivel: false,
     bloqueiaConvitePosCirculos: true,
+    coordenacaoCasalExigeHistorico: false,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -203,6 +204,27 @@ describe('AlocacoesService', () => {
 
       await service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any);
       expect(prisma.alocacao.create).toHaveBeenCalled();
+    });
+
+    it('coordenação de CASAL numa equipe comum não exige histórico (não é Visitação)', async () => {
+      mockVaga(equipeFake({ id: 'animacao-id', coordenacaoCasalExigeHistorico: false }), cargoCoordenacao);
+      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
+
+      await service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'CASAL', fichaCasalId: 'casal-1' } as any);
+
+      expect(prisma.alocacao.create).toHaveBeenCalled();
+      expect(prisma.ficha.findUnique).not.toHaveBeenCalled();
+      expect(prisma.fichaCasal.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('coordenação de CASAL na Visitação exige histórico (Grupo A/B) igual à de jovem', async () => {
+      mockVaga(equipeFake({ slug: 'visitacao', coordenacaoCasalExigeHistorico: true }), cargoCoordenacao);
+      prisma.alocacao.count.mockResolvedValue(0);
+      prisma.fichaCasal.findUnique.mockResolvedValue({ id: 'casal-1', jaFoiEquipeDirigente: false });
+
+      await expect(
+        service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'CASAL', fichaCasalId: 'casal-1' } as any),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 

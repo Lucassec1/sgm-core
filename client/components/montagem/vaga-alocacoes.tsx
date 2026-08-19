@@ -123,7 +123,9 @@ export function VagaAlocacoes({
               montagemId={montagemId}
               vagaMontagemId={vaga.id}
               equipeId={vaga.equipeId}
-              ehCoordenacao={vaga.cargo.ehCoordenacao}
+              // R3 pra coordenação de casal só vale nas equipes marcadas (hoje só a
+              // Visitação) — nas demais qualquer casal ativo pode coordenar.
+              ehCoordenacao={vaga.cargo.ehCoordenacao && vaga.equipe.coordenacaoCasalExigeHistorico}
               tipoPessoa="CASAL"
               label="Adicionar casal"
               idsJaAlocados={idsJaAlocados}
