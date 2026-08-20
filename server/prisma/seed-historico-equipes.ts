@@ -1,9 +1,13 @@
 import { PrismaClient, StatusConvite, TipoPessoa } from '@prisma/client';
 
+const MAX_SERVICOS_POR_PESSOA = 3;
+
 // Massa de dados de HISTÓRICO: 3 encontros passados e finalizados, com alocações ACEITO
-// espalhadas pelas equipes — pra testar Histórico de Equipes (Ficha), avaliação
-// (pode coordenar/palestrar), R2 (repetição, inclusive até bater no limite de 3x) e R3
-// (Grupo A — quem já serviu numa equipe vira sugestão de coordenador nela).
+// espalhadas pelas equipes — pra testar Histórico de Equipes (Ficha), avaliação (pode
+// coordenar/palestrar), R2 (repetição) e R3 (Grupo A — quem já serviu numa equipe vira
+// sugestão de coordenador nela). Cada jovem/casal serve no máximo
+// MAX_SERVICOS_POR_PESSOA vezes no total (não em cada vaga) — histórico enxuto de
+// propósito, pra dar pra revisar pessoa por pessoa sem massa de dados demais.
 //
 // numeroEncontro negativo (-3, -2, -1) só pra não colidir com a montagem de exemplo
 // (numeroEncontro: 1, ver seed-montagem-exemplo.ts) — não representa numeração real.
@@ -32,9 +36,11 @@ export async function seedHistoricoEquipes(prisma: PrismaClient, paroquiaId: str
     throw new Error('seedHistoricoEquipes precisa de pelo menos 5 rapazes, 5 moças e 5 casais ATIVA.');
   }
 
+  // Cria os 3 encontros passados (com o catálogo inteiro de vagas cada um, igual a uma
+  // montagem de verdade) antes de decidir quem serviu onde.
   const DIAS_ATRAS = [400, 250, 100];
+  const montagens: { id: string }[] = [];
   let totalVagas = 0;
-  let totalAlocacoes = 0;
 
   for (let m = 0; m < DIAS_ATRAS.length; m++) {
     const numeroEncontro = -(DIAS_ATRAS.length - m); // -3, -2, -1 (do mais antigo pro mais recente)
@@ -52,6 +58,7 @@ export async function seedHistoricoEquipes(prisma: PrismaClient, paroquiaId: str
         numeroJovensVivenciando,
       },
     });
+    montagens.push(montagem);
 
     await prisma.vagaMontagem.createMany({
       data: cargos.map((cargo) => ({
@@ -63,71 +70,94 @@ export async function seedHistoricoEquipes(prisma: PrismaClient, paroquiaId: str
         quantidadeMocas: cargo.quantidadeMocas,
       })),
     });
-    const vagas = await prisma.vagaMontagem.findMany({ where: { montagemId: montagem.id }, include: { cargo: true } });
-    totalVagas += vagas.length;
-
-    type NovaAlocacao = {
-      vagaMontagemId: string;
-      tipoPessoa: TipoPessoa;
-      fichaId?: string;
-      fichaCasalId?: string;
-      status: StatusConvite;
-      podeCoordenar?: boolean;
-      podePalestrar?: boolean;
-    };
-    const alocacoes: NovaAlocacao[] = [];
-
-    vagas.forEach((vaga, vagaIdx) => {
-      // Vagas de Coordenação: mesmo índice em toda edição (sem deslocar por `m`) — a mesma
-      // pessoa "sempre" coordena aquela equipe nas 3 edições, virando Grupo A garantido pro
-      // R3 e batendo no limite de 3x do R2 pra dar pra testar o bloqueio.
-      // Vagas normais: desloca por `m` pra espalhar entre gente diferente a cada edição.
-      const deslocamento = vaga.cargo.ehCoordenacao ? 0 : m * 7;
-
-      for (let i = 0; i < vaga.quantidadeRapazes; i++) {
-        const idx = (vagaIdx + deslocamento + i) % fichasRapazes.length;
-        alocacoes.push({
-          vagaMontagemId: vaga.id,
-          tipoPessoa: 'JOVEM',
-          fichaId: fichasRapazes[idx].id,
-          status: StatusConvite.ACEITO,
-          podeCoordenar: vaga.cargo.ehCoordenacao || undefined,
-        });
-      }
-      for (let i = 0; i < vaga.quantidadeMocas; i++) {
-        const idx = (vagaIdx + deslocamento + i) % fichasMocas.length;
-        alocacoes.push({
-          vagaMontagemId: vaga.id,
-          tipoPessoa: 'JOVEM',
-          fichaId: fichasMocas[idx].id,
-          status: StatusConvite.ACEITO,
-          podeCoordenar: vaga.cargo.ehCoordenacao || undefined,
-        });
-      }
-      for (let i = 0; i < vaga.quantidadeCasais; i++) {
-        const idx = (vagaIdx + deslocamento + i) % casaisAtivos.length;
-        alocacoes.push({
-          vagaMontagemId: vaga.id,
-          tipoPessoa: 'CASAL',
-          fichaCasalId: casaisAtivos[idx].id,
-          status: StatusConvite.ACEITO,
-          podeCoordenar: vaga.cargo.ehCoordenacao || undefined,
-          podePalestrar: vaga.cargo.ehCoordenacao && idx % 2 === 0,
-        });
-      }
-    });
-
-    await prisma.alocacao.createMany({ data: alocacoes });
-    await prisma.logAtividade.create({
-      data: {
-        montagemId: montagem.id,
-        usuario: 'sistema',
-        acao: 'CRIOU_MONTAGEM',
-        detalhes: `Encontro histórico (seed) — ${alocacoes.length} alocações`,
-      },
-    });
-    totalAlocacoes += alocacoes.length;
   }
 
-  return { totalMontagens: DIAS_ATRAS.length, totalVagas, totalAlocacoes };
+  const todasVagas = await prisma.vagaMontagem.findMany({
+    where: { montagemId: { in: montagens.map((m) => m.id) } },
+    include: { cargo: true },
+  });
+  totalVagas = todasVagas.length;
+
+  const vagasRapaz = todasVagas.filter((v) => v.quantidadeRapazes > 0);
+  const vagasMoca = todasVagas.filter((v) => v.quantidadeMocas > 0);
+  const vagasCasal = todasVagas.filter((v) => v.quantidadeCasais > 0);
+
+  type NovaAlocacao = {
+    vagaMontagemId: string;
+    tipoPessoa: TipoPessoa;
+    fichaId?: string;
+    fichaCasalId?: string;
+    status: StatusConvite;
+    podeCoordenar?: boolean;
+    podePalestrar?: boolean;
+  };
+  const alocacoes: NovaAlocacao[] = [];
+
+  // Escolhe até MAX_SERVICOS_POR_PESSOA vagas compatíveis pra uma pessoa (índice `idx`
+  // dentro da lista dela). A cada 4ª pessoa, o 2º serviço repete a mesma equipe do 1º (em
+  // outra vaga/montagem) — dá pra ver repetição (R2) sem exagerar na quantidade.
+  function escolherVagas(vagas: typeof todasVagas, idx: number) {
+    const qtd = 1 + (idx % MAX_SERVICOS_POR_PESSOA);
+    const escolhidas = [vagas[idx % vagas.length]];
+
+    for (let s = 1; s < qtd; s++) {
+      if (s === 1 && idx % 4 === 0) {
+        const equipeId = escolhidas[0].equipeId;
+        const mesmaEquipe = vagas.find((v) => v.equipeId === equipeId && v.id !== escolhidas[0].id);
+        escolhidas.push(mesmaEquipe ?? vagas[(idx + s * 5) % vagas.length]);
+      } else {
+        escolhidas.push(vagas[(idx + s * 5) % vagas.length]);
+      }
+    }
+    return escolhidas;
+  }
+
+  fichasRapazes.forEach((ficha, idx) => {
+    for (const vaga of escolherVagas(vagasRapaz, idx)) {
+      alocacoes.push({
+        vagaMontagemId: vaga.id,
+        tipoPessoa: 'JOVEM',
+        fichaId: ficha.id,
+        status: StatusConvite.ACEITO,
+        podeCoordenar: vaga.cargo.ehCoordenacao || undefined,
+      });
+    }
+  });
+
+  fichasMocas.forEach((ficha, idx) => {
+    for (const vaga of escolherVagas(vagasMoca, idx)) {
+      alocacoes.push({
+        vagaMontagemId: vaga.id,
+        tipoPessoa: 'JOVEM',
+        fichaId: ficha.id,
+        status: StatusConvite.ACEITO,
+        podeCoordenar: vaga.cargo.ehCoordenacao || undefined,
+      });
+    }
+  });
+
+  casaisAtivos.forEach((casal, idx) => {
+    for (const vaga of escolherVagas(vagasCasal, idx)) {
+      alocacoes.push({
+        vagaMontagemId: vaga.id,
+        tipoPessoa: 'CASAL',
+        fichaCasalId: casal.id,
+        status: StatusConvite.ACEITO,
+        podeCoordenar: vaga.cargo.ehCoordenacao || undefined,
+        podePalestrar: vaga.cargo.ehCoordenacao && idx % 2 === 0,
+      });
+    }
+  });
+
+  await prisma.alocacao.createMany({ data: alocacoes });
+  await prisma.logAtividade.createMany({
+    data: montagens.map((montagem) => ({
+      montagemId: montagem.id,
+      usuario: 'sistema',
+      acao: 'CRIOU_MONTAGEM',
+      detalhes: 'Encontro histórico (seed)',
+    })),
+  });
+
+  return { totalMontagens: montagens.length, totalVagas, totalAlocacoes: alocacoes.length };
 }
