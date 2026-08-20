@@ -8,19 +8,16 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Textarea } from '@/components/ui/textarea';
 import { useUpdateAlocacao } from '@/lib/hooks/use-montagens';
 import type { Alocacao } from '@/lib/types';
 
 // Avaliação por equipe servida — mesmo modelo da ficha física do Segue-me: quem coordena
-// marca se a pessoa pode coordenar/palestrar NAQUELA equipe específica, mais uma observação
-// livre. Cada Alocacao já é o registro certo pra isso (1 por equipe/encontro que a pessoa
-// serviu), só faltava a tela.
+// marca se a pessoa pode coordenar/palestrar NAQUELA equipe específica. Cada Alocacao já é
+// o registro certo pra isso (1 por equipe/encontro que a pessoa serviu).
 export function AlocacaoAvaliacaoPopover({ montagemId, alocacao }: { montagemId: string; alocacao: Alocacao }) {
   const [open, setOpen] = useState(false);
   const [podeCoordenar, setPodeCoordenar] = useState(!!alocacao.podeCoordenar);
   const [podePalestrar, setPodePalestrar] = useState(!!alocacao.podePalestrar);
-  const [observacao, setObservacao] = useState(alocacao.observacoesAvaliacao ?? '');
   const updateAlocacao = useUpdateAlocacao(montagemId);
 
   async function salvar() {
@@ -29,7 +26,6 @@ export function AlocacaoAvaliacaoPopover({ montagemId, alocacao }: { montagemId:
         id: alocacao.id,
         podeCoordenar,
         podePalestrar,
-        observacoesAvaliacao: observacao.trim() || undefined,
       });
       toast.success('Avaliação salva.');
       setOpen(false);
@@ -38,7 +34,7 @@ export function AlocacaoAvaliacaoPopover({ montagemId, alocacao }: { montagemId:
     }
   }
 
-  const jaAvaliado = alocacao.podeCoordenar || alocacao.podePalestrar || !!alocacao.observacoesAvaliacao;
+  const jaAvaliado = alocacao.podeCoordenar || alocacao.podePalestrar;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -56,15 +52,6 @@ export function AlocacaoAvaliacaoPopover({ montagemId, alocacao }: { montagemId:
         <div className="flex items-center gap-2">
           <Checkbox id={`palestrar-${alocacao.id}`} checked={podePalestrar} onCheckedChange={(v) => setPodePalestrar(!!v)} />
           <Label htmlFor={`palestrar-${alocacao.id}`} className="font-normal">Pode palestrar</Label>
-        </div>
-        <div>
-          <Label htmlFor={`observacao-${alocacao.id}`}>Observação</Label>
-          <Textarea
-            id={`observacao-${alocacao.id}`}
-            value={observacao}
-            onChange={(e) => setObservacao(e.target.value)}
-            className="text-sm"
-          />
         </div>
         <div className="flex justify-end">
           <Button size="sm" onClick={salvar} disabled={updateAlocacao.isPending}>

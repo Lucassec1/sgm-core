@@ -2,8 +2,8 @@ import { PrismaClient, StatusConvite, TipoPessoa } from '@prisma/client';
 
 // Massa de dados de HISTÓRICO: 3 encontros passados e finalizados, com alocações ACEITO
 // espalhadas pelas equipes — pra testar Histórico de Equipes (Ficha), avaliação
-// (pode coordenar/palestrar/observação), R2 (repetição, inclusive até bater no limite de
-// 3x) e R3 (Grupo A — quem já serviu numa equipe vira sugestão de coordenador nela).
+// (pode coordenar/palestrar), R2 (repetição, inclusive até bater no limite de 3x) e R3
+// (Grupo A — quem já serviu numa equipe vira sugestão de coordenador nela).
 //
 // numeroEncontro negativo (-3, -2, -1) só pra não colidir com a montagem de exemplo
 // (numeroEncontro: 1, ver seed-montagem-exemplo.ts) — não representa numeração real.
@@ -31,15 +31,6 @@ export async function seedHistoricoEquipes(prisma: PrismaClient, paroquiaId: str
   if (fichasRapazes.length < 5 || fichasMocas.length < 5 || casaisAtivos.length < 5) {
     throw new Error('seedHistoricoEquipes precisa de pelo menos 5 rapazes, 5 moças e 5 casais ATIVA.');
   }
-
-  const OBSERVACOES = [
-    'Muito comunicativo(a), ótimo(a) com o grupo.',
-    'Cumpriu bem as tarefas, pontual nos horários.',
-    'Teve dificuldade de trabalhar em equipe nessa edição.',
-    'Demonstrou liderança natural, se destacou.',
-    undefined,
-    undefined,
-  ];
 
   const DIAS_ATRAS = [400, 250, 100];
   let totalVagas = 0;
@@ -83,10 +74,8 @@ export async function seedHistoricoEquipes(prisma: PrismaClient, paroquiaId: str
       status: StatusConvite;
       podeCoordenar?: boolean;
       podePalestrar?: boolean;
-      observacoesAvaliacao?: string;
     };
     const alocacoes: NovaAlocacao[] = [];
-    let obsIdx = 0;
 
     vagas.forEach((vaga, vagaIdx) => {
       // Vagas de Coordenação: mesmo índice em toda edição (sem deslocar por `m`) — a mesma
@@ -103,7 +92,6 @@ export async function seedHistoricoEquipes(prisma: PrismaClient, paroquiaId: str
           fichaId: fichasRapazes[idx].id,
           status: StatusConvite.ACEITO,
           podeCoordenar: vaga.cargo.ehCoordenacao || undefined,
-          observacoesAvaliacao: OBSERVACOES[obsIdx++ % OBSERVACOES.length],
         });
       }
       for (let i = 0; i < vaga.quantidadeMocas; i++) {
@@ -114,7 +102,6 @@ export async function seedHistoricoEquipes(prisma: PrismaClient, paroquiaId: str
           fichaId: fichasMocas[idx].id,
           status: StatusConvite.ACEITO,
           podeCoordenar: vaga.cargo.ehCoordenacao || undefined,
-          observacoesAvaliacao: OBSERVACOES[obsIdx++ % OBSERVACOES.length],
         });
       }
       for (let i = 0; i < vaga.quantidadeCasais; i++) {
@@ -126,7 +113,6 @@ export async function seedHistoricoEquipes(prisma: PrismaClient, paroquiaId: str
           status: StatusConvite.ACEITO,
           podeCoordenar: vaga.cargo.ehCoordenacao || undefined,
           podePalestrar: vaga.cargo.ehCoordenacao && idx % 2 === 0,
-          observacoesAvaliacao: OBSERVACOES[obsIdx++ % OBSERVACOES.length],
         });
       }
     });

@@ -5,9 +5,9 @@ import { useHistoricoEquipesCasal } from '@/lib/hooks/use-fichas-casais';
 import type { HistoricoEquipeItem } from '@/lib/types';
 
 // Histórico de equipes servidas + avaliação (docs/requisitos.md, 2.1) — um registro por
-// Alocacao (por equipe/encontro que a pessoa serviu), com o mesmo critério da ficha física
-// do Segue-me: pode coordenar/palestrar são específicos daquela equipe, não um selo geral.
-// Dado gerado pelo módulo Montagem, não editável aqui.
+// Alocacao (por equipe/encontro que a pessoa serviu). Avaliação aqui é só pode
+// coordenar/palestrar, específicos daquela equipe, não um selo geral. Dado gerado pelo
+// módulo Montagem, não editável aqui.
 function HistoricoEquipesLista({ historico, isLoading }: { historico?: HistoricoEquipeItem[]; isLoading: boolean }) {
   if (isLoading) return <p className="text-sm text-muted-foreground">Carregando...</p>;
   if (!historico || historico.length === 0) {
@@ -43,8 +43,6 @@ function HistoricoEquipesLista({ historico, isLoading }: { historico?: Historico
               )}
             </div>
           )}
-
-          {item.observacoesAvaliacao && <p className="text-sm text-muted-foreground">{item.observacoesAvaliacao}</p>}
         </li>
       ))}
     </ul>

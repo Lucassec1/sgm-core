@@ -329,9 +329,8 @@ model Alocacao {
   motivoRecusa String?
 
   // Avaliação (alimenta o Histórico da Ficha — ver docs/requisitos.md, seção 2.1)
-  podeCoordenar        Boolean?
-  podePalestrar        Boolean?
-  observacoesAvaliacao String?
+  podeCoordenar Boolean?
+  podePalestrar Boolean?
 
   substituidaPorId String?   @unique
   substituidaPor   Alocacao? @relation("Substituicao", fields: [substituidaPorId], references: [id])

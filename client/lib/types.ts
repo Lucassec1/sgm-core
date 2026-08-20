@@ -167,7 +167,6 @@ export interface Alocacao {
   motivoRecusa?: string | null;
   podeCoordenar?: boolean | null;
   podePalestrar?: boolean | null;
-  observacoesAvaliacao?: string | null;
   substituidaPorId?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -179,7 +178,6 @@ export interface HistoricoEquipeItem {
   motivoRecusa?: string | null;
   podeCoordenar?: boolean | null;
   podePalestrar?: boolean | null;
-  observacoesAvaliacao?: string | null;
   createdAt: string;
   vagaMontagem: {
     equipe: Equipe;
