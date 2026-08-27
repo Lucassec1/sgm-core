@@ -3,11 +3,33 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { EquipeIcon } from '@/components/equipes/equipe-icon';
 import { VagaAlocacoes } from './vaga-alocacoes';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
 
+const STATUS_INATIVO = ['RECUSADO', 'DESISTIU', 'SUBSTITUIDO'];
+
 function nomeAlocacao(alocacao: Alocacao) {
   return alocacao.ficha?.nomeCompleto ?? (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : '—');
+}
+
+function plural(n: number, singular: string, plural: string) {
+  return `${n} ${n === 1 ? singular : plural}`;
+}
+
+// Quanto falta pra fechar a equipe, separado por tipo — mesma conta do VagaAlocacoes,
+// somada em todos os cargos da equipe.
+function faltaDaEquipe(vagas: VagaMontagem[], alocacoesPorVaga: Map<string, Alocacao[]>) {
+  let jovens = 0;
+  let casais = 0;
+  for (const vaga of vagas) {
+    const ativas = (alocacoesPorVaga.get(vaga.id) ?? []).filter((a) => !STATUS_INATIVO.includes(a.status));
+    const j = ativas.filter((a) => a.tipoPessoa === 'JOVEM').length;
+    const c = ativas.filter((a) => a.tipoPessoa === 'CASAL').length;
+    jovens += Math.max(0, vaga.quantidadeRapazes + vaga.quantidadeMocas - j);
+    casais += Math.max(0, vaga.quantidadeCasais - c);
+  }
+  return { jovens, casais };
 }
 
 // Lista por extenso — mesmas equipes do Quadro em Cards, mas em texto corrido, uma equipe
@@ -60,14 +82,25 @@ export function ListaCompletaEquipes({
       <div className="space-y-8">
         {gruposFiltrados.map((vagas) => {
           const equipe = vagas[0].equipe;
-          const totalPessoas = vagas
-            .flatMap((v) => alocacoesPorVaga.get(v.id) ?? [])
-            .filter((a) => !['RECUSADO', 'DESISTIU', 'SUBSTITUIDO'].includes(a.status)).length;
+          const falta = faltaDaEquipe(vagas, alocacoesPorVaga);
+          const completa = falta.jovens === 0 && falta.casais === 0;
+          const resumoFalta = [
+            falta.jovens > 0 && plural(falta.jovens, 'jovem', 'jovens'),
+            falta.casais > 0 && plural(falta.casais, 'casal', 'casais'),
+          ]
+            .filter(Boolean)
+            .join(' · ');
 
           return (
             <div key={vagas[0].equipeId}>
-              <h3 className="text-base font-semibold border-b pb-1 mb-3">
-                {equipe.nome} <span className="text-sm font-normal text-muted-foreground">({totalPessoas} pessoa(s))</span>
+              <h3 className="flex items-center gap-2 text-base font-semibold border-b pb-1 mb-3">
+                <EquipeIcon slug={equipe.slug} nome={equipe.nome} size={20} />
+                <span>
+                  {equipe.nome}{' '}
+                  <span className={`text-sm font-normal ${completa ? 'text-green-600' : 'text-amber-600'}`}>
+                    {completa ? '· completa' : `· faltam ${resumoFalta}`}
+                  </span>
+                </span>
               </h3>
               <div className="space-y-4">
                 {vagas.map((vaga) => (

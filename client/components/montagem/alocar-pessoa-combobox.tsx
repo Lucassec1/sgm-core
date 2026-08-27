@@ -199,7 +199,10 @@ export function AlocarPessoaCombobox({
 
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
+      {/* modal: sem isso, quando este combobox abre de dentro do Drawer da equipe (um
+          Radix Dialog), o scroll-lock come o wheel e a lista não rola. Com modal, o
+          conteúdo do Popover entra no shard do RemoveScroll e o scroll volta. */}
+      <Popover open={open} onOpenChange={setOpen} modal>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className="gap-1">
             <Plus className="h-3.5 w-3.5" />

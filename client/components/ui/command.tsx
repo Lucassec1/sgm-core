@@ -7,7 +7,6 @@ import { Search } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
@@ -55,16 +54,20 @@ const CommandInput = React.forwardRef<
 
 CommandInput.displayName = CommandPrimitive.Input.displayName;
 
-// Scroll via ScrollArea (Radix), não overflow-y-auto nativo: dentro de um Dialog/Sheet, o
-// scroll-lock do Radix costuma capturar o wheel/trackpad do Mac e só a barra de rolagem
-// arrastada manualmente funciona — ScrollArea evita esse conflito.
+// Scroll nativo. O motivo de já ter existido um ScrollArea aqui era o scroll-lock do Radix
+// (Dialog/Sheet) capturando o wheel quando o Command fica num Popover portalado pra fora do
+// lock — mas o ScrollArea sem altura definida no viewport não rolava de jeito nenhum. A
+// solução certa é o Popover que embrulha o Command ser `modal` (aí o conteúdo dele entra no
+// shard do RemoveScroll e o wheel volta a funcionar). Ver alocar-pessoa-combobox.tsx.
 const CommandList = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
 >(({ className, ...props }, ref) => (
-  <ScrollArea className={cn('max-h-[300px]', className)}>
-    <CommandPrimitive.List ref={ref} {...props} />
-  </ScrollArea>
+  <CommandPrimitive.List
+    ref={ref}
+    className={cn('max-h-[300px] overflow-y-auto overflow-x-hidden', className)}
+    {...props}
+  />
 ));
 
 CommandList.displayName = CommandPrimitive.List.displayName;
