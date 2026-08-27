@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { EquipeIcon } from '@/components/equipes/equipe-icon';
 import type { VagaMontagem, Alocacao } from '@/lib/types';
 
 // Uma alocação ainda ocupa a vaga enquanto não foi recusada/desistida/substituída — mesmo
@@ -34,7 +35,10 @@ export function EquipeCard({
     >
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-sm font-medium leading-tight">{equipe.nome}</CardTitle>
+          <div className="flex min-w-0 items-center gap-2">
+            <EquipeIcon slug={equipe.slug} nome={equipe.nome} size={24} />
+            <CardTitle className="text-sm font-medium leading-tight">{equipe.nome}</CardTitle>
+          </div>
           {equipe.ehCirculos && (
             <Badge variant="outline" className="shrink-0 text-xs">
               1ª a convidar

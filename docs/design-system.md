@@ -45,7 +45,7 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 | Necessidade do sistema | Componente shadcn | Onde aparece |
 |---|---|---|
 | Navegação geral | Sidebar | Toda a aplicação |
-| Abas da Ficha do Jovem/Casal | Tabs | Ficha do Jovem, Ficha do Casal |
+| Seções da Ficha do Jovem/Casal | Separator (empilhadas, sem Tabs) | Ficha do Jovem, Ficha do Casal |
 | Campos de formulário | Input, Select, Textarea, Checkbox | Fichas, Criação da Montagem |
 | Grid das 16 equipes | Card + Progress + Badge | Quadro das 16 Equipes |
 | Detalhe de uma equipe | Drawer | Ao clicar no card de uma equipe |
@@ -57,6 +57,7 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 | Listagens tabulares | DataTable | Lista de Fichas, Histórico da Ficha, Histórico de Montagens, Controle de Convites |
 | Status e indicadores | Badge | Cor do círculo, Ativa/Inativa, Aceito/Recusado, "Já em: [equipe]" |
 | Foto da pessoa | Avatar | Ficha, Lista de Fichas, Distribuição, Popover |
+| Ícone da equipe | `EquipeIcon` (PNG em `client/public/equipes/`, nome do arquivo = `slug` da Equipe) | Histórico de Equipes da ficha, cards das 16 equipes, Drawer da equipe |
 | Auto-save, ações e remanejamento | Toast | Ficha (auto-save), Montagem (remanejamento com Desfazer) |
 | % de preenchimento | Progress | Card de cada equipe, Dashboard da Montagem |
 | Upload/download de PDF | Input file + lista | Aba Quadrantes (sem componente shadcn nativo pra isso) |
@@ -68,6 +69,7 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 
 - **Alert Dialog é reservado pras regras R1-R3** (recusa, limite de 3x, coordenação) — não usar pra confirmações genéricas de UI. Ações reversíveis (como o remanejamento de equipe) usam Toast com Desfazer, não Alert Dialog.
 - **Badge de cor do círculo** é sempre a mesma badge, reaproveitada em Lista de Fichas, Distribuição e Popover — consistência visual é o que faz a cor funcionar como atalho de reconhecimento.
+- **Ícone da equipe** (`EquipeIcon`): os PNGs oficiais das 16 equipes do Segue-me, usados pequenos (16–24px) e **sempre ao lado do nome da equipe**, nunca sozinhos — mesma regra do badge de círculo. Mantêm a cor original (num tamanho pequeno não competem com as cores funcionais); a UI ao redor continua neutra. Chave de lookup é o `slug` da `Equipe` (mesmo slug do seed), então o arquivo é `public/equipes/<slug>.png`.
 - **DataTable** é o padrão único pra qualquer listagem — Histórico de Fichas, Histórico de Montagens e Controle de Convites usam a mesma configuração de componente (colunas variam, comportamento não).
 - **Sidebar fixa**, sem navegação por breadcrumb — o sistema tem poucos níveis de profundidade (Fichas / Montagem / Exportação, cada um raso), não precisa de trilha de navegação.
 

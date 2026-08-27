@@ -6,13 +6,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CORES_CIRCULO } from '@/lib/types';
 import type { Ficha } from '@/lib/types';
@@ -20,9 +20,12 @@ import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
 import { useCreateFicha, useUpdateFicha } from '@/lib/hooks/use-fichas';
 import { nullsToUndefined } from '@/lib/utils';
 
-// Campos e ordem das abas seguem docs/requisitos.md (2.1) e docs/ux-e-fluxos.md (2). Histórico
-// de equipes fica fora das abas — é gerado pelo módulo Montagem e mostrado como seção separada
-// na página de detalhe (HistoricoEquipesSection), não faz parte do formulário editável.
+// Campos seguem docs/requisitos.md (2.1) e docs/ux-e-fluxos.md (2). As seções (Identificação,
+// Endereço, Filiação, Escolaridade, Religião, Convite) ficam empilhadas uma abaixo da outra,
+// separadas por divider — não em abas: a equipe dirigente escaneia a ficha inteira de uma vez
+// e volta pra atualizar seções pontuais, alternar aba só atrapalhava. Histórico de equipes
+// fica fora do formulário — é gerado pelo módulo Montagem e mostrado como seção separada na
+// página de detalhe (HistoricoEquipesSection).
 const fichaSchema = z.object({
   nomeCompleto: z.string().min(3, 'Informe o nome completo'),
   sexo: z.enum(['RAPAZ', 'MOCA'], { required_error: 'Selecione o sexo' }),
@@ -64,6 +67,10 @@ const fichaSchema = z.object({
 });
 
 type FichaFormValues = z.infer<typeof fichaSchema>;
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h3 className="text-sm font-medium text-muted-foreground">{children}</h3>;
+}
 
 export function FichaForm({ ficha }: { ficha?: Ficha }) {
   const router = useRouter();
@@ -109,25 +116,30 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
   const fotoUrl = watch('fotoUrl');
   const nomeCompleto = watch('nomeCompleto');
 
-  // Depois de criada, só o que muda com frequência continua editável: endereço, telefone,
-  // email, observações (nota prática — alergia, sem transporte, etc. — que pode mudar ou
-  // deixar de valer com o tempo) e situação/motivo de desativação. O resto é dado de
-  // identificação (nome, sexo, data de nasc., encontro, círculo, filiação, escolaridade,
-  // religião, convite, foto) e vira somente leitura pra evitar edição por engano.
+  // Depois de criada, só o que muda com frequência continua editável: foto, endereço,
+  // telefone, email, observações (nota prática — alergia, sem transporte, etc. — que pode
+  // mudar ou deixar de valer com o tempo) e situação/motivo de desativação. O resto é dado
+  // de identificação (nome, sexo, data de nasc., encontro, círculo, filiação, escolaridade,
+  // religião, convite) e vira somente leitura pra evitar edição por engano. O nome não
+  // aparece no formulário na edição — fica no header da página de detalhe.
   const bloqueado = isEdit;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Avatar className="h-16 w-16">
-          <AvatarImage src={fotoUrl || undefined} alt={nomeCompleto} />
-          <AvatarFallback>{(nomeCompleto || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <Label htmlFor="fotoUrl">Foto (URL)</Label>
-          <Input id="fotoUrl" placeholder="https://..." disabled={bloqueado} {...register('fotoUrl')} />
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      {/* No cadastro novo não há header de página com a foto — mostra aqui. Na edição a foto
+          fica no topo da página de detalhe. */}
+      {!isEdit && (
+        <div className="flex items-center gap-4">
+          <Avatar className="h-16 w-16">
+            <AvatarImage src={fotoUrl || undefined} alt={nomeCompleto} />
+            <AvatarFallback>{(nomeCompleto || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <Label htmlFor="fotoUrl">Foto (URL)</Label>
+            <Input id="fotoUrl" placeholder="https://..." {...register('fotoUrl')} />
+          </div>
         </div>
-      </div>
+      )}
 
       {isEdit && (
         <div className="grid grid-cols-2 gap-4 rounded-md border p-4">
@@ -152,22 +164,16 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
         </div>
       )}
 
-      <Tabs defaultValue="identificacao">
-        <TabsList>
-          <TabsTrigger value="identificacao">Identificação</TabsTrigger>
-          <TabsTrigger value="endereco">Endereço</TabsTrigger>
-          <TabsTrigger value="filiacao">Filiação</TabsTrigger>
-          <TabsTrigger value="escolaridade">Escolaridade</TabsTrigger>
-          <TabsTrigger value="religiao">Religião</TabsTrigger>
-          <TabsTrigger value="convite">Convite</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="identificacao" className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <Label htmlFor="nomeCompleto">Nome completo</Label>
-            <Input id="nomeCompleto" disabled={bloqueado} {...register('nomeCompleto')} />
-            {errors.nomeCompleto && <p className="text-xs text-red-600 mt-1">{errors.nomeCompleto.message}</p>}
-          </div>
+      <section className="space-y-4">
+        <SectionTitle>Identificação</SectionTitle>
+        <div className="grid grid-cols-2 gap-4">
+          {!isEdit && (
+            <div className="col-span-2">
+              <Label htmlFor="nomeCompleto">Nome completo</Label>
+              <Input id="nomeCompleto" {...register('nomeCompleto')} />
+              {errors.nomeCompleto && <p className="text-xs text-red-600 mt-1">{errors.nomeCompleto.message}</p>}
+            </div>
+          )}
           <div>
             <Label>Sexo</Label>
             <Select value={watch('sexo')} onValueChange={(v) => setValue('sexo', v as FichaFormValues['sexo'])} disabled={bloqueado}>
@@ -225,9 +231,20 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
             </Select>
             {errors.corCirculo && <p className="text-xs text-red-600 mt-1">{errors.corCirculo.message}</p>}
           </div>
-        </TabsContent>
+          {isEdit && (
+            <div className="col-span-2">
+              <Label htmlFor="fotoUrl">Foto (URL)</Label>
+              <Input id="fotoUrl" placeholder="https://..." {...register('fotoUrl')} />
+            </div>
+          )}
+        </div>
+      </section>
 
-        <TabsContent value="endereco" className="grid grid-cols-2 gap-4">
+      <Separator />
+
+      <section className="space-y-4">
+        <SectionTitle>Endereço</SectionTitle>
+        <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
             <Label htmlFor="logradouro">Logradouro</Label>
             <Input id="logradouro" {...register('logradouro')} />
@@ -256,9 +273,14 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
             <Label htmlFor="cep">CEP</Label>
             <Input id="cep" {...register('cep')} />
           </div>
-        </TabsContent>
+        </div>
+      </section>
 
-        <TabsContent value="filiacao" className="grid grid-cols-2 gap-4">
+      <Separator />
+
+      <section className="space-y-4">
+        <SectionTitle>Filiação</SectionTitle>
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="nomePai">Nome do pai</Label>
             <Input id="nomePai" disabled={bloqueado} {...register('nomePai')} />
@@ -267,9 +289,14 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
             <Label htmlFor="nomeMae">Nome da mãe</Label>
             <Input id="nomeMae" disabled={bloqueado} {...register('nomeMae')} />
           </div>
-        </TabsContent>
+        </div>
+      </section>
 
-        <TabsContent value="escolaridade" className="grid grid-cols-2 gap-4">
+      <Separator />
+
+      <section className="space-y-4">
+        <SectionTitle>Escolaridade</SectionTitle>
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="grauEscolaridade">Grau de escolaridade</Label>
             <Input id="grauEscolaridade" disabled={bloqueado} {...register('grauEscolaridade')} />
@@ -286,9 +313,14 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
             <Label htmlFor="instituicao">Instituição</Label>
             <Input id="instituicao" disabled={bloqueado} {...register('instituicao')} />
           </div>
-        </TabsContent>
+        </div>
+      </section>
 
-        <TabsContent value="religiao" className="grid grid-cols-2 gap-4">
+      <Separator />
+
+      <section className="space-y-4">
+        <SectionTitle>Religião</SectionTitle>
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="religiao">Religião</Label>
             <Input id="religiao" disabled={bloqueado} {...register('religiao')} />
@@ -342,9 +374,14 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
               <Label htmlFor="sacramentoCrisma" className="font-normal">Crisma</Label>
             </div>
           </div>
-        </TabsContent>
+        </div>
+      </section>
 
-        <TabsContent value="convite" className="grid grid-cols-2 gap-4">
+      <Separator />
+
+      <section className="space-y-4">
+        <SectionTitle>Convite</SectionTitle>
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="nomeConvidante">Nome de quem convidou</Label>
             <Input id="nomeConvidante" disabled={bloqueado} {...register('nomeConvidante')} />
@@ -357,8 +394,10 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
             <Label htmlFor="enderecoConvidante">Endereço do convidante</Label>
             <Input id="enderecoConvidante" disabled={bloqueado} {...register('enderecoConvidante')} />
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </section>
+
+      <Separator />
 
       <div>
         <Label htmlFor="observacoes">Observações</Label>

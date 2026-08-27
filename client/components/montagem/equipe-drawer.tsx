@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { EquipeIcon } from '@/components/equipes/equipe-icon';
 import { ApiError } from '@/lib/api-client';
 import { useUpdateAlocacao } from '@/lib/hooks/use-montagens';
 import { VagaAlocacoes } from './vaga-alocacoes';
@@ -67,7 +68,10 @@ export function EquipeDrawer({
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
           <div className="flex items-center justify-between gap-2">
-            <SheetTitle>{equipe?.nome}</SheetTitle>
+            <SheetTitle className="flex items-center gap-2">
+              {equipe && <EquipeIcon slug={equipe.slug} nome={equipe.nome} size={22} />}
+              {equipe?.nome}
+            </SheetTitle>
             {!readOnly && emRascunho.length > 0 && (
               <TooltipProvider delayDuration={200}>
                 <Tooltip>

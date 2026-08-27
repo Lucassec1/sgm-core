@@ -6,10 +6,15 @@ import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useDeleteListaSubstituicaoItem, useListaSubstituicao } from '@/lib/hooks/use-montagens';
-import { AdicionarSubstitutoCombobox } from './adicionar-substituto-combobox';
+import { useAlocacoes, useDeleteListaSubstituicaoItem, useListaSubstituicao } from '@/lib/hooks/use-montagens';
+import { AdicionarSubstitutoBar } from './adicionar-substituto-combobox';
 import { PessoaPreviewPopover } from './pessoa-preview-popover';
 import type { ListaSubstituicaoItem } from '@/lib/types';
+
+// Quem já está no encontro não é opção de substituição: ou está ocupando uma vaga
+// (RASCUNHO/CONVIDADO/ACEITO), ou recusou/desistiu e não pode servir esse encontro (R1).
+// Quem foi SUBSTITUIDO saiu da vaga e volta a ficar disponível como backup.
+const STATUS_INDISPONIVEL = ['RASCUNHO', 'CONVIDADO', 'ACEITO', 'RECUSADO', 'DESISTIU'];
 
 function nomeItem(item: ListaSubstituicaoItem) {
   return item.ficha?.nomeCompleto ?? (item.fichaCasal ? `${item.fichaCasal.nomeEle} e ${item.fichaCasal.nomeEla}` : '—');
@@ -23,9 +28,15 @@ function fotoItem(item: ListaSubstituicaoItem) {
 // vaga/equipe, por encontro. Não carrega automaticamente de um encontro pro outro.
 export function ListaSubstituicaoSection({ montagemId }: { montagemId: string }) {
   const { data: itens, isLoading } = useListaSubstituicao(montagemId);
+  const { data: alocacoes } = useAlocacoes(montagemId);
   const deleteItem = useDeleteListaSubstituicaoItem(montagemId);
 
   const idsJaNaLista = new Set((itens ?? []).map((i) => i.fichaId ?? i.fichaCasalId ?? ''));
+  const idsNoEncontro = new Set(
+    (alocacoes ?? [])
+      .filter((a) => STATUS_INDISPONIVEL.includes(a.status))
+      .map((a) => a.fichaId ?? a.fichaCasalId ?? ''),
+  );
 
   async function remover(id: string) {
     try {
@@ -38,12 +49,13 @@ export function ListaSubstituicaoSection({ montagemId }: { montagemId: string })
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <p className="max-w-md text-sm text-muted-foreground">
-          Pessoas cotadas como boa opção de substituição em qualquer equipe — consulte aqui primeiro quando alguém sair de
-          uma vaga.
-        </p>
-        <AdicionarSubstitutoCombobox montagemId={montagemId} idsJaNaLista={idsJaNaLista} />
+      <p className="text-sm text-muted-foreground">
+        Pessoas cotadas como boa opção de substituição em qualquer equipe — consulte aqui primeiro quando alguém sair de
+        uma vaga.
+      </p>
+
+      <div className="max-w-xl">
+        <AdicionarSubstitutoBar montagemId={montagemId} idsJaNaLista={idsJaNaLista} idsNoEncontro={idsNoEncontro} />
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
