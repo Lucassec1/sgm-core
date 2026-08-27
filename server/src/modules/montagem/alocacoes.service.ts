@@ -182,6 +182,13 @@ export class AlocacoesService {
       },
     });
 
+    // Se a pessoa estava no banco de substituição desse encontro, sai da lista ao ser
+    // alocada — a lista é só "prontos pra entrar", quem entrou não fica mais lá
+    // (ver docs/ux-e-fluxos.md, seção 3).
+    await this.prisma.listaSubstituicao.deleteMany({
+      where: { montagemId, ...(dto.fichaId ? { fichaId: dto.fichaId } : { fichaCasalId: dto.fichaCasalId }) },
+    });
+
     await this.logAtividade.registrar(montagemId, dto.usuario, 'CRIOU_ALOCACAO', `${vaga.equipe.nome} / ${vaga.cargo.nome}`);
 
     return alocacao;

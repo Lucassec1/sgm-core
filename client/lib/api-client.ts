@@ -8,6 +8,7 @@ import type {
   FichaListResponse,
   HistoricoEquipeItem,
   ListaSubstituicaoItem,
+  LogAtividadeItem,
   Montagem,
   MontagemListResponse,
 } from './types';
@@ -212,5 +213,9 @@ export const apiClient = {
 
   deleteListaSubstituicaoItem(montagemId: string, id: string) {
     return request<ListaSubstituicaoItem>(`/montagens/${montagemId}/lista-substituicao/${id}`, { method: 'DELETE' });
+  },
+
+  listLog(montagemId: string) {
+    return request<LogAtividadeItem[]>(`/montagens/${montagemId}/log`);
   },
 };

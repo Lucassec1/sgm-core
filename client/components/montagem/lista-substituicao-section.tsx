@@ -6,8 +6,9 @@ import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useAlocacoes, useDeleteListaSubstituicaoItem, useListaSubstituicao } from '@/lib/hooks/use-montagens';
+import { useAlocacoes, useDeleteListaSubstituicaoItem, useListaSubstituicao, useMontagem } from '@/lib/hooks/use-montagens';
 import { AdicionarSubstitutoBar } from './adicionar-substituto-combobox';
+import { AlocarSubstitutoCombobox } from './alocar-substituto-combobox';
 import { PessoaPreviewPopover } from './pessoa-preview-popover';
 import type { ListaSubstituicaoItem } from '@/lib/types';
 
@@ -26,9 +27,10 @@ function fotoItem(item: ListaSubstituicaoItem) {
 
 // Banco geral de backups da montagem (docs/ux-e-fluxos.md, seção 3) — independente de
 // vaga/equipe, por encontro. Não carrega automaticamente de um encontro pro outro.
-export function ListaSubstituicaoSection({ montagemId }: { montagemId: string }) {
+export function ListaSubstituicaoSection({ montagemId, readOnly = false }: { montagemId: string; readOnly?: boolean }) {
   const { data: itens, isLoading } = useListaSubstituicao(montagemId);
   const { data: alocacoes } = useAlocacoes(montagemId);
+  const { data: montagem } = useMontagem(montagemId);
   const deleteItem = useDeleteListaSubstituicaoItem(montagemId);
 
   const idsJaNaLista = new Set((itens ?? []).map((i) => i.fichaId ?? i.fichaCasalId ?? ''));
@@ -94,6 +96,14 @@ export function ListaSubstituicaoSection({ montagemId }: { montagemId: string })
                   </Button>
                 </div>
                 {item.nota && <p className="text-xs text-muted-foreground">{item.nota}</p>}
+                {!readOnly && montagem && (
+                  <AlocarSubstitutoCombobox
+                    montagemId={montagemId}
+                    item={item}
+                    vagas={montagem.vagas}
+                    alocacoes={alocacoes ?? []}
+                  />
+                )}
               </div>
             </li>
           ))}

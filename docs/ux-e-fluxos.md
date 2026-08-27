@@ -133,9 +133,16 @@ Isso evita abrir a ficha completa toda hora durante a montagem, que era exatamen
 
 Novo recurso: uma lista **geral** de pessoas cotadas como boas opções de substituição, independente de qual equipe. Não fica presa a uma vaga específica — é um "banco de backups" da montagem como um todo, que a equipe dirigente consulta sempre que alguém sai de qualquer equipe. O motivo de alguém entrar nessa lista pode ser prático (já serviu bem em várias equipes, perfil versátil) ou só preferência da equipe dirigente por aquele encontro — o sistema não precisa diferenciar o motivo.
 
-- Um espaço próprio dentro da Montagem (ex.: uma aba/seção "Substituições" ao lado do Quadro de Equipes), com uma lista de pessoas + uma nota opcional do porquê ("já serviu em 3 equipes diferentes", "disponibilidade confirmada", etc.).
-- Quando alguém sai de **qualquer** equipe (recusa/desistência, regra R1), a equipe dirigente consulta essa lista geral primeiro, antes de cair na busca genérica por prioridade.
-- A lista é por montagem/encontro — não carrega automaticamente de um encontro pro outro (a equipe dirigente decide de novo a cada encontro quem entra nela).
+- Aba "Substituições" na página da Montagem: uma barra de busca (abre ao focar, sugere alguns nomes, um clique adiciona) + a lista de pessoas, cada card com uma nota opcional do porquê.
+- **Quem já está no encontro não aparece como opção** — alocado numa vaga ou tendo recusado/desistido (R1). Ao ser alocada, a pessoa **sai automaticamente da lista** (a lista é só "prontos pra entrar"; não há vínculo X→Y formal — a equipe dirigente digita o nome e pronto).
+- Cada card tem um botão **"Alocar"** que abre as **vagas em aberto compatíveis** (equipe · cargo · "faltam N", já filtrado por tipo e, pra jovem, sexo; vagas de Coordenação ficam de fora — R3 passa pela Lista completa/Drawer) — evita trocar de aba.
+- Quando alguém sai de **qualquer** equipe (recusa/desistência, R1), a equipe dirigente consulta essa lista primeiro, antes de cair na busca genérica por prioridade.
+- A lista é por montagem/encontro — não carrega automaticamente de um encontro pro outro.
+
+### Aba "Convites" e log de atividade (R9)
+
+- **Aba Convites**: tabela de todos os convites da montagem por status (filtro por status) + uma seção **"Saídas registradas"** — recusas e desistências com o **motivo da saída** (tanto recusa quanto desistência exigem registrar o motivo). Essa seção some quando a montagem é finalizada (R9). Cada saída tem um atalho "Substituir" que abre a busca de pessoa pra aquela vaga.
+- **Log de atividade** (R9): drawer "Atividade" no header da montagem — linha do tempo de toda alteração (quem / o quê / quando). Sem Auth real ainda, "quem" é o campo `usuario` informado pelo client.
 
 ### Alertas visuais
 

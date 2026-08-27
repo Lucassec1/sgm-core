@@ -71,11 +71,18 @@ export function useCoordenadoresSugeridos(montagemId: string | undefined, equipe
   });
 }
 
+// Alocar/mover/mudar status mexe em várias listas de uma vez (alocações, log de atividade
+// R9, e a lista de substituição — de onde a pessoa sai ao ser alocada). Invalida tudo que
+// é escopado nessa montagem de uma vez.
+function invalidarMontagem(queryClient: ReturnType<typeof useQueryClient>, montagemId: string) {
+  return queryClient.invalidateQueries({ queryKey: ['montagens', montagemId] });
+}
+
 export function useCreateAlocacao(montagemId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: Parameters<typeof apiClient.createAlocacao>[1]) => apiClient.createAlocacao(montagemId, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['montagens', montagemId, 'alocacoes'] }),
+    onSuccess: () => invalidarMontagem(queryClient, montagemId),
   });
 }
 
@@ -83,7 +90,7 @@ export function useDeleteAlocacao(montagemId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => apiClient.deleteAlocacao(montagemId, id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['montagens', montagemId, 'alocacoes'] }),
+    onSuccess: () => invalidarMontagem(queryClient, montagemId),
   });
 }
 
@@ -92,7 +99,7 @@ export function useUpdateAlocacao(montagemId: string) {
   return useMutation({
     mutationFn: ({ id, ...data }: { id: string } & Parameters<typeof apiClient.updateAlocacao>[2]) =>
       apiClient.updateAlocacao(montagemId, id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['montagens', montagemId, 'alocacoes'] }),
+    onSuccess: () => invalidarMontagem(queryClient, montagemId),
   });
 }
 
@@ -102,6 +109,14 @@ export function useCandidatosJovensGeral(montagemId: string | undefined) {
   return useQuery({
     queryKey: ['montagens', montagemId, 'candidatos-jovens', 'geral'],
     queryFn: () => apiClient.listCandidatosJovens(montagemId as string),
+    enabled: !!montagemId,
+  });
+}
+
+export function useLog(montagemId: string | undefined) {
+  return useQuery({
+    queryKey: ['montagens', montagemId, 'log'],
+    queryFn: () => apiClient.listLog(montagemId as string),
     enabled: !!montagemId,
   });
 }
@@ -119,7 +134,7 @@ export function useCreateListaSubstituicaoItem(montagemId: string) {
   return useMutation({
     mutationFn: (data: Parameters<typeof apiClient.createListaSubstituicaoItem>[1]) =>
       apiClient.createListaSubstituicaoItem(montagemId, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['montagens', montagemId, 'lista-substituicao'] }),
+    onSuccess: () => invalidarMontagem(queryClient, montagemId),
   });
 }
 
@@ -127,6 +142,6 @@ export function useDeleteListaSubstituicaoItem(montagemId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => apiClient.deleteListaSubstituicaoItem(montagemId, id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['montagens', montagemId, 'lista-substituicao'] }),
+    onSuccess: () => invalidarMontagem(queryClient, montagemId),
   });
 }

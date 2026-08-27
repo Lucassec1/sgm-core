@@ -51,6 +51,7 @@ function criarPrismaMock() {
     ficha: { findUnique: jest.fn() },
     fichaCasal: { findUnique: jest.fn() },
     equipe: { findUnique: jest.fn() },
+    listaSubstituicao: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) },
   };
 }
 
@@ -307,6 +308,17 @@ describe('AlocacoesService', () => {
       } as any);
 
       expect(logAtividade.registrar).toHaveBeenCalledWith(MONTAGEM_ID, 'Lucas', 'CRIOU_ALOCACAO', expect.any(String));
+    });
+
+    it('tira a pessoa da lista de substituição desse encontro ao alocá-la', async () => {
+      mockVaga(equipeFake(), cargoFake());
+      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
+
+      await service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any);
+
+      expect(prisma.listaSubstituicao.deleteMany).toHaveBeenCalledWith({
+        where: { montagemId: MONTAGEM_ID, fichaId: 'ficha-1' },
+      });
     });
 
     it('oculta substituidaPorId quando a montagem está FINALIZADA', async () => {
