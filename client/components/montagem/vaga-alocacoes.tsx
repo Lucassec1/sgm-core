@@ -90,7 +90,13 @@ export function VagaAlocacoes({
                   {!readOnly && (
                     <>
                       <AlocacaoRowActions montagemId={montagemId} alocacao={alocacao} />
-                      {alocacao.status === 'ACEITO' && <AlocacaoAvaliacaoPopover montagemId={montagemId} alocacao={alocacao} />}
+                      {/* Cargo de Coordenação (inclusive Comandantes Gerais/Jovens do Comando
+                          Geral) não passa por avaliação aqui — pra chegar nesse cargo a pessoa
+                          já foi habilitada antes (R3, Grupo A/B), não faz sentido perguntar de
+                          novo "pode coordenar essa equipe?". */}
+                      {alocacao.status === 'ACEITO' && !vaga.cargo.ehCoordenacao && (
+                        <AlocacaoAvaliacaoPopover montagemId={montagemId} alocacao={alocacao} />
+                      )}
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => remover(alocacao.id)} aria-label="Remover alocação">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>

@@ -17,7 +17,6 @@ export class UpdateAlocacaoDto {
 
   @IsOptional() @IsBoolean() podeCoordenar?: boolean;
   @IsOptional() @IsBoolean() podePalestrar?: boolean;
-  @IsOptional() @IsString() observacoesAvaliacao?: string;
 
   @EmptyToUndefined() @IsOptional() @IsUUID() substituidaPorId?: string;
 

@@ -182,7 +182,6 @@ export const apiClient = {
       motivoRecusa?: string;
       podeCoordenar?: boolean;
       podePalestrar?: boolean;
-      observacoesAvaliacao?: string;
       usuario?: string;
     },
   ) {
