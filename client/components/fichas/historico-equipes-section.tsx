@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { AlocacaoStatusBadge } from '@/components/montagem/alocacao-status-badge';
+import { EquipeIcon } from '@/components/equipes/equipe-icon';
 import { useHistoricoEquipes } from '@/lib/hooks/use-fichas';
 import { useHistoricoEquipesCasal } from '@/lib/hooks/use-fichas-casais';
 import type { HistoricoEquipeItem } from '@/lib/types';
@@ -19,12 +20,15 @@ function HistoricoEquipesLista({ historico, isLoading }: { historico?: Historico
       {historico.map((item) => (
         <li key={item.id} className="rounded-md border p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-sm font-medium">{item.vagaMontagem.equipe.nome}</p>
-              <p className="text-xs text-muted-foreground">
-                {item.vagaMontagem.cargo.nome} · {item.vagaMontagem.montagem.numeroEncontro}º Encontro (
-                {new Date(item.vagaMontagem.montagem.data).toLocaleDateString('pt-BR')})
-              </p>
+            <div className="flex items-center gap-2.5">
+              <EquipeIcon slug={item.vagaMontagem.equipe.slug} nome={item.vagaMontagem.equipe.nome} />
+              <div>
+                <p className="text-sm font-medium">{item.vagaMontagem.equipe.nome}</p>
+                <p className="text-xs text-muted-foreground">
+                  {item.vagaMontagem.cargo.nome} · {item.vagaMontagem.montagem.numeroEncontro}º Encontro (
+                  {new Date(item.vagaMontagem.montagem.data).toLocaleDateString('pt-BR')})
+                </p>
+              </div>
             </div>
             <AlocacaoStatusBadge status={item.status} />
           </div>

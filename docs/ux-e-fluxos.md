@@ -20,12 +20,12 @@ Nova Ficha
    │
    ▼
 Identificação → Endereço → Filiação → Escolaridade → Religião → Convite
-   │  (cada aba salva sozinha — auto-save, sem "próximo/anterior" obrigatório)
+   │  (cada seção salva sozinha — auto-save, sem "próximo/anterior" obrigatório)
    ▼
 Ficha salva → aparece na Lista de Fichas
 ```
 
-**Decisão tomada:** Tabs, não Wizard. As seções são independentes entre si (editar Religião não exige ter preenchido Escolaridade), e a equipe dirigente frequentemente volta só para atualizar uma seção específica (ex.: registrar avaliação depois de um encontro). Wizard força sequência e trava edição parcial — não combina com esse padrão de uso.
+**Decisão tomada:** seções empilhadas uma abaixo da outra, separadas por divider — não Wizard e não Tabs. As seções são independentes entre si (editar Religião não exige ter preenchido Escolaridade), e a equipe dirigente frequentemente volta só para atualizar uma seção específica. Wizard força sequência e trava edição parcial. Tabs escondem conteúdo atrás de clique — na prática a equipe dirigente escaneia a ficha inteira de uma vez, então tudo visível numa rolagem só (com divider entre as seções) funciona melhor.
 
 ### 1.2 Fluxo — Criação da Montagem
 
@@ -72,8 +72,10 @@ Exportar (.xlsx) + Visualizar no Histórico
 ### Ficha do Jovem/Casal
 
 **Organização**
-- **Tabs**, não Wizard (decisão acima).
-- Ordem sugerida das abas: Identificação → Endereço → Filiação → Escolaridade → Religião → Convite → Histórico. Motivo: do mais estável (nome, nascimento) ao mais dinâmico (histórico, que muda a cada encontro).
+- **Seções empilhadas com divider**, não Wizard nem Tabs (decisão acima).
+- Página de detalhe, de cima pra baixo: **header** (foto grande + nome + badge de situação; no Jovem também badge da cor do círculo e nº do encontro) → **Histórico de Equipes** → **Dados cadastrais** (o formulário). Divider entre cada bloco.
+- Ordem das seções dentro de Dados cadastrais: Identificação → Endereço → Filiação → Escolaridade → Religião → Convite. Cada seção com um subtítulo discreto e um divider entre elas. Histórico não é seção do formulário — vem antes, logo abaixo do header.
+- No cadastro novo (sem header de página) a foto aparece no topo do próprio formulário; na edição ela fica só no header.
 - Campos lado a lado: tudo que é curto e correlato (Data de nascimento + Naturalidade; Telefone + E-mail; Logradouro + Número). Largura total: campos de texto livre (Observações, motivo de desativação) e Endereço completo em telas estreitas.
 - Histórico: **não** Accordion — sugiro **Table** (uma linha por equipe servida: nº do encontro, equipe, pode coordenar?, pode palestrar?, observações). Accordion esconde informação que a equipe dirigente frequentemente precisa escanear rápido (ex.: "quantas vezes já serviu nos Círculos?").
 - Avaliação: embutida na mesma linha da Table de Histórico (não em Timeline separada) — evita alternar entre duas visualizações pra responder "essa pessoa pode coordenar essa equipe?".
@@ -164,7 +166,7 @@ Novo recurso: uma lista **geral** de pessoas cotadas como boas opções de subst
 | Necessidade do sistema | Componente shadcn |
 |---|---|
 | Navegação geral (Fichas / Montagem / Exportação) | Sidebar |
-| Abas da Ficha do Jovem/Casal | Tabs |
+| Seções da Ficha do Jovem/Casal | Separator (empilhadas, sem Tabs) |
 | Grid das 16 equipes | Card + Progress + Badge |
 | Detalhe de uma equipe ao clicar no card | Drawer |
 | Confirmações obrigatórias (repetição de equipe, recusa) | Alert Dialog |
