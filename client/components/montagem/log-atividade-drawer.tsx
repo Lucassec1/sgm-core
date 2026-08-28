@@ -18,6 +18,8 @@ const ACOES: Record<string, string> = {
   REMOVEU_ALOCACAO: 'removeu uma alocação',
   ADICIONOU_LISTA_SUBSTITUICAO: 'adicionou à lista de substituição',
   REMOVEU_LISTA_SUBSTITUICAO: 'removeu da lista de substituição',
+  ADICIONOU_QUADRANTE: 'anexou um quadrante (PDF)',
+  REMOVEU_QUADRANTE: 'removeu um quadrante',
 };
 
 export function LogAtividadeDrawer({ montagemId }: { montagemId: string }) {

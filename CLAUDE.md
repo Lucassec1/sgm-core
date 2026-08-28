@@ -38,12 +38,14 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
   + histórico de equipes + dados cadastrais em seções empilhadas. Falta upload real de foto
   (hoje é só campo de URL).
 - **Módulo Montagem: quase completo** — schema, backend (montagens, alocações, equipes,
-  lista de substituição, log de atividade) com regras R1–R6 e R9 aplicadas e testadas
-  (specs em `server/src/modules/montagem/*.spec.ts`); frontend com quadro das 16 equipes,
-  drawer por equipe, lista completa, aba Convites (status + saídas/motivos + log), aba
-  Substituições, criar/editar/finalizar montagem, ícones das equipes (`EquipeIcon`).
-  **Falta:** exportar .xlsx (aba Exportação = "em breve"), aba Quadrantes (upload/download de
-  PDF), e R7/R8 seguem adiados (ver seção "Isolamento por paróquia").
+  lista de substituição, log de atividade, quadrantes) com regras R1–R6 e R9 aplicadas e
+  testadas (specs em `server/src/modules/montagem/*.spec.ts`); frontend com quadro das 16
+  equipes, drawer por equipe, lista completa, aba Convites (status + saídas/motivos + log),
+  aba Substituições, aba Quadrantes (upload/download de PDF), criar/editar/finalizar
+  montagem, ícones das equipes (`EquipeIcon`).
+  **Falta:** exportar .xlsx (aba Exportação = "em breve"); R7/R8 seguem adiados (ver seção
+  "Isolamento por paróquia"). Quadrantes: binário no filesystem do server
+  (`UPLOADS_DIR`, fallback `server/uploads/`, gitignored) — pra produção apontar num volume.
 - **Auth: stub** — `AuthController`/`AuthService`/`JwtAuthGuard` existem como esqueleto, sem
   lógica real. `/login` no client é uma página vazia. Enquanto isso, o campo `usuario` do log
   de atividade (R9) e o `paroquiaId` vêm do client provisoriamente.

@@ -8,10 +8,25 @@ import { AlocacoesService } from './alocacoes.service';
 import { ListaSubstituicaoController } from './lista-substituicao.controller';
 import { ListaSubstituicaoService } from './lista-substituicao.service';
 import { LogAtividadeService } from './log-atividade.service';
+import { QuadrantesController } from './quadrantes.controller';
+import { QuadrantesService } from './quadrantes.service';
 
 @Module({
-  controllers: [EquipesController, MontagensController, AlocacoesController, ListaSubstituicaoController],
-  providers: [EquipesService, MontagensService, AlocacoesService, ListaSubstituicaoService, LogAtividadeService],
+  controllers: [
+    EquipesController,
+    MontagensController,
+    AlocacoesController,
+    ListaSubstituicaoController,
+    QuadrantesController,
+  ],
+  providers: [
+    EquipesService,
+    MontagensService,
+    AlocacoesService,
+    ListaSubstituicaoService,
+    LogAtividadeService,
+    QuadrantesService,
+  ],
   exports: [EquipesService, MontagensService, AlocacoesService, ListaSubstituicaoService, LogAtividadeService],
 })
 export class MontagemModule {}

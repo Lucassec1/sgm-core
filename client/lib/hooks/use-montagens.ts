@@ -121,6 +121,31 @@ export function useLog(montagemId: string | undefined) {
   });
 }
 
+export function useQuadrantes(montagemId: string | undefined) {
+  return useQuery({
+    queryKey: ['montagens', montagemId, 'quadrantes'],
+    queryFn: () => apiClient.listQuadrantes(montagemId as string),
+    enabled: !!montagemId,
+  });
+}
+
+export function useUploadQuadrante(montagemId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ file, usuario }: { file: File; usuario?: string }) =>
+      apiClient.uploadQuadrante(montagemId, file, usuario),
+    onSuccess: () => invalidarMontagem(queryClient, montagemId),
+  });
+}
+
+export function useDeleteQuadrante(montagemId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiClient.deleteQuadrante(montagemId, id),
+    onSuccess: () => invalidarMontagem(queryClient, montagemId),
+  });
+}
+
 export function useListaSubstituicao(montagemId: string | undefined) {
   return useQuery({
     queryKey: ['montagens', montagemId, 'lista-substituicao'],

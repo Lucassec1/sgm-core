@@ -144,6 +144,10 @@ Novo recurso: uma lista **geral** de pessoas cotadas como boas opções de subst
 - **Aba Convites**: tabela de todos os convites da montagem por status (filtro por status) + uma seção **"Saídas registradas"** — recusas e desistências com o **motivo da saída** (tanto recusa quanto desistência exigem registrar o motivo). Essa seção some quando a montagem é finalizada (R9). Cada saída tem um atalho "Substituir" que abre a busca de pessoa pra aquela vaga.
 - **Log de atividade** (R9): drawer "Atividade" no header da montagem — linha do tempo de toda alteração (quem / o quê / quando). Sem Auth real ainda, "quem" é o campo `usuario` informado pelo client.
 
+### Aba "Quadrantes"
+
+- Só anexo de PDF da Equipe da Gráfica, sem campos cadastráveis (requisitos 2.3). Lista (nome, tamanho, data) + enviar (só PDF, até 50 MB) + baixar + remover. O binário fica no filesystem do server (PDFs de 55–70 páginas), o banco guarda só metadados.
+
 ### Alertas visuais
 
 | Situação | Sugestão visual |

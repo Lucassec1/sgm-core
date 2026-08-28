@@ -12,6 +12,7 @@ import { FinalizarMontagemButton } from '@/components/montagem/finalizar-montage
 import { ListaCompletaEquipes } from '@/components/montagem/lista-completa-equipes';
 import { ListaSubstituicaoSection } from '@/components/montagem/lista-substituicao-section';
 import { LogAtividadeDrawer } from '@/components/montagem/log-atividade-drawer';
+import { QuadrantesSection } from '@/components/montagem/quadrantes-section';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
 
 function agruparPorEquipe(vagas: VagaMontagem[]) {
@@ -81,6 +82,7 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
           <TabsTrigger value="lista">Lista completa</TabsTrigger>
           <TabsTrigger value="convites">Convites</TabsTrigger>
           <TabsTrigger value="substituicoes">Substituições</TabsTrigger>
+          <TabsTrigger value="quadrantes">Quadrantes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="equipes" className="space-y-4">
@@ -125,6 +127,10 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
 
         <TabsContent value="substituicoes">
           <ListaSubstituicaoSection montagemId={id} readOnly={montagem.status === 'FINALIZADA'} />
+        </TabsContent>
+
+        <TabsContent value="quadrantes">
+          <QuadrantesSection montagemId={id} readOnly={montagem.status === 'FINALIZADA'} />
         </TabsContent>
       </Tabs>
 
