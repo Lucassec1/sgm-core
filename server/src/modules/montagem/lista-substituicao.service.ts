@@ -21,25 +21,28 @@ export class ListaSubstituicaoService {
     await this.montagensService.findOne(montagemId);
 
     try {
-      const item = await this.prisma.listaSubstituicao.create({
-        data: {
+      return await this.prisma.$transaction(async (tx) => {
+        const item = await tx.listaSubstituicao.create({
+          data: {
+            montagemId,
+            tipoPessoa: dto.tipoPessoa,
+            fichaId: dto.fichaId,
+            fichaCasalId: dto.fichaCasalId,
+            nota: dto.nota,
+          },
+          include: ITEM_INCLUDE,
+        });
+
+        await this.logAtividade.registrar(
           montagemId,
-          tipoPessoa: dto.tipoPessoa,
-          fichaId: dto.fichaId,
-          fichaCasalId: dto.fichaCasalId,
-          nota: dto.nota,
-        },
-        include: ITEM_INCLUDE,
+          dto.usuario,
+          'ADICIONOU_LISTA_SUBSTITUICAO',
+          item.ficha?.nomeCompleto ?? `${item.fichaCasal?.nomeEle} e ${item.fichaCasal?.nomeEla}`,
+          tx,
+        );
+
+        return item;
       });
-
-      await this.logAtividade.registrar(
-        montagemId,
-        dto.usuario,
-        'ADICIONOU_LISTA_SUBSTITUICAO',
-        item.ficha?.nomeCompleto ?? `${item.fichaCasal?.nomeEle} e ${item.fichaCasal?.nomeEla}`,
-      );
-
-      return item;
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         throw new ConflictException('Essa pessoa já está na lista de substituição desta montagem');
@@ -63,13 +66,16 @@ export class ListaSubstituicaoService {
       throw new NotFoundException(`Item ${id} não encontrado na lista de substituição da montagem ${montagemId}`);
     }
 
-    await this.prisma.listaSubstituicao.delete({ where: { id } });
-    await this.logAtividade.registrar(
-      montagemId,
-      undefined,
-      'REMOVEU_LISTA_SUBSTITUICAO',
-      item.ficha?.nomeCompleto ?? `${item.fichaCasal?.nomeEle} e ${item.fichaCasal?.nomeEla}`,
-    );
+    await this.prisma.$transaction(async (tx) => {
+      await tx.listaSubstituicao.delete({ where: { id } });
+      await this.logAtividade.registrar(
+        montagemId,
+        undefined,
+        'REMOVEU_LISTA_SUBSTITUICAO',
+        item.ficha?.nomeCompleto ?? `${item.fichaCasal?.nomeEle} e ${item.fichaCasal?.nomeEla}`,
+        tx,
+      );
+    });
 
     return item;
   }

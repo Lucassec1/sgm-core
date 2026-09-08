@@ -11,7 +11,7 @@ import { LogAtividadeService } from './log-atividade.service';
 const MONTAGEM_ID = 'montagem-1';
 
 function criarPrismaMock() {
-  return {
+  const mock: Record<string, unknown> = {
     listaSubstituicao: {
       create: jest.fn(),
       findMany: jest.fn(),
@@ -19,6 +19,11 @@ function criarPrismaMock() {
       delete: jest.fn(),
     },
   };
+  // Passthrough: roda o callback com o próprio mock no lugar do client transacional.
+  mock.$transaction = jest.fn((arg: unknown) =>
+    typeof arg === 'function' ? (arg as (tx: unknown) => unknown)(mock) : Promise.all(arg as unknown[]),
+  );
+  return mock as Record<string, any>;
 }
 
 describe('ListaSubstituicaoService', () => {
@@ -55,7 +60,13 @@ describe('ListaSubstituicaoService', () => {
 
       await service.create(MONTAGEM_ID, { tipoPessoa: 'JOVEM', fichaId: 'ficha-1', usuario: 'Ana' } as any);
 
-      expect(logAtividade.registrar).toHaveBeenCalledWith(MONTAGEM_ID, 'Ana', 'ADICIONOU_LISTA_SUBSTITUICAO', 'João Silva');
+      expect(logAtividade.registrar).toHaveBeenCalledWith(
+        MONTAGEM_ID,
+        'Ana',
+        'ADICIONOU_LISTA_SUBSTITUICAO',
+        'João Silva',
+        expect.anything(),
+      );
     });
 
     it('traduz violação de unicidade (pessoa já está na lista) em ConflictException', async () => {
@@ -95,7 +106,13 @@ describe('ListaSubstituicaoService', () => {
       await service.remove(MONTAGEM_ID, 'item-1');
 
       expect(prisma.listaSubstituicao.delete).toHaveBeenCalledWith({ where: { id: 'item-1' } });
-      expect(logAtividade.registrar).toHaveBeenCalledWith(MONTAGEM_ID, undefined, 'REMOVEU_LISTA_SUBSTITUICAO', 'João');
+      expect(logAtividade.registrar).toHaveBeenCalledWith(
+        MONTAGEM_ID,
+        undefined,
+        'REMOVEU_LISTA_SUBSTITUICAO',
+        'João',
+        expect.anything(),
+      );
     });
 
     it('rejeita quando o item não existe ou é de outra montagem', async () => {
