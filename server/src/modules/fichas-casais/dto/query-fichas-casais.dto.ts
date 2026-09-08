@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 import { SituacaoFicha } from '@prisma/client';
 
 // Filtros da Lista de Casais — busca por nome (dele ou dela) e status.
@@ -22,5 +22,6 @@ export class QueryFichasCasaisDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(100)
   pageSize?: number;
 }
