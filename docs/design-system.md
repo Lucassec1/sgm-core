@@ -10,6 +10,8 @@
 - **Fonte:** Inter.
 - **Radius:** 0.5rem (8px) como padrão — mantém consistência com o kit shadcn que você encontrou na Community.
 - **Paleta base:** zinc/neutral (fundo branco, texto zinc-950, bordas zinc-200, texto secundário zinc-500) — paleta neutra de propósito, porque as cores "com significado" do sistema (cor do círculo, status) já competem bastante por atenção visual; a UI em si fica neutra pra não disputar destaque com essas cores funcionais.
+- **Tema:** claro e escuro, alternável (claro → escuro → automático/SO) pelo botão no header. Implementado com `next-themes` + classe `.dark` no `<html>`; os tokens shadcn (`--background`, `--card`, `--sidebar-*` etc.) têm o par escuro em `app/globals.css`. Escolha do usuário persiste em `localStorage`; sem escolha, segue o SO. O contexto de uso (fim de semana inteiro de tela, período noturno do encontro em salão com pouca luz) torna o escuro mais que estético.
+  - Cores funcionais no escuro: badge de círculo não muda (pílula sólida com hex exato + texto de contraste calculado). Badges de status e caixas de aviso âmbar ganham variante `dark:` (tom `-950` de fundo + texto `-400`/`-200`). Texto de erro de formulário (`text-red-600`, espalhado pelos forms) ainda não tem variante `dark:` — legível, mas é polimento pendente (ver Pendências).
 
 ### Cores funcionais (uso restrito, não decorativo)
 
@@ -77,4 +79,6 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 
 ## Pendências
 
-_(nenhuma no momento)_
+- **Polimento do tema escuro nos textos de erro de formulário.** `text-red-600` aparece ~22x nos forms
+  (`ficha-form.tsx`, `ficha-casal-form.tsx`, `nova-montagem-dialog.tsx` etc.) sem variante `dark:`. Fica
+  legível no escuro, mas o ideal é trocar por um token (`text-destructive`) numa passada dedicada.
