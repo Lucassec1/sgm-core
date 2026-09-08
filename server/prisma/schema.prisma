@@ -1,6 +1,6 @@
 // Schema do Prisma — SGM Core
-// Ainda sem models: o schema da Ficha (e demais entidades) é código de negócio
-// e entra numa etapa seguinte, junto com o CRUD do módulo Fichas.
+// Models dos módulos Fichas e Montagem. Regras de negócio (R1-R9) vivem nas Services
+// (ver docs/regras-imutaveis.md e docs/arquitetura.md, seção 2), não aqui.
 
 generator client {
   provider = "prisma-client-js"
