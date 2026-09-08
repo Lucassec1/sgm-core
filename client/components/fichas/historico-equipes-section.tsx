@@ -36,7 +36,7 @@ function HistoricoEquipesLista({ historico, isLoading }: { historico?: Historico
           {(item.podeCoordenar || item.podePalestrar) && (
             <div className="flex gap-2">
               {item.podeCoordenar && (
-                <Badge variant="outline" className="border-transparent bg-green-50 text-green-700 font-medium">
+                <Badge variant="outline" className="border-transparent bg-green-50 text-green-700 font-medium dark:bg-green-950 dark:text-green-400">
                   Pode coordenar essa equipe
                 </Badge>
               )}

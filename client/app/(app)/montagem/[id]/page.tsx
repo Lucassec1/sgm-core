@@ -87,7 +87,7 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
 
         <TabsContent value="equipes" className="space-y-4">
           {!circulosFechado && (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
               Aguardando a Eq. dos Círculos fechar (todos aceitos) — as outras equipes já podem ser rascunhadas, mas o convite delas só é liberado depois.
             </div>
           )}

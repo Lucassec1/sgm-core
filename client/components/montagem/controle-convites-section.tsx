@@ -136,7 +136,7 @@ export function ControleConvitesSection({
               return (
                 <li key={a.id} className="rounded-md border p-3 text-sm">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="outline" className="border-transparent bg-red-50 font-medium text-red-700">
+                    <Badge variant="outline" className="border-transparent bg-red-50 font-medium text-red-700 dark:bg-red-950 dark:text-red-400">
                       {a.status === 'DESISTIU' ? 'Desistiu' : 'Recusou'}
                     </Badge>
                     <span className="font-medium">{nomeAlocacao(a)}</span>

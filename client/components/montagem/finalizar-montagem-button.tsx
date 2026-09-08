@@ -101,7 +101,7 @@ export function FinalizarMontagemButton({
                   somente leitura e o histórico de substituição deste encontro deixa de aparecer.
                 </p>
                 {equipesIncompletas.length > 0 && (
-                  <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800">
+                  <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
                     <p className="font-medium">Essas equipes ainda não estão com a quantidade certa de pessoas:</p>
                     <ul className="mt-1 list-inside list-disc">
                       {equipesIncompletas.map((e) => (

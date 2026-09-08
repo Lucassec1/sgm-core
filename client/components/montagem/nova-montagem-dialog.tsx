@@ -124,7 +124,7 @@ export function NovaMontagemDialog() {
             </div>
             {ehImplantacao && (
               <>
-                <div className="col-span-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                <div className="col-span-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
                   Soma automaticamente 12 jovens sementeira da paróquia afilhada e 4 casais afilhados na Eq. da Visitação
                   (fixo, não editável).
                 </div>

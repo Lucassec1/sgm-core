@@ -97,7 +97,7 @@ export function ListaCompletaEquipes({
                 <EquipeIcon slug={equipe.slug} nome={equipe.nome} size={20} />
                 <span>
                   {equipe.nome}{' '}
-                  <span className={`text-sm font-normal ${completa ? 'text-green-600' : 'text-amber-600'}`}>
+                  <span className={`text-sm font-normal ${completa ? 'text-green-600 dark:text-green-500' : 'text-amber-600 dark:text-amber-500'}`}>
                     {completa ? '· completa' : `· faltam ${resumoFalta}`}
                   </span>
                 </span>
