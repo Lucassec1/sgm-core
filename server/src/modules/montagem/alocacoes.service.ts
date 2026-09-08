@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Equipe, StatusConvite } from '@prisma/client';
+import { Equipe, Prisma, StatusConvite } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LogAtividadeService } from './log-atividade.service';
 import { CreateAlocacaoDto } from './dto/create-alocacao.dto';
@@ -27,8 +27,23 @@ export class AlocacoesService {
     private readonly logAtividade: LogAtividadeService,
   ) {}
 
-  private async getVagaOuFalha(montagemId: string, vagaMontagemId: string) {
-    const vaga = await this.prisma.vagaMontagem.findUnique({
+  // Sob isolamento Serializable o Postgres aborta uma das transações concorrentes com
+  // P2034 — a operação é segura de repetir. O volume de uso (equipe dirigente, não
+  // público) torna poucas tentativas suficientes.
+  private async comRetrySerializacao<T>(fn: () => Promise<T>, tentativas = 3): Promise<T> {
+    for (let i = 1; ; i++) {
+      try {
+        return await fn();
+      } catch (err) {
+        const conflito =
+          err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2034';
+        if (!conflito || i >= tentativas) throw err;
+      }
+    }
+  }
+
+  private async getVagaOuFalha(tx: Prisma.TransactionClient, montagemId: string, vagaMontagemId: string) {
+    const vaga = await tx.vagaMontagem.findUnique({
       where: { id: vagaMontagemId },
       include: { equipe: true, cargo: true },
     });
@@ -39,8 +54,13 @@ export class AlocacoesService {
   }
 
   // R1 — recusa/desistência bloqueia qualquer nova alocação da mesma pessoa nesse encontro.
-  private async verificarBloqueioRecusa(montagemId: string, fichaId?: string, fichaCasalId?: string) {
-    const bloqueio = await this.prisma.alocacao.findFirst({
+  private async verificarBloqueioRecusa(
+    tx: Prisma.TransactionClient,
+    montagemId: string,
+    fichaId?: string,
+    fichaCasalId?: string,
+  ) {
+    const bloqueio = await tx.alocacao.findFirst({
       where: {
         vagaMontagem: { montagemId },
         status: { in: [StatusConvite.RECUSADO, StatusConvite.DESISTIU] },
@@ -54,13 +74,14 @@ export class AlocacoesService {
 
   // R2 — aviso de repetição (exige confirmação) + limite real de 3x (exceto Eq. da Visitação).
   private async verificarRepeticaoEquipe(
+    tx: Prisma.TransactionClient,
     equipe: Equipe,
     montagemId: string,
     fichaId: string | undefined,
     fichaCasalId: string | undefined,
     confirmarRepeticao: boolean | undefined,
   ) {
-    const vezesServidas = await this.prisma.alocacao.count({
+    const vezesServidas = await tx.alocacao.count({
       where: {
         vagaMontagem: { equipeId: equipe.id, montagemId: { not: montagemId } },
         status: StatusConvite.ACEITO,
@@ -89,12 +110,13 @@ export class AlocacoesService {
   // coordenação por casal só vale nas equipes com coordenacaoCasalExigeHistorico=true (hoje
   // só a Visitação — nas demais qualquer casal ativo pode coordenar sem histórico).
   private async verificarCoordenacao(
+    tx: Prisma.TransactionClient,
     equipe: Equipe,
     montagemId: string,
     fichaId: string | undefined,
     fichaCasalId: string | undefined,
   ) {
-    const grupoA = await this.prisma.alocacao.count({
+    const grupoA = await tx.alocacao.count({
       where: {
         vagaMontagem: { equipeId: equipe.id, montagemId: { not: montagemId } },
         status: StatusConvite.ACEITO,
@@ -104,16 +126,16 @@ export class AlocacoesService {
     if (grupoA > 0) return;
 
     if (fichaId) {
-      const ficha = await this.prisma.ficha.findUnique({ where: { id: fichaId } });
+      const ficha = await tx.ficha.findUnique({ where: { id: fichaId } });
       if (ficha?.jaFoiEquipeDirigente) return;
     } else if (fichaCasalId) {
-      const fichaCasal = await this.prisma.fichaCasal.findUnique({ where: { id: fichaCasalId } });
+      const fichaCasal = await tx.fichaCasal.findUnique({ where: { id: fichaCasalId } });
       if (fichaCasal?.jaFoiEquipeDirigente) return;
     }
 
-    const comandoGeral = await this.prisma.equipe.findUnique({ where: { slug: 'comando-geral' } });
+    const comandoGeral = await tx.equipe.findUnique({ where: { slug: 'comando-geral' } });
     if (comandoGeral) {
-      const grupoBComandoGeral = await this.prisma.alocacao.count({
+      const grupoBComandoGeral = await tx.alocacao.count({
         where: {
           vagaMontagem: { equipeId: comandoGeral.id },
           status: StatusConvite.ACEITO,
@@ -130,13 +152,13 @@ export class AlocacoesService {
 
   // R4 — Eq. dos Círculos primeiro: as demais equipes (exceto Círculos e Comando Geral) só
   // enviam convite depois que todos os membros dos Círculos aceitaram.
-  private async verificarBloqueioConvite(equipe: Equipe, montagemId: string) {
+  private async verificarBloqueioConvite(tx: Prisma.TransactionClient, equipe: Equipe, montagemId: string) {
     if (!equipe.bloqueiaConvitePosCirculos) return;
 
-    const circulos = await this.prisma.equipe.findUnique({ where: { slug: 'circulos' } });
+    const circulos = await tx.equipe.findUnique({ where: { slug: 'circulos' } });
     if (!circulos) return;
 
-    const alocacoesCirculos = await this.prisma.alocacao.findMany({
+    const alocacoesCirculos = await tx.alocacao.findMany({
       where: { vagaMontagem: { equipeId: circulos.id, montagemId } },
       select: { status: true },
     });
@@ -157,41 +179,58 @@ export class AlocacoesService {
   }
 
   async create(montagemId: string, dto: CreateAlocacaoDto) {
-    const vaga = await this.getVagaOuFalha(montagemId, dto.vagaMontagemId);
+    // Checagens de regra (R1-R4) + escrita numa única transação Serializable: as regras
+    // leem contagens que a própria escrita altera (ex.: "máximo 3x" da R2), então ler e
+    // gravar precisam enxergar o mesmo estado — sem isso, duas chamadas simultâneas pra
+    // mesma pessoa+equipe podem furar o limite. O log (R9) entra na mesma transação.
+    return this.comRetrySerializacao(() =>
+      this.prisma.$transaction(
+        async (tx) => {
+          const vaga = await this.getVagaOuFalha(tx, montagemId, dto.vagaMontagemId);
 
-    await this.verificarBloqueioRecusa(montagemId, dto.fichaId, dto.fichaCasalId);
-    await this.verificarRepeticaoEquipe(vaga.equipe, montagemId, dto.fichaId, dto.fichaCasalId, dto.confirmarRepeticao);
-    const exigeCoordenacao =
-      vaga.cargo.ehCoordenacao && (dto.tipoPessoa === 'JOVEM' || vaga.equipe.coordenacaoCasalExigeHistorico);
-    if (exigeCoordenacao) {
-      await this.verificarCoordenacao(vaga.equipe, montagemId, dto.fichaId, dto.fichaCasalId);
-    }
-    if (dto.status === StatusConvite.CONVIDADO) {
-      await this.verificarBloqueioConvite(vaga.equipe, montagemId);
-    }
+          await this.verificarBloqueioRecusa(tx, montagemId, dto.fichaId, dto.fichaCasalId);
+          await this.verificarRepeticaoEquipe(tx, vaga.equipe, montagemId, dto.fichaId, dto.fichaCasalId, dto.confirmarRepeticao);
+          const exigeCoordenacao =
+            vaga.cargo.ehCoordenacao && (dto.tipoPessoa === 'JOVEM' || vaga.equipe.coordenacaoCasalExigeHistorico);
+          if (exigeCoordenacao) {
+            await this.verificarCoordenacao(tx, vaga.equipe, montagemId, dto.fichaId, dto.fichaCasalId);
+          }
+          if (dto.status === StatusConvite.CONVIDADO) {
+            await this.verificarBloqueioConvite(tx, vaga.equipe, montagemId);
+          }
 
-    const alocacao = await this.prisma.alocacao.create({
-      data: {
-        vagaMontagemId: dto.vagaMontagemId,
-        tipoPessoa: dto.tipoPessoa,
-        fichaId: dto.fichaId,
-        fichaCasalId: dto.fichaCasalId,
-        status: dto.status,
-        dataConvite: dto.dataConvite ? new Date(dto.dataConvite) : undefined,
-        motivoRecusa: dto.motivoRecusa,
-      },
-    });
+          const alocacao = await tx.alocacao.create({
+            data: {
+              vagaMontagemId: dto.vagaMontagemId,
+              tipoPessoa: dto.tipoPessoa,
+              fichaId: dto.fichaId,
+              fichaCasalId: dto.fichaCasalId,
+              status: dto.status,
+              dataConvite: dto.dataConvite ? new Date(dto.dataConvite) : undefined,
+              motivoRecusa: dto.motivoRecusa,
+            },
+          });
 
-    // Se a pessoa estava no banco de substituição desse encontro, sai da lista ao ser
-    // alocada — a lista é só "prontos pra entrar", quem entrou não fica mais lá
-    // (ver docs/ux-e-fluxos.md, seção 3).
-    await this.prisma.listaSubstituicao.deleteMany({
-      where: { montagemId, ...(dto.fichaId ? { fichaId: dto.fichaId } : { fichaCasalId: dto.fichaCasalId }) },
-    });
+          // Se a pessoa estava no banco de substituição desse encontro, sai da lista ao ser
+          // alocada — a lista é só "prontos pra entrar", quem entrou não fica mais lá
+          // (ver docs/ux-e-fluxos.md, seção 3).
+          await tx.listaSubstituicao.deleteMany({
+            where: { montagemId, ...(dto.fichaId ? { fichaId: dto.fichaId } : { fichaCasalId: dto.fichaCasalId }) },
+          });
 
-    await this.logAtividade.registrar(montagemId, dto.usuario, 'CRIOU_ALOCACAO', `${vaga.equipe.nome} / ${vaga.cargo.nome}`);
+          await this.logAtividade.registrar(
+            montagemId,
+            dto.usuario,
+            'CRIOU_ALOCACAO',
+            `${vaga.equipe.nome} / ${vaga.cargo.nome}`,
+            tx,
+          );
 
-    return alocacao;
+          return alocacao;
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      ),
+    );
   }
 
   async findAll(montagemId: string) {
@@ -216,40 +255,46 @@ export class AlocacoesService {
 
   async update(montagemId: string, id: string, dto: UpdateAlocacaoDto) {
     const atual = await this.findOne(montagemId, id);
-
-    if (dto.status === StatusConvite.CONVIDADO && atual.status !== StatusConvite.CONVIDADO) {
-      await this.verificarBloqueioConvite(atual.vagaMontagem.equipe, montagemId);
-    }
-
     const { usuario, ...campos } = dto;
-    const alocacao = await this.prisma.alocacao.update({
-      where: { id },
-      data: {
-        ...campos,
-        ...(dto.dataConvite && { dataConvite: new Date(dto.dataConvite) }),
-        ...(dto.dataResposta && { dataResposta: new Date(dto.dataResposta) }),
-      },
+
+    return this.prisma.$transaction(async (tx) => {
+      if (dto.status === StatusConvite.CONVIDADO && atual.status !== StatusConvite.CONVIDADO) {
+        await this.verificarBloqueioConvite(tx, atual.vagaMontagem.equipe, montagemId);
+      }
+
+      const alocacao = await tx.alocacao.update({
+        where: { id },
+        data: {
+          ...campos,
+          ...(dto.dataConvite && { dataConvite: new Date(dto.dataConvite) }),
+          ...(dto.dataResposta && { dataResposta: new Date(dto.dataResposta) }),
+        },
+      });
+
+      await this.logAtividade.registrar(
+        montagemId,
+        usuario,
+        'ATUALIZOU_ALOCACAO',
+        dto.status ? `status -> ${dto.status}` : undefined,
+        tx,
+      );
+
+      return alocacao;
     });
-
-    await this.logAtividade.registrar(
-      montagemId,
-      usuario,
-      'ATUALIZOU_ALOCACAO',
-      dto.status ? `status -> ${dto.status}` : undefined,
-    );
-
-    return alocacao;
   }
 
   async remove(montagemId: string, id: string) {
     const alocacao = await this.findOne(montagemId, id);
-    await this.prisma.alocacao.delete({ where: { id } });
-    await this.logAtividade.registrar(
-      montagemId,
-      undefined,
-      'REMOVEU_ALOCACAO',
-      `${alocacao.vagaMontagem.equipe.nome} / ${alocacao.vagaMontagem.cargo.nome}`,
-    );
-    return alocacao;
+    return this.prisma.$transaction(async (tx) => {
+      await tx.alocacao.delete({ where: { id } });
+      await this.logAtividade.registrar(
+        montagemId,
+        undefined,
+        'REMOVEU_ALOCACAO',
+        `${alocacao.vagaMontagem.equipe.nome} / ${alocacao.vagaMontagem.cargo.nome}`,
+        tx,
+      );
+      return alocacao;
+    });
   }
 }
