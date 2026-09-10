@@ -49,44 +49,50 @@ export class MontagensService {
       );
     }
 
-    const ultimaMontagem = await this.prisma.montagem.findFirst({
-      where: { paroquiaId: dto.paroquiaId },
-      orderBy: { numeroEncontro: 'desc' },
-      select: { numeroEncontro: true },
+    // Montagem + vagas + log numa transação só: sem isso, uma falha no createMany deixaria
+    // uma Montagem sem nenhuma vaga, e uma falha no log deixaria a criação sem rastro (R9).
+    const montagem = await this.prisma.$transaction(async (tx) => {
+      const ultimaMontagem = await tx.montagem.findFirst({
+        where: { paroquiaId: dto.paroquiaId },
+        orderBy: { numeroEncontro: 'desc' },
+        select: { numeroEncontro: true },
+      });
+      const numeroEncontro = (ultimaMontagem?.numeroEncontro ?? 0) + 1;
+
+      const cargos = await tx.cargo.findMany({ include: { equipe: true } });
+
+      const criada = await tx.montagem.create({
+        data: {
+          paroquiaId: dto.paroquiaId,
+          numeroEncontro,
+          data: new Date(dto.data),
+          padroeiro: dto.padroeiro,
+          diretorEspiritual: dto.diretorEspiritual,
+          ehImplantacao,
+          paroquiaAfilhadaNome: dto.paroquiaAfilhadaNome,
+          quantidadeJovensSementeira: ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : undefined,
+          quantidadeCasaisAfilhada: ehImplantacao ? CASAIS_AFILHADA_IMPLANTACAO : undefined,
+          numeroJovensVivenciando: dto.numeroJovensVivenciando,
+        },
+      });
+
+      await tx.vagaMontagem.createMany({
+        data: cargos.map((cargo) => ({
+          montagemId: criada.id,
+          equipeId: cargo.equipeId,
+          cargoId: cargo.id,
+          quantidadeCasais: cargo.quantidadeDinamica
+            ? calcularCasaisVisitacao(dto.numeroJovensVivenciando, ehImplantacao)
+            : cargo.quantidadeCasais,
+          quantidadeRapazes: cargo.quantidadeRapazes,
+          quantidadeMocas: cargo.quantidadeMocas,
+        })),
+      });
+
+      await this.logAtividade.registrar(criada.id, dto.usuario, 'CRIOU_MONTAGEM', `Encontro nº ${numeroEncontro}`, tx);
+
+      return criada;
     });
-    const numeroEncontro = (ultimaMontagem?.numeroEncontro ?? 0) + 1;
-
-    const cargos = await this.prisma.cargo.findMany({ include: { equipe: true } });
-
-    const montagem = await this.prisma.montagem.create({
-      data: {
-        paroquiaId: dto.paroquiaId,
-        numeroEncontro,
-        data: new Date(dto.data),
-        padroeiro: dto.padroeiro,
-        diretorEspiritual: dto.diretorEspiritual,
-        ehImplantacao,
-        paroquiaAfilhadaNome: dto.paroquiaAfilhadaNome,
-        quantidadeJovensSementeira: ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : undefined,
-        quantidadeCasaisAfilhada: ehImplantacao ? CASAIS_AFILHADA_IMPLANTACAO : undefined,
-        numeroJovensVivenciando: dto.numeroJovensVivenciando,
-      },
-    });
-
-    await this.prisma.vagaMontagem.createMany({
-      data: cargos.map((cargo) => ({
-        montagemId: montagem.id,
-        equipeId: cargo.equipeId,
-        cargoId: cargo.id,
-        quantidadeCasais: cargo.quantidadeDinamica
-          ? calcularCasaisVisitacao(dto.numeroJovensVivenciando, ehImplantacao)
-          : cargo.quantidadeCasais,
-        quantidadeRapazes: cargo.quantidadeRapazes,
-        quantidadeMocas: cargo.quantidadeMocas,
-      })),
-    });
-
-    await this.logAtividade.registrar(montagem.id, dto.usuario, 'CRIOU_MONTAGEM', `Encontro nº ${numeroEncontro}`);
 
     return this.findOne(montagem.id);
   }
@@ -144,34 +150,39 @@ export class MontagensService {
       }
     }
 
-    const montagem = await this.prisma.montagem.update({
-      where: { id },
-      data: {
-        ...campos,
-        ...(dto.data && { data: new Date(dto.data) }),
-        ...(dto.ehImplantacao !== undefined && {
-          quantidadeJovensSementeira: dto.ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : null,
-          quantidadeCasaisAfilhada: dto.ehImplantacao ? CASAIS_AFILHADA_IMPLANTACAO : null,
-        }),
-      },
-      include: VAGAS_INCLUDE,
-    });
+    // update da Montagem + recálculo da vaga dinâmica (R6) + log numa transação só.
+    const montagem = await this.prisma.$transaction(async (tx) => {
+      const atualizada = await tx.montagem.update({
+        where: { id },
+        data: {
+          ...campos,
+          ...(dto.data && { data: new Date(dto.data) }),
+          ...(dto.ehImplantacao !== undefined && {
+            quantidadeJovensSementeira: dto.ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : null,
+            quantidadeCasaisAfilhada: dto.ehImplantacao ? CASAIS_AFILHADA_IMPLANTACAO : null,
+          }),
+        },
+        include: VAGAS_INCLUDE,
+      });
 
-    if (precisaRecalcular) {
-      const vagaDinamica = montagem.vagas.find((v) => v.cargo.quantidadeDinamica);
-      if (vagaDinamica) {
-        await this.prisma.vagaMontagem.update({
-          where: { id: vagaDinamica.id },
-          data: { quantidadeCasais: calcularCasaisVisitacao(numeroJovensVivenciando, ehImplantacao) },
-        });
+      if (precisaRecalcular) {
+        const vagaDinamica = atualizada.vagas.find((v) => v.cargo.quantidadeDinamica);
+        if (vagaDinamica) {
+          await tx.vagaMontagem.update({
+            where: { id: vagaDinamica.id },
+            data: { quantidadeCasais: calcularCasaisVisitacao(numeroJovensVivenciando, ehImplantacao) },
+          });
+        }
       }
-    }
 
-    if (dto.status && dto.status !== anterior.status) {
-      await this.logAtividade.registrar(id, usuario, 'MUDOU_STATUS', `${anterior.status} -> ${dto.status}`);
-    } else {
-      await this.logAtividade.registrar(id, usuario, 'ATUALIZOU_MONTAGEM');
-    }
+      if (dto.status && dto.status !== anterior.status) {
+        await this.logAtividade.registrar(id, usuario, 'MUDOU_STATUS', `${anterior.status} -> ${dto.status}`, tx);
+      } else {
+        await this.logAtividade.registrar(id, usuario, 'ATUALIZOU_MONTAGEM', undefined, tx);
+      }
+
+      return atualizada;
+    });
 
     return precisaRecalcular ? this.findOne(id) : montagem;
   }

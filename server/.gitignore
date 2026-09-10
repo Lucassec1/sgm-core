@@ -5,6 +5,9 @@ node_modules/
 dist/
 *.tsbuildinfo
 
+# Uploads (Quadrantes) — binários ficam no filesystem, fora do git
+uploads/
+
 # Prisma generated client
 src/generated/
 

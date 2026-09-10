@@ -4,12 +4,15 @@ import { use, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlocacoes, useMontagem } from '@/lib/hooks/use-montagens';
+import { ControleConvitesSection } from '@/components/montagem/controle-convites-section';
 import { EditarTamanhoEncontroDialog } from '@/components/montagem/editar-tamanho-encontro-dialog';
 import { EquipeCard } from '@/components/montagem/equipe-card';
 import { EquipeDrawer } from '@/components/montagem/equipe-drawer';
 import { FinalizarMontagemButton } from '@/components/montagem/finalizar-montagem-button';
 import { ListaCompletaEquipes } from '@/components/montagem/lista-completa-equipes';
 import { ListaSubstituicaoSection } from '@/components/montagem/lista-substituicao-section';
+import { LogAtividadeDrawer } from '@/components/montagem/log-atividade-drawer';
+import { QuadrantesSection } from '@/components/montagem/quadrantes-section';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
 
 function agruparPorEquipe(vagas: VagaMontagem[]) {
@@ -62,6 +65,7 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
           <Badge variant={montagem.status === 'EM_ANDAMENTO' ? 'default' : 'outline'}>
             {montagem.status === 'EM_ANDAMENTO' ? 'Em andamento' : 'Finalizada'}
           </Badge>
+          <LogAtividadeDrawer montagemId={id} />
           {montagem.status === 'EM_ANDAMENTO' && <EditarTamanhoEncontroDialog montagem={montagem} />}
           <FinalizarMontagemButton
             montagemId={id}
@@ -76,12 +80,14 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
         <TabsList>
           <TabsTrigger value="equipes">Quadro de Equipes</TabsTrigger>
           <TabsTrigger value="lista">Lista completa</TabsTrigger>
+          <TabsTrigger value="convites">Convites</TabsTrigger>
           <TabsTrigger value="substituicoes">Substituições</TabsTrigger>
+          <TabsTrigger value="quadrantes">Quadrantes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="equipes" className="space-y-4">
           {!circulosFechado && (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
               Aguardando a Eq. dos Círculos fechar (todos aceitos) — as outras equipes já podem ser rascunhadas, mas o convite delas só é liberado depois.
             </div>
           )}
@@ -110,8 +116,21 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
           />
         </TabsContent>
 
+        <TabsContent value="convites">
+          <ControleConvitesSection
+            montagemId={id}
+            alocacoes={alocacoes ?? []}
+            todasVagas={montagem.vagas}
+            readOnly={montagem.status === 'FINALIZADA'}
+          />
+        </TabsContent>
+
         <TabsContent value="substituicoes">
-          <ListaSubstituicaoSection montagemId={id} />
+          <ListaSubstituicaoSection montagemId={id} readOnly={montagem.status === 'FINALIZADA'} />
+        </TabsContent>
+
+        <TabsContent value="quadrantes">
+          <QuadrantesSection montagemId={id} readOnly={montagem.status === 'FINALIZADA'} />
         </TabsContent>
       </Tabs>
 

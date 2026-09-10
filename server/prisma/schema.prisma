@@ -1,6 +1,6 @@
 // Schema do Prisma — SGM Core
-// Ainda sem models: o schema da Ficha (e demais entidades) é código de negócio
-// e entra numa etapa seguinte, junto com o CRUD do módulo Fichas.
+// Models dos módulos Fichas e Montagem. Regras de negócio (R1-R9) vivem nas Services
+// (ver docs/regras-imutaveis.md e docs/arquitetura.md, seção 2), não aqui.
 
 generator client {
   provider = "prisma-client-js"
@@ -257,6 +257,7 @@ model Montagem {
   vagas             VagaMontagem[]
   logs              LogAtividade[]
   listaSubstituicao ListaSubstituicao[]
+  quadrantes        QuadranteArquivo[]
 
   @@unique([paroquiaId, numeroEncontro])
   @@index([paroquiaId])
@@ -382,6 +383,27 @@ model LogAtividade {
   usuario   String
   acao      String
   detalhes  String?
+  createdAt DateTime @default(now())
+
+  @@index([montagemId])
+}
+
+// Aba Quadrantes (docs/requisitos.md, 2.3) — PDFs da Equipe da Gráfica anexados à montagem.
+// Só anexo, sem campos cadastráveis. O binário fica no filesystem do server (não no banco —
+// são PDFs de 55-70 páginas); aqui guardamos só os metadados. `armazenadoComo` é o nome do
+// arquivo em disco (uuid), separado do `nomeOriginal` que o usuário vê.
+model QuadranteArquivo {
+  id String @id @default(uuid())
+
+  montagemId String
+  montagem   Montagem @relation(fields: [montagemId], references: [id])
+
+  nomeOriginal  String
+  armazenadoComo String
+  mimeType      String
+  tamanhoBytes  Int
+
+  usuario   String?
   createdAt DateTime @default(now())
 
   @@index([montagemId])

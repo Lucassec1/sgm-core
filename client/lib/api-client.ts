@@ -8,8 +8,10 @@ import type {
   FichaListResponse,
   HistoricoEquipeItem,
   ListaSubstituicaoItem,
+  LogAtividadeItem,
   Montagem,
   MontagemListResponse,
+  QuadranteArquivo,
 } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -212,5 +214,35 @@ export const apiClient = {
 
   deleteListaSubstituicaoItem(montagemId: string, id: string) {
     return request<ListaSubstituicaoItem>(`/montagens/${montagemId}/lista-substituicao/${id}`, { method: 'DELETE' });
+  },
+
+  listLog(montagemId: string) {
+    return request<LogAtividadeItem[]>(`/montagens/${montagemId}/log`);
+  },
+
+  listQuadrantes(montagemId: string) {
+    return request<QuadranteArquivo[]>(`/montagens/${montagemId}/quadrantes`);
+  },
+
+  // Upload é multipart — não passa pelo `request` (que força Content-Type: application/json).
+  async uploadQuadrante(montagemId: string, file: File, usuario?: string) {
+    const form = new FormData();
+    form.append('file', file);
+    if (usuario) form.append('usuario', usuario);
+    const res = await fetch(`${API_URL}/montagens/${montagemId}/quadrantes`, { method: 'POST', body: form });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      const message = (body?.message as string) ?? `Erro ${res.status} ao enviar o arquivo`;
+      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, res.status, body);
+    }
+    return res.json() as Promise<QuadranteArquivo>;
+  },
+
+  quadranteDownloadUrl(montagemId: string, id: string) {
+    return `${API_URL}/montagens/${montagemId}/quadrantes/${id}/download`;
+  },
+
+  deleteQuadrante(montagemId: string, id: string) {
+    return request<QuadranteArquivo>(`/montagens/${montagemId}/quadrantes/${id}`, { method: 'DELETE' });
   },
 };

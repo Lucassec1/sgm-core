@@ -34,11 +34,21 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
 ## Estado atual
 
 - **Módulo Fichas: pronto** — CRUD completo de Ficha do Jovem e Ficha do Casal (server +
-  client), Sidebar de navegação, dashboard. Falta upload real de foto (hoje é só campo de
-  URL) e Situação/histórico de equipes (fica pro módulo Montagem).
-- **Módulo Montagem: não iniciado** — nem schema, nem backend, nem frontend.
+  client), Sidebar de navegação, dashboard, página de detalhe com header (foto/nome/situação)
+  + histórico de equipes + dados cadastrais em seções empilhadas. Falta upload real de foto
+  (hoje é só campo de URL).
+- **Módulo Montagem: quase completo** — schema, backend (montagens, alocações, equipes,
+  lista de substituição, log de atividade, quadrantes) com regras R1–R6 e R9 aplicadas e
+  testadas (specs em `server/src/modules/montagem/*.spec.ts`); frontend com quadro das 16
+  equipes, drawer por equipe, lista completa, aba Convites (status + saídas/motivos + log),
+  aba Substituições, aba Quadrantes (upload/download de PDF), criar/editar/finalizar
+  montagem, ícones das equipes (`EquipeIcon`).
+  **Falta:** exportar .xlsx (aba Exportação = "em breve"); R7/R8 seguem adiados (ver seção
+  "Isolamento por paróquia"). Quadrantes: binário no filesystem do server
+  (`UPLOADS_DIR`, fallback `server/uploads/`, gitignored) — pra produção apontar num volume.
 - **Auth: stub** — `AuthController`/`AuthService`/`JwtAuthGuard` existem como esqueleto, sem
-  lógica real. `/login` no client é uma página vazia.
+  lógica real. `/login` no client é uma página vazia. Enquanto isso, o campo `usuario` do log
+  de atividade (R9) e o `paroquiaId` vêm do client provisoriamente.
 - **CI**: GitHub Actions rodando lint + typecheck + build (server e client) em push/PR pra `main`.
 
 ## Isolamento por paróquia

@@ -7,7 +7,15 @@ import { cn } from '@/lib/utils';
 export function StatusBadge({ situacao }: { situacao: SituacaoFicha }) {
   const ativa = situacao === 'ATIVA';
   return (
-    <Badge variant="outline" className={cn('border-transparent font-medium', ativa ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700')}>
+    <Badge
+      variant="outline"
+      className={cn(
+        'border-transparent font-medium',
+        ativa
+          ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400'
+          : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400',
+      )}
+    >
       {ativa ? '✓ Ativa' : '✕ Inativa'}
     </Badge>
   );

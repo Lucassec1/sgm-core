@@ -11,7 +11,7 @@ const PAROQUIA_ID = 'paroquia-1';
 const MONTAGEM_ID = 'montagem-1';
 
 function criarPrismaMock() {
-  return {
+  const mock: Record<string, unknown> = {
     montagem: {
       findFirst: jest.fn(),
       create: jest.fn(),
@@ -27,6 +27,11 @@ function criarPrismaMock() {
     equipe: { findUnique: jest.fn() },
     alocacao: { findMany: jest.fn() },
   };
+  // Passthrough: roda o callback com o próprio mock no lugar do client transacional.
+  mock.$transaction = jest.fn((arg: unknown) =>
+    typeof arg === 'function' ? (arg as (tx: unknown) => unknown)(mock) : Promise.all(arg as unknown[]),
+  );
+  return mock as Record<string, any>;
 }
 
 describe('MontagensService', () => {

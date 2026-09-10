@@ -37,7 +37,7 @@ function cargoFake(overrides: Record<string, unknown> = {}) {
 }
 
 function criarPrismaMock() {
-  return {
+  const mock: Record<string, unknown> = {
     vagaMontagem: { findUnique: jest.fn() },
     alocacao: {
       findFirst: jest.fn(),
@@ -51,7 +51,13 @@ function criarPrismaMock() {
     ficha: { findUnique: jest.fn() },
     fichaCasal: { findUnique: jest.fn() },
     equipe: { findUnique: jest.fn() },
+    listaSubstituicao: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) },
   };
+  // Passthrough: roda o callback com o próprio mock no lugar do client transacional.
+  mock.$transaction = jest.fn((arg: unknown) =>
+    typeof arg === 'function' ? (arg as (tx: unknown) => unknown)(mock) : Promise.all(arg as unknown[]),
+  );
+  return mock as Record<string, any>;
 }
 
 describe('AlocacoesService', () => {
@@ -306,7 +312,24 @@ describe('AlocacoesService', () => {
         usuario: 'Lucas',
       } as any);
 
-      expect(logAtividade.registrar).toHaveBeenCalledWith(MONTAGEM_ID, 'Lucas', 'CRIOU_ALOCACAO', expect.any(String));
+      expect(logAtividade.registrar).toHaveBeenCalledWith(
+        MONTAGEM_ID,
+        'Lucas',
+        'CRIOU_ALOCACAO',
+        expect.any(String),
+        expect.anything(),
+      );
+    });
+
+    it('tira a pessoa da lista de substituição desse encontro ao alocá-la', async () => {
+      mockVaga(equipeFake(), cargoFake());
+      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
+
+      await service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any);
+
+      expect(prisma.listaSubstituicao.deleteMany).toHaveBeenCalledWith({
+        where: { montagemId: MONTAGEM_ID, fichaId: 'ficha-1' },
+      });
     });
 
     it('oculta substituidaPorId quando a montagem está FINALIZADA', async () => {

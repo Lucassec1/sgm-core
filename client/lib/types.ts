@@ -203,6 +203,25 @@ export interface ListaSubstituicaoItem {
   createdAt: string;
 }
 
+export interface LogAtividadeItem {
+  id: string;
+  montagemId: string;
+  usuario: string;
+  acao: string;
+  detalhes?: string | null;
+  createdAt: string;
+}
+
+export interface QuadranteArquivo {
+  id: string;
+  montagemId: string;
+  nomeOriginal: string;
+  mimeType: string;
+  tamanhoBytes: number;
+  usuario?: string | null;
+  createdAt: string;
+}
+
 // Paleta fixa dos círculos — ver docs/design-system.md, seção 1.
 export const CORES_CIRCULO: { value: CorCirculo; label: string; hex: string }[] = [
   { value: 'VERMELHO', label: 'Vermelho', hex: '#f40606' },

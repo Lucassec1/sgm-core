@@ -1,4 +1,5 @@
 import { AppSidebar } from '@/components/app-sidebar';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Separator } from '@/components/ui/separator';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/sonner';
@@ -12,6 +13,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <SidebarTrigger />
           <Separator orientation="vertical" className="h-4" />
           <span className="text-sm font-medium text-muted-foreground">SGM Core</span>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
         </header>
         <div className="flex flex-1 flex-col">{children}</div>
       </SidebarInset>
