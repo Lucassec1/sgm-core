@@ -175,6 +175,28 @@ travar numa tela de erro no meio da distribuição das equipes.
 **Esforço:** médio — Service Worker com cache das últimas respostas da API + uma barra de aviso
 "sem conexão — mostrando última versão sincronizada".
 
+**Status (11/09/2026): implementado.** `client/public/sw.js` intercepta só GET de
+`/montagens/:id`, `/montagens/:id/alocacoes` e `/equipes` (casado pelo caminho, não pela
+origem — a API roda num host separado) — o resto passa direto pelo Service Worker sem
+interferência, inclusive todo POST/PATCH/DELETE. Estratégia: tenta a rede primeiro, guarda a
+resposta no Cache Storage; se a rede falhar, serve a última versão cacheada com um header
+próprio (`X-From-Cache`). Decisões desta rodada, com o Lucas:
+- **Service Worker de verdade** (Cache API), não persistência do React Query em localStorage
+  — mais fiel ao texto original e mais resiliente (funciona mesmo num reload da página
+  durante a queda), ao custo do ciclo de ativação/atualização de SW de sempre.
+- **Escopo restrito à Montagem** (Quadro de Equipes + Distribuição), como a proposta original
+  já dizia — não estendido pra Fichas.
+
+`OfflineBanner` (`components/montagem/offline-banner.tsx`) aparece na página da Montagem
+quando a última leitura veio do cache, e some sozinho assim que uma leitura voltar a vir da
+rede — sem lib nova, um pub-sub pequeno (`lib/offline-status.ts`) que `api-client.ts`
+atualiza a cada resposta. Escrita nunca foi interceptada, então já falha naturalmente sem
+rede — nenhum código extra pra "bloquear" isso.
+
+**Limite conhecido:** por ser um Service Worker real (não a alternativa de localStorage), só
+funciona depois que o navegador já visitou a página pelo menos uma vez com internet — abrir a
+Montagem pela primeira vez já offline não tem o que servir do cache.
+
 ---
 
 ## 7. Dark mode
@@ -207,3 +229,8 @@ tempo-real), e reforça uma decisão de produto que você já tomou (produtivida
 dirigente importa de verdade). As demais dependem de peças de infraestrutura que ainda não
 existem (upload de imagem, tempo real, service worker) — vale sequenciar depois de decidir se
 valem o esforço.
+
+**Status (11/09/2026): 6 das 7 propostas implementadas** (#1, #2, #4, #5, #6, #7 — cada uma
+com a linha "Status" na sua seção, incluindo os ajustes de escopo decididos no caminho). Só
+falta a **#3 (indicador de presença em tempo real)** — a mais cara da lista (pede canal
+WebSocket/SSE que o projeto ainda não tem) e a única que não foi encaminhada ainda.

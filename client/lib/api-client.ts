@@ -14,6 +14,7 @@ import type {
   QuadranteArquivo,
   ResumoMontagem,
 } from './types';
+import { markServedFresh, markServedFromCache } from './offline-status';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -36,6 +37,12 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });
+
+  // Sinal de "sem conexão" (proposta #6) — só as leituras da Montagem passam pelo Service
+  // Worker (public/sw.js), então esse header só aparece nelas; qualquer outra resposta
+  // bem-sucedida confirma que a rede está OK e limpa o aviso.
+  if (res.headers.get('x-from-cache')) markServedFromCache();
+  else markServedFresh();
 
   if (!res.ok) {
     const body = await res.json().catch(() => null);
