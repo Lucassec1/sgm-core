@@ -25,7 +25,8 @@ function criarPrismaMock() {
     ficha: { findMany: jest.fn() },
     fichaCasal: { findMany: jest.fn() },
     equipe: { findUnique: jest.fn() },
-    alocacao: { findMany: jest.fn() },
+    alocacao: { findMany: jest.fn(), count: jest.fn() },
+    logAtividade: { findMany: jest.fn(), findFirst: jest.fn() },
   };
   // Passthrough: roda o callback com o próprio mock no lugar do client transacional.
   mock.$transaction = jest.fn((arg: unknown) =>
@@ -263,6 +264,145 @@ describe('MontagensService', () => {
       for (const call of prisma.fichaCasal.findMany.mock.calls) {
         expect(call[0].where.situacao).toBe('ATIVA');
       }
+    });
+  });
+
+  describe('resumo — proposta #2 (painel "como foi esse encontro")', () => {
+    beforeEach(() => {
+      prisma.alocacao.count.mockResolvedValue(0);
+      prisma.logAtividade.findMany.mockResolvedValue([]);
+      prisma.logAtividade.findFirst.mockResolvedValue(null);
+      prisma.montagem.findMany.mockResolvedValue([]);
+    });
+
+    it('duracaoMs é null quando a montagem ainda não foi finalizada', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        numeroEncontro: 5,
+        status: 'EM_ANDAMENTO',
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+        vagas: [],
+      });
+
+      const resumo = await service.resumo(MONTAGEM_ID);
+
+      expect(resumo.duracaoMs).toBeNull();
+      expect(prisma.logAtividade.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('duracaoMs = tempo entre a criação e a finalização mais recente (MUDOU_STATUS -> FINALIZADA)', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        numeroEncontro: 5,
+        status: 'FINALIZADA',
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+        vagas: [],
+      });
+      prisma.logAtividade.findFirst.mockResolvedValue({ createdAt: new Date('2026-01-03T00:00:00Z') });
+
+      const resumo = await service.resumo(MONTAGEM_ID);
+
+      expect(resumo.duracaoMs).toBe(2 * 24 * 60 * 60 * 1000);
+      expect(prisma.logAtividade.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { montagemId: MONTAGEM_ID, acao: 'MUDOU_STATUS', detalhes: { endsWith: '-> FINALIZADA' } },
+          orderBy: { createdAt: 'desc' },
+        }),
+      );
+    });
+
+    it('equipeMaisMovimentada conta CRIOU_ALOCACAO + REMOVEU_ALOCACAO por equipe (extraída do detalhes)', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        numeroEncontro: 5,
+        status: 'EM_ANDAMENTO',
+        createdAt: new Date(),
+        vagas: [],
+      });
+      prisma.logAtividade.findMany.mockResolvedValue([
+        { detalhes: 'Eq. da Cozinha / Componentes' },
+        { detalhes: 'Eq. da Cozinha / Componentes' },
+        { detalhes: 'Eq. da Animação / Componentes' },
+      ]);
+
+      const resumo = await service.resumo(MONTAGEM_ID);
+
+      expect(resumo.equipeMaisMovimentada).toEqual({ nome: 'Eq. da Cozinha', movimentacoes: 2 });
+    });
+
+    it('equipeMaisMovimentada é null quando não há nenhuma movimentação', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        numeroEncontro: 5,
+        status: 'EM_ANDAMENTO',
+        createdAt: new Date(),
+        vagas: [],
+      });
+
+      const resumo = await service.resumo(MONTAGEM_ID);
+
+      expect(resumo.equipeMaisMovimentada).toBeNull();
+    });
+
+    it('totalRecusasDesistencias e totalSubstituicoes vêm da contagem de Alocacao por status', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        numeroEncontro: 5,
+        status: 'EM_ANDAMENTO',
+        createdAt: new Date(),
+        vagas: [],
+      });
+      prisma.alocacao.count.mockResolvedValueOnce(3).mockResolvedValueOnce(2);
+
+      const resumo = await service.resumo(MONTAGEM_ID);
+
+      expect(resumo.totalRecusasDesistencias).toBe(3);
+      expect(resumo.totalSubstituicoes).toBe(2);
+      expect(prisma.alocacao.count).toHaveBeenNthCalledWith(1, {
+        where: { vagaMontagem: { montagemId: MONTAGEM_ID }, status: { in: ['RECUSADO', 'DESISTIU'] } },
+      });
+      expect(prisma.alocacao.count).toHaveBeenNthCalledWith(2, {
+        where: { vagaMontagem: { montagemId: MONTAGEM_ID }, status: 'SUBSTITUIDO' },
+      });
+    });
+
+    it('historico busca até 3 encontros FINALIZADA anteriores da mesma paróquia, do mais antigo pro mais novo', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        numeroEncontro: 5,
+        status: 'EM_ANDAMENTO',
+        createdAt: new Date(),
+        vagas: [],
+      });
+      prisma.montagem.findMany.mockResolvedValue([
+        { id: 'm-4', numeroEncontro: 4, createdAt: new Date('2025-12-01T00:00:00Z'), status: 'FINALIZADA' },
+        { id: 'm-3', numeroEncontro: 3, createdAt: new Date('2025-11-01T00:00:00Z'), status: 'FINALIZADA' },
+      ]);
+      // historicoDuracao inverte pra ordem crescente (mais antigo primeiro) antes de mapear,
+      // então a 1ª chamada de findFirst é pra m-3 e a 2ª é pra m-4.
+      prisma.logAtividade.findFirst
+        .mockResolvedValueOnce({ createdAt: new Date('2025-11-02T00:00:00Z') }) // m-3
+        .mockResolvedValueOnce({ createdAt: new Date('2025-12-02T00:00:00Z') }); // m-4
+
+      const resumo = await service.resumo(MONTAGEM_ID);
+
+      expect(prisma.montagem.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { paroquiaId: PAROQUIA_ID, status: 'FINALIZADA', numeroEncontro: { lt: 5 } },
+          orderBy: { numeroEncontro: 'desc' },
+          take: 3,
+        }),
+      );
+      expect(resumo.historico).toEqual([
+        { numeroEncontro: 3, duracaoMs: 24 * 60 * 60 * 1000 },
+        { numeroEncontro: 4, duracaoMs: 24 * 60 * 60 * 1000 },
+      ]);
     });
   });
 

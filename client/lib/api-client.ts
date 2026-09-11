@@ -12,6 +12,7 @@ import type {
   Montagem,
   MontagemListResponse,
   QuadranteArquivo,
+  ResumoMontagem,
 } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -218,6 +219,10 @@ export const apiClient = {
 
   listLog(montagemId: string) {
     return request<LogAtividadeItem[]>(`/montagens/${montagemId}/log`);
+  },
+
+  resumoMontagem(montagemId: string) {
+    return request<ResumoMontagem>(`/montagens/${montagemId}/resumo`);
   },
 
   listQuadrantes(montagemId: string) {

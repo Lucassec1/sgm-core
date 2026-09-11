@@ -46,4 +46,9 @@ export class MontagensController {
   listarLog(@Param('id') id: string) {
     return this.montagensService.listarLog(id);
   }
+
+  @Get(':id/resumo')
+  resumo(@Param('id') id: string) {
+    return this.montagensService.resumo(id);
+  }
 }

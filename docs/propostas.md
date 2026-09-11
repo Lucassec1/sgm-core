@@ -54,6 +54,21 @@ mais difícil de montar que o passado, ou foi impressão minha?").
 **Esforço:** baixo-médio — uma query agregando `LogAtividade` por `montagemId` e um card de
 resumo na tela de Montagem finalizada.
 
+**Status (11/09/2026): implementado, com 2 métricas ajustadas.** `GET /montagens/:id/resumo` +
+`ResumoEncontroCard` na Montagem finalizada. As duas métricas do escopo original que dependiam
+de dado que o log não guarda viraram uma versão honesta do mesmo espírito (detalhe em
+`MontagensService.resumo()`):
+- "tempo até 100% preenchida" → **tempo até finalizar** (criação → `MUDOU_STATUS -> FINALIZADA`
+  mais recente). `ATUALIZOU_ALOCACAO` não grava qual vaga mudou de status, só o texto da
+  mudança, então não dá pra saber quando cada vaga bateu o total exigido.
+- "equipe que demorou mais pra fechar" → **equipe com mais movimentação** (contagem de
+  `CRIOU_ALOCACAO` + `REMOVEU_ALOCACAO` por equipe, extraída do `detalhes` do log — as únicas
+  duas ações que citam a equipe).
+
+Recusas/desistências e substituições saem direto da contagem de `Alocacao` por status (mais
+confiável que reconstruir do log). Comparação com o histórico: até os 3 encontros FINALIZADA
+anteriores da mesma paróquia, com a duração de cada um.
+
 ---
 
 ## 3. Indicador de presença na tela de Montagem
