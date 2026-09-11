@@ -11,6 +11,7 @@ import { CirculoBadge } from '@/components/fichas/circulo-badge';
 import { StatusBadge } from '@/components/fichas/status-badge';
 import { FichasFiltros, type FiltrosFichas } from '@/components/fichas/fichas-filtros';
 import { FichasTabsNav } from '@/components/fichas/fichas-tabs-nav';
+import { fotoSrc } from '@/lib/utils';
 
 export default function FichasListPage() {
   const [filtros, setFiltros] = useState<FiltrosFichas>({});
@@ -49,7 +50,7 @@ export default function FichasListPage() {
               <TableRow key={ficha.id}>
                 <TableCell>
                   <Avatar>
-                    <AvatarImage src={ficha.fotoUrl ?? undefined} alt={ficha.nomeCompleto} />
+                    <AvatarImage src={fotoSrc(ficha.fotoUrl)} alt={ficha.nomeCompleto} />
                     <AvatarFallback>{ficha.nomeCompleto.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </TableCell>

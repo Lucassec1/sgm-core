@@ -10,6 +10,7 @@ import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
 import { StatusBadge } from '@/components/fichas/status-badge';
 import { FichasCasaisFiltros, type FiltrosFichasCasais } from '@/components/fichas/fichas-casais-filtros';
 import { FichasTabsNav } from '@/components/fichas/fichas-tabs-nav';
+import { fotoSrc } from '@/lib/utils';
 
 export default function FichasCasaisListPage() {
   const [filtros, setFiltros] = useState<FiltrosFichasCasais>({});
@@ -47,7 +48,7 @@ export default function FichasCasaisListPage() {
               <TableRow key={casal.id}>
                 <TableCell>
                   <Avatar>
-                    <AvatarImage src={casal.fotoUrl ?? undefined} alt={casal.nomeEle} />
+                    <AvatarImage src={fotoSrc(casal.fotoUrl)} alt={casal.nomeEle} />
                     <AvatarFallback>{casal.nomeEle.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </TableCell>

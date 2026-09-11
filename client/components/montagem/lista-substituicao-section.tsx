@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAlocacoes, useDeleteListaSubstituicaoItem, useListaSubstituicao, useMontagem } from '@/lib/hooks/use-montagens';
+import { fotoSrc } from '@/lib/utils';
 import { AdicionarSubstitutoBar } from './adicionar-substituto-combobox';
 import { AlocarSubstitutoCombobox } from './alocar-substituto-combobox';
 import { PessoaPreviewPopover } from './pessoa-preview-popover';
@@ -22,7 +23,7 @@ function nomeItem(item: ListaSubstituicaoItem) {
 }
 
 function fotoItem(item: ListaSubstituicaoItem) {
-  return item.ficha?.fotoUrl ?? item.fichaCasal?.fotoUrl ?? undefined;
+  return fotoSrc(item.ficha?.fotoUrl ?? item.fichaCasal?.fotoUrl);
 }
 
 // Banco geral de backups da montagem (docs/ux-e-fluxos.md, seção 3) — independente de
