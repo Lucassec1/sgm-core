@@ -53,9 +53,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # vitest 5 / jsdom 30 (harness de teste do client) exigem Node >=22 — Node 20 (usado
+      # no job do server) quebra em runtime (undici sem webidl.markAsUncloneable).
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: client/package-lock.json
 
