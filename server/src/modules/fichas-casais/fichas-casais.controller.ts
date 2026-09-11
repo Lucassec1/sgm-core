@@ -8,6 +8,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { FichasCasaisService } from './fichas-casais.service';
 import { CreateFichaCasalDto } from './dto/create-ficha-casal.dto';
 import { UpdateFichaCasalDto } from './dto/update-ficha-casal.dto';
@@ -15,6 +16,7 @@ import { QueryFichasCasaisDto } from './dto/query-fichas-casais.dto';
 
 // TODO: aplicar JwtAuthGuard + ParoquiaScopeGuard aqui quando o módulo Auth existir
 // (ver docs/arquitetura.md, seção 3) — hoje paroquiaId ainda vem manual no body/query.
+@ApiTags('fichas-casais')
 @Controller('fichas-casais')
 export class FichasCasaisController {
   constructor(private readonly fichasCasaisService: FichasCasaisService) {}
