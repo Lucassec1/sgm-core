@@ -11,10 +11,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { ArquivoRecebido, QuadrantesService } from './quadrantes.service';
 
 // TODO: aplicar JwtAuthGuard + ParoquiaScopeGuard aqui quando o módulo Auth existir.
+@ApiTags('quadrantes')
 @Controller('montagens/:montagemId/quadrantes')
 export class QuadrantesController {
   constructor(private readonly quadrantesService: QuadrantesService) {}
@@ -25,6 +27,16 @@ export class QuadrantesController {
   }
 
   @Post()
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        usuario: { type: 'string' },
+      },
+    },
+  })
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 50 * 1024 * 1024 } }))
   adicionar(
     @Param('montagemId') montagemId: string,
