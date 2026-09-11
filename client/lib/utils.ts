@@ -1,9 +1,18 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { apiClient } from './api-client';
 import type { VagaMontagem } from './types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+// `fotoUrl` pode ser um caminho relativo servido pela API (upload real — proposta #4, ver
+// docs/propostas.md) ou uma URL externa completa (dado antigo, de quando o campo era um link
+// colado à mão). Só o primeiro caso precisa do prefixo do host da API.
+export function fotoSrc(fotoUrl?: string | null): string | undefined {
+  if (!fotoUrl) return undefined;
+  return fotoUrl.startsWith('http') ? fotoUrl : `${apiClient.baseUrl}${fotoUrl}`;
 }
 
 // Agrupa as vagas por equipe, na ordem de exibição das 16 equipes (Equipe.ordem) — usado no
