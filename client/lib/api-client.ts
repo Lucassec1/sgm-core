@@ -106,6 +106,24 @@ export const apiClient = {
     return request<HistoricoEquipeItem[]>(`/fichas/${id}/historico-equipes`);
   },
 
+  // Upload é multipart — não passa pelo `request` (que força Content-Type: application/json),
+  // mesmo padrão do uploadQuadrante.
+  async uploadFotoFicha(id: string, file: File) {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch(`${API_URL}/fichas/${id}/foto`, { method: 'POST', body: form });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      const message = (body?.message as string) ?? `Erro ${res.status} ao enviar a foto`;
+      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, res.status, body);
+    }
+    return res.json() as Promise<Ficha>;
+  },
+
+  removerFotoFicha(id: string) {
+    return request<Ficha>(`/fichas/${id}/foto`, { method: 'DELETE' });
+  },
+
   listEncontros(paroquiaId: string) {
     return request<number[]>(`/fichas/encontros?${buildQuery({ paroquiaId })}`);
   },
@@ -132,6 +150,22 @@ export const apiClient = {
 
   historicoEquipesFichaCasal(id: string) {
     return request<HistoricoEquipeItem[]>(`/fichas-casais/${id}/historico-equipes`);
+  },
+
+  async uploadFotoFichaCasal(id: string, file: File) {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch(`${API_URL}/fichas-casais/${id}/foto`, { method: 'POST', body: form });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      const message = (body?.message as string) ?? `Erro ${res.status} ao enviar a foto`;
+      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, res.status, body);
+    }
+    return res.json() as Promise<FichaCasal>;
+  },
+
+  removerFotoFichaCasal(id: string) {
+    return request<FichaCasal>(`/fichas-casais/${id}/foto`, { method: 'DELETE' });
   },
 
   listEquipes() {
