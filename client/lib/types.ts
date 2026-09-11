@@ -186,6 +186,22 @@ export interface HistoricoEquipeItem {
   };
 }
 
+// Painel "como foi esse encontro" (docs/propostas.md, proposta #2) — agregado a partir do
+// LogAtividade e das Alocacoes, sem schema novo.
+export interface ResumoMontagem {
+  montagemId: string;
+  numeroEncontro: number;
+  status: StatusMontagem;
+  /** null se a montagem ainda não foi finalizada. */
+  duracaoMs: number | null;
+  /** Equipe com mais idas-e-vindas (criou/removeu alocação) — proxy de "mais difícil de fechar". */
+  equipeMaisMovimentada: { nome: string; movimentacoes: number } | null;
+  totalRecusasDesistencias: number;
+  totalSubstituicoes: number;
+  /** Até os 3 encontros finalizados anteriores da mesma paróquia, do mais antigo pro mais novo. */
+  historico: Array<{ numeroEncontro: number; duracaoMs: number | null }>;
+}
+
 export interface CoordenadoresSugeridos {
   grupoA: { fichas: Ficha[]; fichasCasais: FichaCasal[] };
   grupoB: { fichas: Ficha[]; fichasCasais: FichaCasal[] };
