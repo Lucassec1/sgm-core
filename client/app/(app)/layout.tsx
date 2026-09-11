@@ -1,4 +1,5 @@
 import { AppSidebar } from '@/components/app-sidebar';
+import { CommandPalette } from '@/components/command-palette';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Separator } from '@/components/ui/separator';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -13,7 +14,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <SidebarTrigger />
           <Separator orientation="vertical" className="h-4" />
           <span className="text-sm font-medium text-muted-foreground">SGM Core</span>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-1">
+            <CommandPalette />
             <ThemeToggle />
           </div>
         </header>
