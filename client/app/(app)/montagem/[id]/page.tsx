@@ -13,6 +13,7 @@ import { ListaCompletaEquipes } from '@/components/montagem/lista-completa-equip
 import { ListaSubstituicaoSection } from '@/components/montagem/lista-substituicao-section';
 import { LogAtividadeDrawer } from '@/components/montagem/log-atividade-drawer';
 import { QuadrantesSection } from '@/components/montagem/quadrantes-section';
+import { ResumoEncontroCard } from '@/components/montagem/resumo-encontro-card';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
 
 function agruparPorEquipe(vagas: VagaMontagem[]) {
@@ -75,6 +76,8 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
           />
         </div>
       </div>
+
+      {montagem.status === 'FINALIZADA' && <ResumoEncontroCard montagemId={id} />}
 
       <Tabs defaultValue="equipes">
         <TabsList>
