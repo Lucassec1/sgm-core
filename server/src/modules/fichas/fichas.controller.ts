@@ -7,8 +7,15 @@ import {
   Patch,
   Post,
   Query,
+  Res,
+  StreamableFile,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
+import { ArquivoRecebido, MAX_FOTO_BYTES } from '../../common/uploads/foto-storage';
 import { FichasService } from './fichas.service';
 import { CreateFichaDto } from './dto/create-ficha.dto';
 import { UpdateFichaDto } from './dto/update-ficha.dto';
@@ -54,5 +61,25 @@ export class FichasController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.fichasService.remove(id);
+  }
+
+  @Post(':id/foto')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_FOTO_BYTES } }))
+  uploadFoto(@Param('id') id: string, @UploadedFile() file: ArquivoRecebido | undefined) {
+    return this.fichasService.uploadFoto(id, file);
+  }
+
+  @Delete(':id/foto')
+  removerFoto(@Param('id') id: string) {
+    return this.fichasService.removerFoto(id);
+  }
+
+  @Get(':id/foto')
+  async streamFoto(@Param('id') id: string, @Res({ passthrough: true }) res: Response) {
+    const { stream, mimetype } = await this.fichasService.streamFoto(id);
+    res.set({ 'Content-Type': mimetype });
+    return new StreamableFile(stream);
   }
 }
