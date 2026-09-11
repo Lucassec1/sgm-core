@@ -77,3 +77,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Modo telão / impressão do Quadro de Equipes (docs/propostas.md, proposta #5) — margem
+   enxuta e fundo sempre branco na página impressa, independente do tema escuro na tela. */
+@media print {
+  @page {
+    margin: 1.2cm;
+  }
+  body {
+    background: white;
+  }
+}

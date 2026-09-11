@@ -1,9 +1,13 @@
 'use client';
 
 import { use, useState } from 'react';
+import Link from 'next/link';
+import { Presentation } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlocacoes, useMontagem } from '@/lib/hooks/use-montagens';
+import { agruparVagasPorEquipe } from '@/lib/utils';
 import { ControleConvitesSection } from '@/components/montagem/controle-convites-section';
 import { EditarTamanhoEncontroDialog } from '@/components/montagem/editar-tamanho-encontro-dialog';
 import { EquipeCard } from '@/components/montagem/equipe-card';
@@ -14,17 +18,7 @@ import { ListaSubstituicaoSection } from '@/components/montagem/lista-substituic
 import { LogAtividadeDrawer } from '@/components/montagem/log-atividade-drawer';
 import { QuadrantesSection } from '@/components/montagem/quadrantes-section';
 import { ResumoEncontroCard } from '@/components/montagem/resumo-encontro-card';
-import type { Alocacao, VagaMontagem } from '@/lib/types';
-
-function agruparPorEquipe(vagas: VagaMontagem[]) {
-  const grupos = new Map<string, VagaMontagem[]>();
-  for (const vaga of vagas) {
-    const lista = grupos.get(vaga.equipeId) ?? [];
-    lista.push(vaga);
-    grupos.set(vaga.equipeId, lista);
-  }
-  return [...grupos.values()].sort((a, b) => a[0].equipe.ordem - b[0].equipe.ordem);
-}
+import type { Alocacao } from '@/lib/types';
 
 export default function MontagemDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -35,7 +29,7 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
   if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando...</p>;
   if (isError || !montagem) return <p className="p-6 text-sm text-red-600">Não foi possível carregar a montagem.</p>;
 
-  const gruposPorEquipe = agruparPorEquipe(montagem.vagas);
+  const gruposPorEquipe = agruparVagasPorEquipe(montagem.vagas);
   const alocacoesPorVaga = new Map<string, Alocacao[]>();
   for (const alocacao of alocacoes ?? []) {
     const lista = alocacoesPorVaga.get(alocacao.vagaMontagemId) ?? [];
@@ -66,6 +60,12 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
           <Badge variant={montagem.status === 'EM_ANDAMENTO' ? 'default' : 'outline'}>
             {montagem.status === 'EM_ANDAMENTO' ? 'Em andamento' : 'Finalizada'}
           </Badge>
+          <Button variant="outline" size="sm" className="gap-1.5" asChild>
+            <Link href={`/montagem/${id}/telao`} target="_blank">
+              <Presentation className="h-3.5 w-3.5" />
+              Modo telão
+            </Link>
+          </Button>
           <LogAtividadeDrawer montagemId={id} />
           {montagem.status === 'EM_ANDAMENTO' && <EditarTamanhoEncontroDialog montagem={montagem} />}
           <FinalizarMontagemButton
