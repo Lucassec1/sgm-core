@@ -181,12 +181,23 @@ em vez de descobrir faltando em produção.
       interna direto pro client.
 - [ ] **Logger estruturado** — nenhum uso de `console.log` nem do `Logger` do Nest; hoje não existe log
       operacional pra debugar um erro em produção depois do fato.
-- [ ] **Contrato de API (Swagger/OpenAPI)** — nenhum `@nestjs/swagger` configurado.
+- [x] **Contrato de API (Swagger/OpenAPI)** — ~~nenhum `@nestjs/swagger` configurado~~ feito em 11/09/2026.
 
 **Status (07/09/2026): os 5 itens seguem abertos.** `server/package.json` não ganhou `helmet`,
 `@nestjs/throttler` nem `@nestjs/swagger`; `main.ts` não registra middleware de segurança nem filtro de
 exceção global (`src/common/interceptors/` está vazio); nenhum uso de `Logger` do Nest ou `console.` no
 `src/`.
+
+**Status (11/09/2026): Swagger feito, os outros 4 seguem abertos.** `@nestjs/swagger@8.1.1` (major
+compatível com `@nestjs/core@^10` — os majores 9/10 nunca existiram, e o 11+ já pede Nest 12) montado em
+`/docs` (UI) e `/docs-json` (spec), com o plugin do `nest-cli.json` inferindo os schemas dos DTOs a partir
+dos decorators do `class-validator` — sem precisar anotar `@ApiProperty` campo a campo. `@ApiTags` nos 7
+controllers com rota (fichas, fichas-casais, montagens, equipes, alocacoes, lista-substituicao,
+quadrantes); `paroquias`/`auth` ficaram de fora por serem esqueletos sem endpoint. Limitação conhecida:
+enums do Prisma (`Sexo`, `StatusConvite` etc.) aparecem como `type: object` no schema em vez do enum
+propriamente dito — o plugin não resolve tipos re-exportados de `@prisma/client`; corrigir exigiria
+`@ApiProperty({ enum: ... })` manual em cada campo enum, deixado de fora por ora. Sem proteção de acesso
+à `/docs` — mesmo estágio do resto do sistema (uso interno, sem Auth real ainda).
 
 ---
 
