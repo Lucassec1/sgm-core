@@ -2,10 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient, type ListMontagensParams } from '../api-client';
 import type { Montagem } from '../types';
 
-export function useMontagens(params: ListMontagensParams) {
+export function useMontagens(params: ListMontagensParams, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['montagens', params],
     queryFn: () => apiClient.listMontagens(params),
+    enabled: options?.enabled ?? true,
   });
 }
 
