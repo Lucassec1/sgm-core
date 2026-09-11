@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CirculoBadge } from '@/components/fichas/circulo-badge';
+import { fotoSrc } from '@/lib/utils';
 import type { Ficha, FichaCasal } from '@/lib/types';
 
 // Popover de pré-visualização (docs/ux-e-fluxos.md, seção 3) — evita abrir a ficha completa
@@ -33,7 +34,7 @@ export function PessoaPreviewPopover({
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <Avatar>
-                <AvatarImage src={ficha.fotoUrl ?? undefined} alt={ficha.nomeCompleto} />
+                <AvatarImage src={fotoSrc(ficha.fotoUrl)} alt={ficha.nomeCompleto} />
                 <AvatarFallback>{ficha.nomeCompleto.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
@@ -54,7 +55,7 @@ export function PessoaPreviewPopover({
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <Avatar>
-                <AvatarImage src={fichaCasal.fotoUrl ?? undefined} alt={fichaCasal.nomeEle} />
+                <AvatarImage src={fotoSrc(fichaCasal.fotoUrl)} alt={fichaCasal.nomeEle} />
                 <AvatarFallback>{fichaCasal.nomeEle.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>

@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { CORES_CIRCULO } from '@/lib/types';
 import type { Ficha } from '@/lib/types';
 import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
@@ -61,7 +61,6 @@ const fichaSchema = z.object({
   telefoneConvidante: z.string().optional(),
   enderecoConvidante: z.string().optional(),
   observacoes: z.string().optional(),
-  fotoUrl: z.string().optional(),
   situacao: z.enum(['ATIVA', 'INATIVA']).optional(),
   motivoDesativacao: z.string().optional(),
 });
@@ -113,31 +112,29 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
     }
   };
 
-  const fotoUrl = watch('fotoUrl');
   const nomeCompleto = watch('nomeCompleto');
 
-  // Depois de criada, só o que muda com frequência continua editável: foto, endereço,
-  // telefone, email, observações (nota prática — alergia, sem transporte, etc. — que pode
-  // mudar ou deixar de valer com o tempo) e situação/motivo de desativação. O resto é dado
-  // de identificação (nome, sexo, data de nasc., encontro, círculo, filiação, escolaridade,
+  // Depois de criada, só o que muda com frequência continua editável: endereço, telefone,
+  // email, observações (nota prática — alergia, sem transporte, etc. — que pode mudar ou
+  // deixar de valer com o tempo) e situação/motivo de desativação. O resto é dado de
+  // identificação (nome, sexo, data de nasc., encontro, círculo, filiação, escolaridade,
   // religião, convite) e vira somente leitura pra evitar edição por engano. O nome não
   // aparece no formulário na edição — fica no header da página de detalhe.
   const bloqueado = isEdit;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-      {/* No cadastro novo não há header de página com a foto — mostra aqui. Na edição a foto
-          fica no topo da página de detalhe. */}
+      {/* Upload de foto real (proposta #4) só é possível depois que a Ficha existe — o
+          arquivo em disco usa o id dela como nome. No cadastro novo, só um preview com as
+          iniciais; a foto é adicionada depois, no header da página de detalhe. */}
       {!isEdit && (
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={fotoUrl || undefined} alt={nomeCompleto} />
             <AvatarFallback>{(nomeCompleto || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <div className="flex-1">
-            <Label htmlFor="fotoUrl">Foto (URL)</Label>
-            <Input id="fotoUrl" placeholder="https://..." {...register('fotoUrl')} />
-          </div>
+          <p className="text-xs text-muted-foreground">
+            A foto pode ser adicionada depois de salvar, na página da ficha.
+          </p>
         </div>
       )}
 
@@ -231,12 +228,6 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
             </Select>
             {errors.corCirculo && <p className="text-xs text-red-600 mt-1">{errors.corCirculo.message}</p>}
           </div>
-          {isEdit && (
-            <div className="col-span-2">
-              <Label htmlFor="fotoUrl">Foto (URL)</Label>
-              <Input id="fotoUrl" placeholder="https://..." {...register('fotoUrl')} />
-            </div>
-          )}
         </div>
       </section>
 

@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { FichaCasal } from '@/lib/types';
 import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
 import { useCreateFichaCasal, useUpdateFichaCasal } from '@/lib/hooks/use-fichas-casais';
@@ -31,7 +31,6 @@ const fichaCasalSchema = z.object({
   telefoneEla: z.string().min(1, 'Informe o telefone dela'),
   emailEle: z.string().email('E-mail inválido').optional().or(z.literal('')),
   emailEla: z.string().email('E-mail inválido').optional().or(z.literal('')),
-  fotoUrl: z.string().optional(),
   logradouro: z.string().optional(),
   numero: z.string().optional(),
   complemento: z.string().optional(),
@@ -97,10 +96,10 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
     }
   };
 
-  const fotoUrl = watch('fotoUrl');
   const nomeEle = watch('nomeEle');
+  const nomeEla = watch('nomeEla');
 
-  // Mesmo critério da Ficha do Jovem: depois de criada, só foto, endereço/telefone/email,
+  // Mesmo critério da Ficha do Jovem: depois de criada, só endereço/telefone/email,
   // observações (notas práticas — teve bebê recentemente, sem transporte, etc.) e
   // situação/motivo continuam editáveis. O resto vira somente leitura. Os nomes não
   // aparecem no formulário na edição — ficam no header da página de detalhe.
@@ -108,18 +107,20 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-      {/* No cadastro novo não há header de página com a foto — mostra aqui. Na edição a foto
-          fica no topo da página de detalhe. */}
+      {/* Upload de foto real (proposta #4) só é possível depois que a Ficha de Casal existe.
+          No cadastro novo, só um preview com as iniciais; a foto é adicionada depois, no
+          header da página de detalhe. */}
       {!isEdit && (
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={fotoUrl || undefined} alt={nomeEle} />
-            <AvatarFallback>{(nomeEle || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarFallback>
+              {(nomeEle || '?').slice(0, 1).toUpperCase()}
+              {(nomeEla || '?').slice(0, 1).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
-          <div className="flex-1">
-            <Label htmlFor="fotoUrl">Foto (URL)</Label>
-            <Input id="fotoUrl" placeholder="https://..." {...register('fotoUrl')} />
-          </div>
+          <p className="text-xs text-muted-foreground">
+            A foto pode ser adicionada depois de salvar, na página do casal.
+          </p>
         </div>
       )}
 
@@ -191,13 +192,6 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
             <Input id="emailEla" type="email" {...register('emailEla')} />
             {errors.emailEla && <p className="text-xs text-red-600 mt-1">{errors.emailEla.message}</p>}
           </div>
-
-          {isEdit && (
-            <div className="col-span-2">
-              <Label htmlFor="fotoUrl">Foto (URL)</Label>
-              <Input id="fotoUrl" placeholder="https://..." {...register('fotoUrl')} />
-            </div>
-          )}
 
           <div className="col-span-2 flex items-center gap-2">
             <Checkbox

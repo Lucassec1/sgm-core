@@ -44,3 +44,26 @@ export function useHistoricoEquipesCasal(fichaCasalId: string | undefined) {
     enabled: !!fichaCasalId,
   });
 }
+
+// Upload de foto (docs/propostas.md, proposta #4).
+export function useUploadFotoFichaCasal(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => apiClient.uploadFotoFichaCasal(id, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fichas-casais'] });
+      queryClient.invalidateQueries({ queryKey: ['fichas-casais', id] });
+    },
+  });
+}
+
+export function useRemoverFotoFichaCasal(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiClient.removerFotoFichaCasal(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fichas-casais'] });
+      queryClient.invalidateQueries({ queryKey: ['fichas-casais', id] });
+    },
+  });
+}

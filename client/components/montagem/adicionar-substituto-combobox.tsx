@@ -9,6 +9,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
 import { useCandidatosJovensGeral, useCreateListaSubstituicaoItem } from '@/lib/hooks/use-montagens';
 import { useFichasCasais } from '@/lib/hooks/use-fichas-casais';
+import { fotoSrc } from '@/lib/utils';
 
 interface PessoaOpcao {
   id: string;
@@ -112,7 +113,7 @@ export function AdicionarSubstitutoBar({
                   className="gap-2 py-2"
                 >
                   <Avatar className="h-7 w-7 shrink-0">
-                    <AvatarImage src={pessoa.fotoUrl ?? undefined} alt={pessoa.nome} />
+                    <AvatarImage src={fotoSrc(pessoa.fotoUrl)} alt={pessoa.nome} />
                     <AvatarFallback className="text-xs">{iniciais(pessoa.nome)}</AvatarFallback>
                   </Avatar>
                   {pessoa.nome}
@@ -135,7 +136,7 @@ export function AdicionarSubstitutoBar({
                   className="gap-2 py-2"
                 >
                   <Avatar className="h-7 w-7 shrink-0">
-                    <AvatarImage src={pessoa.fotoUrl ?? undefined} alt={pessoa.nome} />
+                    <AvatarImage src={fotoSrc(pessoa.fotoUrl)} alt={pessoa.nome} />
                     <AvatarFallback className="text-xs">{iniciais(pessoa.nome)}</AvatarFallback>
                   </Avatar>
                   {pessoa.nome}

@@ -51,3 +51,26 @@ export function useHistoricoEquipes(fichaId: string | undefined) {
     enabled: !!fichaId,
   });
 }
+
+// Upload de foto (docs/propostas.md, proposta #4).
+export function useUploadFotoFicha(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => apiClient.uploadFotoFicha(id, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fichas'] });
+      queryClient.invalidateQueries({ queryKey: ['fichas', id] });
+    },
+  });
+}
+
+export function useRemoverFotoFicha(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiClient.removerFotoFicha(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fichas'] });
+      queryClient.invalidateQueries({ queryKey: ['fichas', id] });
+    },
+  });
+}

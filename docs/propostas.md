@@ -112,6 +112,22 @@ bucket S3-compatible tipo Cloudflare R2/Backblaze resolve bem pro volume) e, pro
 um passo de conferência que casa cada arquivo com a ficha certa antes de confirmar (mesmo padrão
 de tela de conferência que `ux-e-fluxos.md` já propõe pro importador CSV).
 
+**Status (11/09/2026): upload individual implementado; upload em lote adiado.** Decisões
+tomadas com o Lucas nesta rodada:
+- **Storage: filesystem do server**, não bucket S3-compatible — mesmo padrão dos Quadrantes
+  (`UPLOADS_DIR`, fallback `server/uploads/`, gitignored), em vez de Cloudflare R2/Backblaze.
+  Evita depender de conta externa pro protótipo; a mesma ressalva dos Quadrantes vale aqui —
+  pra produção, apontar `UPLOADS_DIR` pra um volume.
+- **Escopo:** só upload individual nesta leva. Upload em lote (pasta inteira + tela de
+  conferência) fica pra uma rodada separada.
+
+Implementado: `POST/GET/DELETE /fichas/:id/foto` e `/fichas-casais/:id/foto` (JPEG/PNG/WEBP,
+até 5MB, um arquivo por registro — nome do arquivo em disco é o próprio id). Campo `fotoUrl`
+continua existindo no schema, mas passa a ser preenchido automaticamente pelo upload (URL
+relativa servida pela API), não mais digitado à mão — os formulários de Ficha/Casal perderam
+o campo "Foto (URL)". Upload só é possível depois que o registro existe (o id vira o nome do
+arquivo), então no cadastro novo a foto é adicionada depois, na página de detalhe.
+
 ---
 
 ## 5. Modo telão / modo impressão pro Quadro de Equipes
