@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -22,6 +23,25 @@ async function bootstrap() {
     origin: corsOrigins && corsOrigins.length > 0 ? corsOrigins : true,
     credentials: true,
   });
+
+  // Contrato de API (docs/code-review.md, checklist de hardening) — documentação gerada a
+  // partir dos DTOs (class-validator, via plugin do nest-cli.json) e dos controllers. Sem
+  // proteção de acesso por enquanto: mesmo estágio do resto do sistema (uso interno, sem
+  // Auth real ainda — ver "Isolamento por paróquia" no CLAUDE.md).
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('SGM Core API')
+    .setDescription('API do Segue-me (Fichas + Montagem), diocese de Crato.')
+    .setVersion('1.0')
+    .addTag('fichas', 'Ficha do Jovem')
+    .addTag('fichas-casais', 'Ficha do Casal')
+    .addTag('montagens')
+    .addTag('equipes')
+    .addTag('alocacoes', 'Alocação de pessoas nas vagas da Montagem (R1-R9)')
+    .addTag('lista-substituicao')
+    .addTag('quadrantes')
+    .build();
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('docs', app, swaggerDocument);
 
   const port = process.env.PORT ?? 3001;
   await app.listen(port);
