@@ -130,6 +130,14 @@ chegar pra todo mundo do encontro de uma vez.
 **Esforço:** baixo — reaproveita os dados que o Quadro já busca, só uma rota `/montagem/[id]/telao`
 com CSS de impressão/projeção e filtro dos campos sensíveis.
 
+**Status (11/09/2026): implementado.** Rota `/montagem/[id]/telao`, fora do grupo `(app)` de
+propósito (sem Sidebar/header — só o essencial pra projetar/imprimir). Mostra equipe + cargo +
+nome de quem está **ACEITO** (rascunho/convidado ainda não é "quem está confirmado", não
+apareceria no mural); nada de telefone, endereço, avaliação ou ação de edição. Botão "Modo
+telão" na página normal da Montagem (abre em nova aba) + botão "Imprimir" na própria página.
+CSS de impressão (`@media print` em `globals.css`) força fundo branco e margem de página,
+independente do tema escuro estar ativo na tela.
+
 ---
 
 ## 6. Cache de leitura pra internet instável no fim de semana do encontro
