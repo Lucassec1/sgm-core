@@ -16,6 +16,7 @@ import { FinalizarMontagemButton } from '@/components/montagem/finalizar-montage
 import { ListaCompletaEquipes } from '@/components/montagem/lista-completa-equipes';
 import { ListaSubstituicaoSection } from '@/components/montagem/lista-substituicao-section';
 import { LogAtividadeDrawer } from '@/components/montagem/log-atividade-drawer';
+import { OfflineBanner } from '@/components/montagem/offline-banner';
 import { QuadrantesSection } from '@/components/montagem/quadrantes-section';
 import { ResumoEncontroCard } from '@/components/montagem/resumo-encontro-card';
 import type { Alocacao } from '@/lib/types';
@@ -47,6 +48,8 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="p-6 space-y-6">
+      <OfflineBanner />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold">{montagem.numeroEncontro}º Encontro</h1>
