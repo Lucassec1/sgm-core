@@ -27,6 +27,15 @@ resto do sistema, sem introduzir um padrão novo de UI.
 **Esforço:** baixo — um listener de teclado no layout raiz + reaproveitar o `Command` existente
 com os endpoints de busca que já existem (`listFichas`, `listFichasCasais`, `listMontagens`).
 
+**Status (11/09/2026): implementado.** `components/command-palette.tsx`, botão "Buscar ⌘K" no
+header + atalho global (`⌘K`/`Ctrl+K` de qualquer tela). Busca fichas (jovens) e casais por
+nome via API (debounce de 200ms, a partir de 2 caracteres) e montagens por número do encontro
+(lista local, filtrada aqui — a API não tem busca por nome de montagem). Ações rápidas: Nova
+Ficha, Novo Casal, Ver Quadro de Equipes, e "Ir para Montagem em andamento" (só aparece
+quando existe uma). **Diferença do escopo original:** não busca "equipes" — as 16 equipes não
+têm rota própria (só aparecem dentro do drawer de uma Montagem específica), então não haveria
+pra onde navegar num resultado de equipe isolado.
+
 ---
 
 ## 2. Painel "como foi esse encontro" a partir do Log de Atividade
