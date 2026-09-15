@@ -13,6 +13,7 @@ import type {
   MontagemListResponse,
   QuadranteArquivo,
   ResumoMontagem,
+  VagaMontagem,
 } from './types';
 import { markServedFresh, markServedFromCache } from './offline-status';
 
@@ -32,9 +33,19 @@ export class ApiError extends Error {
   }
 }
 
+// Dispara em qualquer 401 (sessão expirada/ausente) pra quem estiver ouvindo (ver
+// client/lib/auth-context.tsx) redirecionar pro /login. Fica fora do React de propósito —
+// `request()` é usado por código que não é componente (ex. Server Components/actions).
+function markSessaoExpirada() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('sgm:sessao-expirada'));
+  }
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     ...options,
   });
 
@@ -45,6 +56,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   else markServedFresh();
 
   if (!res.ok) {
+    if (res.status === 401) markSessaoExpirada();
     const body = await res.json().catch(() => null);
     const message = (body?.message as string) ?? `Erro ${res.status} ao chamar ${path}`;
     throw new ApiError(Array.isArray(message) ? message.join(', ') : message, res.status, body);
@@ -55,7 +67,6 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export interface ListFichasParams {
-  paroquiaId: string;
   nome?: string;
   numeroEncontro?: number;
   situacao?: string;
@@ -64,7 +75,6 @@ export interface ListFichasParams {
 }
 
 export interface ListFichasCasaisParams {
-  paroquiaId: string;
   nome?: string;
   situacao?: string;
   page?: number;
@@ -72,10 +82,19 @@ export interface ListFichasCasaisParams {
 }
 
 export interface ListMontagensParams {
-  paroquiaId: string;
   status?: string;
   page?: number;
   pageSize?: number;
+}
+
+export type Role = 'PAROQUIA' | 'CONSELHO';
+
+export interface SessaoAtual {
+  id: string;
+  login: string;
+  role: Role;
+  nome: string | null;
+  paroquia: { id: string; nome: string } | null;
 }
 
 function buildQuery(params: object) {
@@ -88,6 +107,18 @@ function buildQuery(params: object) {
 
 export const apiClient = {
   baseUrl: API_URL,
+
+  login(login: string, senha: string) {
+    return request<SessaoAtual>('/auth/login', { method: 'POST', body: JSON.stringify({ login, senha }) });
+  },
+
+  logout() {
+    return request<{ ok: true }>('/auth/logout', { method: 'POST' });
+  },
+
+  me() {
+    return request<SessaoAtual>('/auth/me');
+  },
 
   listFichas(params: ListFichasParams) {
     return request<FichaListResponse>(`/fichas?${buildQuery(params)}`);
@@ -118,7 +149,7 @@ export const apiClient = {
   async uploadFotoFicha(id: string, file: File) {
     const form = new FormData();
     form.append('file', file);
-    const res = await fetch(`${API_URL}/fichas/${id}/foto`, { method: 'POST', body: form });
+    const res = await fetch(`${API_URL}/fichas/${id}/foto`, { method: 'POST', body: form, credentials: 'include' });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       const message = (body?.message as string) ?? `Erro ${res.status} ao enviar a foto`;
@@ -131,8 +162,8 @@ export const apiClient = {
     return request<Ficha>(`/fichas/${id}/foto`, { method: 'DELETE' });
   },
 
-  listEncontros(paroquiaId: string) {
-    return request<number[]>(`/fichas/encontros?${buildQuery({ paroquiaId })}`);
+  listEncontros() {
+    return request<number[]>('/fichas/encontros');
   },
 
   listFichasCasais(params: ListFichasCasaisParams) {
@@ -162,7 +193,7 @@ export const apiClient = {
   async uploadFotoFichaCasal(id: string, file: File) {
     const form = new FormData();
     form.append('file', file);
-    const res = await fetch(`${API_URL}/fichas-casais/${id}/foto`, { method: 'POST', body: form });
+    const res = await fetch(`${API_URL}/fichas-casais/${id}/foto`, { method: 'POST', body: form, credentials: 'include' });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       const message = (body?.message as string) ?? `Erro ${res.status} ao enviar a foto`;
@@ -275,7 +306,7 @@ export const apiClient = {
     const form = new FormData();
     form.append('file', file);
     if (usuario) form.append('usuario', usuario);
-    const res = await fetch(`${API_URL}/montagens/${montagemId}/quadrantes`, { method: 'POST', body: form });
+    const res = await fetch(`${API_URL}/montagens/${montagemId}/quadrantes`, { method: 'POST', body: form, credentials: 'include' });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       const message = (body?.message as string) ?? `Erro ${res.status} ao enviar o arquivo`;
@@ -290,5 +321,84 @@ export const apiClient = {
 
   deleteQuadrante(montagemId: string, id: string) {
     return request<QuadranteArquivo>(`/montagens/${montagemId}/quadrantes/${id}`, { method: 'DELETE' });
+  },
+
+  // Exportação simples (docs/producao.md, item 4) — link direto de download, mesmo padrão do
+  // quadranteDownloadUrl. Navegação normal do browser (clique em link) envia o cookie de
+  // sessão de qualquer jeito, sem precisar de paroquiaId na URL.
+  exportFichasUrl() {
+    return `${API_URL}/fichas/export`;
+  },
+
+  exportFichasCasaisUrl() {
+    return `${API_URL}/fichas-casais/export`;
+  },
+
+  exportMontagemUrl(montagemId: string) {
+    return `${API_URL}/montagens/${montagemId}/export`;
+  },
+
+  // Telão (docs/propostas.md, proposta #5) — endpoint público e reduzido, sem login (o guard
+  // global exige JWT em tudo, exceto rotas @Public() como esta). Não usar pra nada além do
+  // modo telão/impressão: o shape já vem filtrado (só ACEITOS, sem dado sensível).
+  getTelaoMontagem(id: string) {
+    return request<{
+      id: string;
+      numeroEncontro: number;
+      data: string;
+      padroeiro: string | null;
+      vagas: {
+        id: string;
+        equipe: { id: string; nome: string; slug: string; ordem: number };
+        cargo: { id: string; nome: string; ordem: number };
+        alocacoes: { id: string; ficha: { nomeCompleto: string } | null; fichaCasal: { nomeEle: string; nomeEla: string } | null }[];
+      }[];
+    }>(`/telao/montagens/${id}`);
+  },
+
+  // Conselho (R8) — leitura cross-paróquia de Montagem + observações.
+  listParoquias() {
+    return request<{ id: string; nome: string; usuarios: { id: string; login: string; ativo: boolean }[] }[]>(
+      '/paroquias',
+    );
+  },
+
+  createParoquia(data: { nome: string; login: string; senha: string }) {
+    return request<{ id: string; nome: string }>('/paroquias', { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  resetCredenciaisParoquia(id: string, senha: string) {
+    return request<{ ok: true }>(`/paroquias/${id}/credenciais`, { method: 'PATCH', body: JSON.stringify({ senha }) });
+  },
+
+  conselhoListMontagens(params: { paroquiaId?: string; status?: string; page?: number; pageSize?: number } = {}) {
+    return request<{
+      items: (Omit<Montagem, 'vagas'> & { paroquia: { id: string; nome: string } })[];
+      total: number;
+      page: number;
+      pageSize: number;
+    }>(`/conselho/montagens?${buildQuery(params)}`);
+  },
+
+  conselhoGetMontagem(id: string) {
+    return request<
+      Omit<Montagem, 'vagas'> & {
+        paroquia: { id: string; nome: string };
+        vagas: (VagaMontagem & { alocacoes: Alocacao[] })[];
+      }
+    >(`/conselho/montagens/${id}`);
+  },
+
+  conselhoListObservacoes(montagemId: string) {
+    return request<{ id: string; texto: string; createdAt: string; usuario: { nome: string | null } }[]>(
+      `/conselho/montagens/${montagemId}/observacoes`,
+    );
+  },
+
+  conselhoCriarObservacao(montagemId: string, texto: string) {
+    return request<{ id: string }>(`/conselho/montagens/${montagemId}/observacoes`, {
+      method: 'POST',
+      body: JSON.stringify({ texto }),
+    });
   },
 };

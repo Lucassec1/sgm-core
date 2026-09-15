@@ -16,7 +16,6 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { CORES_CIRCULO } from '@/lib/types';
 import type { Ficha } from '@/lib/types';
-import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
 import { useCreateFicha, useUpdateFicha } from '@/lib/hooks/use-fichas';
 import { nullsToUndefined } from '@/lib/utils';
 
@@ -107,7 +106,7 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
     if (isEdit) {
       await updateFicha.mutateAsync(values);
     } else {
-      const created = await createFicha.mutateAsync({ ...values, paroquiaId: PAROQUIA_ID_PROVISORIA });
+      const created = await createFicha.mutateAsync({ ...values });
       router.push(`/fichas/${created.id}`);
     }
   };

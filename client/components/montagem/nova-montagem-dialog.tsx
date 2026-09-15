@@ -19,7 +19,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
 import { useCreateMontagem } from '@/lib/hooks/use-montagens';
 
 // Campos seguem docs/ux-e-fluxos.md (1.2, "Dados do encontro") e a validação de tamanho do
@@ -66,7 +65,7 @@ export function NovaMontagemDialog() {
   });
 
   const onSubmit = async (values: MontagemFormValues) => {
-    const montagem = await createMontagem.mutateAsync({ ...values, paroquiaId: PAROQUIA_ID_PROVISORIA });
+    const montagem = await createMontagem.mutateAsync({ ...values });
     setOpen(false);
     reset();
     router.push(`/montagem/${montagem.id}`);

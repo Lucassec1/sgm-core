@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
 import { useMontagens } from '@/lib/hooks/use-montagens';
 import { NovaMontagemDialog } from '@/components/montagem/nova-montagem-dialog';
 
@@ -11,7 +10,7 @@ import { NovaMontagemDialog } from '@/components/montagem/nova-montagem-dialog';
 // por isso a entrada do módulo é: mostra o encontro em andamento (se houver) e o histórico
 // de encontros finalizados, sem seletor de "qual montagem" além disso.
 export default function MontagemPage() {
-  const { data, isLoading, isError } = useMontagens({ paroquiaId: PAROQUIA_ID_PROVISORIA, pageSize: 50 });
+  const { data, isLoading, isError } = useMontagens({ pageSize: 50 });
 
   const emAndamento = data?.items.find((m) => m.status === 'EM_ANDAMENTO');
   const finalizadas = data?.items.filter((m) => m.status === 'FINALIZADA') ?? [];

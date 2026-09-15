@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { FichaCasal } from '@/lib/types';
-import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
 import { useCreateFichaCasal, useUpdateFichaCasal } from '@/lib/hooks/use-fichas-casais';
 import { nullsToUndefined } from '@/lib/utils';
 
@@ -91,7 +90,7 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
     if (isEdit) {
       await updateFichaCasal.mutateAsync(values);
     } else {
-      const created = await createFichaCasal.mutateAsync({ ...values, paroquiaId: PAROQUIA_ID_PROVISORIA });
+      const created = await createFichaCasal.mutateAsync({ ...values });
       router.push(`/fichas/casais/${created.id}`);
     }
   };
