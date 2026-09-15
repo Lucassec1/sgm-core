@@ -1,9 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ListaSubstituicaoService } from './lista-substituicao.service';
 import { CreateItemListaSubstituicaoDto } from './dto/create-item-lista-substituicao.dto';
+import { ParoquiaScopeGuard } from '../../common/guards/paroquia-scope.guard';
+import { MontagemScopeGuard } from '../../common/guards/montagem-scope.guard';
 
-// TODO: aplicar JwtAuthGuard + ParoquiaScopeGuard aqui quando o módulo Auth existir.
+@UseGuards(ParoquiaScopeGuard, MontagemScopeGuard)
 @ApiTags('lista-substituicao')
 @Controller('montagens/:montagemId/lista-substituicao')
 export class ListaSubstituicaoController {

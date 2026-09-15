@@ -5,6 +5,7 @@ import { LogAtividadeService } from './log-atividade.service';
 import { CreateMontagemDto } from './dto/create-montagem.dto';
 import { UpdateMontagemDto } from './dto/update-montagem.dto';
 import { QueryMontagensDto } from './dto/query-montagens.dto';
+import { toCsv } from '../../common/export/csv.util';
 
 const VAGAS_INCLUDE = {
   vagas: {
@@ -38,7 +39,18 @@ export class MontagensService {
     private readonly logAtividade: LogAtividadeService,
   ) {}
 
-  async create(dto: CreateMontagemDto) {
+  // R7 — garante que a Montagem pedida pertence à paróquia de quem está autenticado. Usa
+  // NotFoundException (não Forbidden) pra não revelar a existência de registros de outra
+  // paróquia a quem não tem acesso a eles.
+  private async garantirPertence(id: string, paroquiaId: string) {
+    const montagem = await this.prisma.montagem.findUnique({ where: { id } });
+    if (!montagem || montagem.paroquiaId !== paroquiaId) {
+      throw new NotFoundException(`Montagem ${id} não encontrada`);
+    }
+    return montagem;
+  }
+
+  async create(dto: CreateMontagemDto, paroquiaId: string) {
     const ehImplantacao = dto.ehImplantacao ?? false;
     // R6 — mínimo 40, máximo 60 jovens locais; numa implantação somam-se os 12 sementeira.
     const minimo = 40 + (ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : 0);
@@ -53,7 +65,7 @@ export class MontagensService {
     // uma Montagem sem nenhuma vaga, e uma falha no log deixaria a criação sem rastro (R9).
     const montagem = await this.prisma.$transaction(async (tx) => {
       const ultimaMontagem = await tx.montagem.findFirst({
-        where: { paroquiaId: dto.paroquiaId },
+        where: { paroquiaId },
         orderBy: { numeroEncontro: 'desc' },
         select: { numeroEncontro: true },
       });
@@ -63,7 +75,7 @@ export class MontagensService {
 
       const criada = await tx.montagem.create({
         data: {
-          paroquiaId: dto.paroquiaId,
+          paroquiaId,
           numeroEncontro,
           data: new Date(dto.data),
           padroeiro: dto.padroeiro,
@@ -94,11 +106,11 @@ export class MontagensService {
       return criada;
     });
 
-    return this.findOne(montagem.id);
+    return this.findOne(montagem.id, paroquiaId);
   }
 
-  async findAll(query: QueryMontagensDto) {
-    const { paroquiaId, status, page = 1, pageSize = 20 } = query;
+  async findAll(query: QueryMontagensDto, paroquiaId: string) {
+    const { status, page = 1, pageSize = 20 } = query;
 
     const where = {
       paroquiaId,
@@ -118,19 +130,45 @@ export class MontagensService {
     return { items, total, page, pageSize };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, paroquiaId: string) {
     const montagem = await this.prisma.montagem.findUnique({
       where: { id },
       include: VAGAS_INCLUDE,
     });
-    if (!montagem) {
+    if (!montagem || montagem.paroquiaId !== paroquiaId) {
       throw new NotFoundException(`Montagem ${id} não encontrada`);
     }
     return montagem;
   }
 
-  async update(id: string, dto: UpdateMontagemDto) {
-    const anterior = await this.findOne(id);
+  // Exportação simples (docs/producao.md, item 4) — quem está alocado em cada vaga da montagem.
+  async exportCsv(id: string, paroquiaId: string) {
+    await this.garantirPertence(id, paroquiaId);
+
+    const vagas = await this.prisma.vagaMontagem.findMany({
+      where: { montagemId: id },
+      include: {
+        equipe: true,
+        cargo: true,
+        alocacoes: { include: { ficha: true, fichaCasal: true } },
+      },
+      orderBy: [{ equipe: { ordem: 'asc' } }, { cargo: { ordem: 'asc' } }],
+    });
+
+    const headers = ['Equipe', 'Cargo', 'Pessoa', 'Status do convite'];
+    const rows = vagas.flatMap((vaga) =>
+      vaga.alocacoes.map((alocacao) => [
+        vaga.equipe.nome,
+        vaga.cargo.nome,
+        alocacao.ficha?.nomeCompleto ?? (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : ''),
+        alocacao.status,
+      ]),
+    );
+    return toCsv(headers, rows);
+  }
+
+  async update(id: string, dto: UpdateMontagemDto, paroquiaId: string) {
+    const anterior = await this.findOne(id, paroquiaId);
     const { usuario, ...campos } = dto;
 
     // Recalcula a vaga dinâmica (Componentes da Visitação, R6) sempre que o nº de jovens
@@ -184,13 +222,13 @@ export class MontagensService {
       return atualizada;
     });
 
-    return precisaRecalcular ? this.findOne(id) : montagem;
+    return precisaRecalcular ? this.findOne(id, paroquiaId) : montagem;
   }
 
   // R3 — sugestão de coordenadores: Grupo A (já serviu como equipista naquela equipe) e
   // Grupo B (já foi Equipe Dirigente ou Comando Geral, pode coordenar qualquer equipe).
-  async coordenadoresSugeridos(montagemId: string, equipeId: string) {
-    await this.findOne(montagemId);
+  async coordenadoresSugeridos(montagemId: string, equipeId: string, paroquiaId: string) {
+    await this.findOne(montagemId, paroquiaId);
     const equipe = await this.prisma.equipe.findUnique({ where: { id: equipeId } });
     if (!equipe) {
       throw new NotFoundException(`Equipe ${equipeId} não encontrada`);
@@ -237,8 +275,8 @@ export class MontagensService {
   // demais em ordem decrescente. Fichas inativas ou já recusadas/desistentes nesta montagem
   // não entram. `vagaMontagemId`, quando informado, filtra também por sexo compatível com a
   // vaga (VagaMontagem.quantidadeRapazes/quantidadeMocas — ver docs/requisitos.md, 2.2).
-  async candidatosJovens(montagemId: string, vagaMontagemId?: string) {
-    const montagem = await this.findOne(montagemId);
+  async candidatosJovens(montagemId: string, paroquiaId: string, vagaMontagemId?: string) {
+    const montagem = await this.findOne(montagemId, paroquiaId);
 
     let sexos: Sexo[] | undefined;
     if (vagaMontagemId) {
@@ -280,8 +318,8 @@ export class MontagensService {
     });
   }
 
-  async listarLog(montagemId: string) {
-    await this.findOne(montagemId);
+  async listarLog(montagemId: string, paroquiaId: string) {
+    await this.garantirPertence(montagemId, paroquiaId);
     return this.logAtividade.listar(montagemId);
   }
 
@@ -295,8 +333,8 @@ export class MontagensService {
   // - "equipe que demorou mais pra fechar" -> vira "equipe com mais movimentação" (contagem de
   //   CRIOU_ALOCACAO + REMOVEU_ALOCACAO por equipe — essas duas ações são as únicas que citam a
   //   equipe no `detalhes`; é um proxy de "quanto foi mexido", não de duração real).
-  async resumo(montagemId: string) {
-    const montagem = await this.findOne(montagemId);
+  async resumo(montagemId: string, paroquiaId: string) {
+    const montagem = await this.findOne(montagemId, paroquiaId);
 
     const [logsMovimentacao, totalRecusasDesistencias, totalSubstituicoes, duracaoMs] = await Promise.all([
       this.prisma.logAtividade.findMany({
