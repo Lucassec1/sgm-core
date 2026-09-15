@@ -1,6 +1,7 @@
 import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, RoleUsuario } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import * as bcrypt from 'bcrypt';
 import { seedEquipesECargos } from './seed-equipes';
 import { seedMontagemExemplo } from './seed-montagem-exemplo';
 import { seedHistoricoEquipes } from './seed-historico-equipes';
@@ -138,12 +139,27 @@ async function seedFichasCasais() {
   return registros.length;
 }
 
+// Credencial de dev pra logar como a paróquia de desenvolvimento (login por paróquia é
+// compartilhado — ver docs/producao.md — então não faz sentido "um usuário por pessoa" aqui).
+const PAROQUIA_LOGIN_DEV = 'paroquia-dev';
+const PAROQUIA_SENHA_DEV = 'paroquia-dev-123';
+
+async function seedUsuarioParoquiaDev() {
+  const senhaHash = await bcrypt.hash(PAROQUIA_SENHA_DEV, 10);
+  await prisma.usuario.upsert({
+    where: { login: PAROQUIA_LOGIN_DEV },
+    update: { senhaHash, role: RoleUsuario.PAROQUIA, paroquiaId: PAROQUIA_ID, ativo: true },
+    create: { login: PAROQUIA_LOGIN_DEV, senhaHash, role: RoleUsuario.PAROQUIA, paroquiaId: PAROQUIA_ID },
+  });
+}
+
 async function main() {
   await prisma.paroquia.upsert({
     where: { id: PAROQUIA_ID },
     update: {},
     create: { id: PAROQUIA_ID, nome: PAROQUIA_NOME },
   });
+  await seedUsuarioParoquiaDev();
 
   const totalFichas = await seedFichas();
   const totalCasais = await seedFichasCasais();
@@ -151,6 +167,7 @@ async function main() {
   const { totalVagas, totalAlocacoes } = await seedMontagemExemplo(prisma, PAROQUIA_ID);
   const historico = await seedHistoricoEquipes(prisma, PAROQUIA_ID);
 
+  console.log(`Login de dev: usuário "${PAROQUIA_LOGIN_DEV}" / senha "${PAROQUIA_SENHA_DEV}".`);
   console.log(`Seed concluído: ${totalFichas} fichas (jovens) + ${totalCasais} casais na paróquia "${PAROQUIA_NOME}".`);
   console.log(`Catálogo de Montagem: ${totalEquipes} equipes, ${totalCargos} cargos.`);
   console.log(`Montagem de exemplo: ${totalVagas} vagas, ${totalAlocacoes} alocações.`);
