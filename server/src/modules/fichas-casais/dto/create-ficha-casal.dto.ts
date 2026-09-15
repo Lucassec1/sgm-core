@@ -5,18 +5,12 @@ import {
   IsEnum,
   IsOptional,
   IsString,
-  IsUUID,
   MinLength,
 } from 'class-validator';
 import { SituacaoFicha } from '@prisma/client';
 import { EmptyToUndefined } from '../../../common/transformers/empty-to-undefined.transformer';
 
-// TODO: paroquiaId deve vir do usuário autenticado (guard), não do body —
-// provisório até o módulo Auth existir (ver docs/arquitetura.md, seção 1).
 export class CreateFichaCasalDto {
-  @IsUUID()
-  paroquiaId!: string;
-
   // Identificação
   @IsString()
   @MinLength(3)
