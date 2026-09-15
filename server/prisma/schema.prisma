@@ -19,6 +19,38 @@ model Paroquia {
   fichas       Ficha[]
   fichasCasais FichaCasal[]
   montagens    Montagem[]
+  usuarios     Usuario[]
+}
+
+enum RoleUsuario {
+  PAROQUIA
+  CONSELHO
+}
+
+// Conta de acesso ao sistema (docs/producao.md, bloqueador #3; docs/regras-imutaveis.md, R7/R8).
+// PAROQUIA: uma credencial compartilhada por paróquia (toda a equipe dirigente usa a mesma,
+// como uma conta de Drive) — por isso `paroquiaId` é obrigatório e `nome` não importa.
+// CONSELHO: uma conta por pessoa (8 jovens + 4 casais, R8) — `paroquiaId` é sempre null (não
+// pertence a nenhuma paróquia) e `nome` é obrigatório na prática, pra identificar quem deixou
+// cada observação. A unicidade de "1 conta por paróquia" é garantida na Service, não aqui —
+// mais barato de relaxar depois (ex. staging de senha nova) do que reforçar.
+model Usuario {
+  id        String      @id @default(uuid())
+  login     String      @unique
+  senhaHash String
+  role      RoleUsuario
+  nome      String?
+  ativo     Boolean     @default(true)
+
+  paroquiaId String?
+  paroquia   Paroquia? @relation(fields: [paroquiaId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  observacoes ObservacaoMontagem[]
+
+  @@index([paroquiaId])
 }
 
 enum CorCirculo {
@@ -103,6 +135,12 @@ model Ficha {
   // R3, Grupo B: já foi Equipe Dirigente da paróquia — marcado manualmente até o Auth existir
   // de verdade (Equipe Dirigente é grupo pequeno, eleito anualmente, sem ligação com Auth hoje).
   jaFoiEquipeDirigente Boolean @default(false)
+
+  // Consentimento LGPD (docs/producao.md, bloqueador #2): o termo já é coletado em papel na
+  // inscrição do encontro (assinado pelo responsável quando menor de idade) — este campo só
+  // registra no sistema que a coleta em papel aconteceu, pra não depender só do arquivo físico.
+  termoAssinado   Boolean   @default(false)
+  termoAssinadoEm DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -258,9 +296,30 @@ model Montagem {
   logs              LogAtividade[]
   listaSubstituicao ListaSubstituicao[]
   quadrantes        QuadranteArquivo[]
+  observacoes       ObservacaoMontagem[]
 
   @@unique([paroquiaId, numeroEncontro])
   @@index([paroquiaId])
+}
+
+// Observação do Conselho numa Montagem (R8) — só leitura pro Conselho no resto do sistema,
+// mas pode deixar observações/sugestões aqui. `usuario` é sempre quem está autenticado como
+// Conselho (nunca digitado livre), pra garantir que toda observação mostra o nome de quem
+// registrou, como a regra exige.
+model ObservacaoMontagem {
+  id String @id @default(uuid())
+
+  montagemId String
+  montagem   Montagem @relation(fields: [montagemId], references: [id])
+
+  usuarioId String
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+
+  texto String
+
+  createdAt DateTime @default(now())
+
+  @@index([montagemId])
 }
 
 // Instância de um Cargo dentro de uma Montagem específica — quantidades
