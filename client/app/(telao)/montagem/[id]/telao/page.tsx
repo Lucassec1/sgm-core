@@ -6,38 +6,41 @@ import { ArrowLeft, Printer } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { EquipeIcon } from '@/components/equipes/equipe-icon';
-import { useAlocacoes, useMontagem } from '@/lib/hooks/use-montagens';
-import { agruparVagasPorEquipe } from '@/lib/utils';
-import type { Alocacao, VagaMontagem } from '@/lib/types';
+import { useTelaoMontagem } from '@/lib/hooks/use-telao';
 
 // Modo telão / impressão do Quadro de Equipes (docs/propostas.md, proposta #5) — visão
 // somente-leitura, grande, SEM dado sensível: só nome + equipe + função. Nada de telefone,
 // endereço, avaliação ou ações de edição. Vive fora do grupo (app) de propósito (sem
-// Sidebar/header) — é pensada pra projetar num telão ou imprimir e colar no mural.
-function nomeAlocacao(alocacao: Alocacao) {
+// Sidebar/header) — é pensada pra projetar num telão ou imprimir e colar no mural. Público
+// (sem login) — ver server/src/modules/telao — por isso usa um endpoint dedicado que já
+// devolve só o necessário (só ACEITOS, um único request em vez de dois).
+type TelaoVaga = NonNullable<ReturnType<typeof useTelaoMontagem>['data']>['vagas'][number];
+
+function nomeAlocacao(alocacao: TelaoVaga['alocacoes'][number]) {
   return (
     alocacao.ficha?.nomeCompleto ??
     (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : '—')
   );
 }
 
+function agruparPorEquipe(vagas: TelaoVaga[]) {
+  const grupos = new Map<string, TelaoVaga[]>();
+  for (const vaga of vagas) {
+    const lista = grupos.get(vaga.equipe.id) ?? [];
+    lista.push(vaga);
+    grupos.set(vaga.equipe.id, lista);
+  }
+  return [...grupos.values()].sort((a, b) => a[0].equipe.ordem - b[0].equipe.ordem);
+}
+
 export default function TelaoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data: montagem, isLoading, isError } = useMontagem(id);
-  const { data: alocacoes } = useAlocacoes(id);
+  const { data: montagem, isLoading, isError } = useTelaoMontagem(id);
 
   if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando...</p>;
   if (isError || !montagem) return <p className="p-6 text-sm text-red-600">Não foi possível carregar a montagem.</p>;
 
-  const alocacoesPorVaga = new Map<string, Alocacao[]>();
-  for (const alocacao of alocacoes ?? []) {
-    if (alocacao.status !== 'ACEITO') continue;
-    const lista = alocacoesPorVaga.get(alocacao.vagaMontagemId) ?? [];
-    lista.push(alocacao);
-    alocacoesPorVaga.set(alocacao.vagaMontagemId, lista);
-  }
-
-  const gruposPorEquipe = agruparVagasPorEquipe(montagem.vagas);
+  const gruposPorEquipe = agruparPorEquipe(montagem.vagas);
 
   return (
     <div className="mx-auto max-w-6xl p-6 print:p-0">
@@ -64,14 +67,14 @@ export default function TelaoPage({ params }: { params: Promise<{ id: string }> 
 
       <div className="grid gap-6 sm:grid-cols-2 print:grid-cols-2">
         {gruposPorEquipe.map((vagas) => (
-          <BlocoEquipe key={vagas[0].equipeId} vagas={vagas} alocacoesPorVaga={alocacoesPorVaga} />
+          <BlocoEquipe key={vagas[0].equipe.id} vagas={vagas} />
         ))}
       </div>
     </div>
   );
 }
 
-function BlocoEquipe({ vagas, alocacoesPorVaga }: { vagas: VagaMontagem[]; alocacoesPorVaga: Map<string, Alocacao[]> }) {
+function BlocoEquipe({ vagas }: { vagas: TelaoVaga[] }) {
   const { equipe } = vagas[0];
   const cargos = [...vagas].sort((a, b) => a.cargo.ordem - b.cargo.ordem);
 
@@ -83,7 +86,7 @@ function BlocoEquipe({ vagas, alocacoesPorVaga }: { vagas: VagaMontagem[]; aloca
       </h2>
       <div className="space-y-2">
         {cargos.map((vaga) => {
-          const nomes = (alocacoesPorVaga.get(vaga.id) ?? []).map(nomeAlocacao);
+          const nomes = vaga.alocacoes.map(nomeAlocacao);
           return (
             <div key={vaga.id} className="text-sm print:text-black">
               <span className="font-medium">{vaga.cargo.nome}:</span>{' '}

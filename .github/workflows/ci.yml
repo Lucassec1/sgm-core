@@ -17,6 +17,8 @@ jobs:
     # mesmo pra `prisma generate` (que não conecta em banco nenhum) — só precisa existir.
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      JWT_SECRET: ci-secret-fake
+      JWT_EXPIRES_IN: 8h
     steps:
       - uses: actions/checkout@v4
 

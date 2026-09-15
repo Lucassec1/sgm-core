@@ -2,23 +2,28 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LogAtividadeService } from './log-atividade.service';
-import { MontagensService } from './montagens.service';
 import { CreateItemListaSubstituicaoDto } from './dto/create-item-lista-substituicao.dto';
 
 const ITEM_INCLUDE = { ficha: true, fichaCasal: true };
 
 // Lista geral de substituição da Montagem — "banco de backups" independente de vaga/equipe
 // (ver docs/ux-e-fluxos.md, seção 3). Por montagem: não carrega de um encontro pro outro.
+// Pertencimento à paróquia (R7) já é garantido pelo MontagemScopeGuard no controller — aqui
+// só confirma que a Montagem existe.
 @Injectable()
 export class ListaSubstituicaoService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly montagensService: MontagensService,
     private readonly logAtividade: LogAtividadeService,
   ) {}
 
+  private async garantirMontagem(montagemId: string) {
+    const montagem = await this.prisma.montagem.findUnique({ where: { id: montagemId } });
+    if (!montagem) throw new NotFoundException(`Montagem ${montagemId} não encontrada`);
+  }
+
   async create(montagemId: string, dto: CreateItemListaSubstituicaoDto) {
-    await this.montagensService.findOne(montagemId);
+    await this.garantirMontagem(montagemId);
 
     try {
       return await this.prisma.$transaction(async (tx) => {
@@ -52,7 +57,7 @@ export class ListaSubstituicaoService {
   }
 
   async findAll(montagemId: string) {
-    await this.montagensService.findOne(montagemId);
+    await this.garantirMontagem(montagemId);
     return this.prisma.listaSubstituicao.findMany({
       where: { montagemId },
       include: ITEM_INCLUDE,

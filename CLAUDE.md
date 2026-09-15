@@ -45,22 +45,25 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
   equipes, drawer por equipe, lista completa, aba Convites (status + saídas/motivos + log),
   aba Substituições, aba Quadrantes (upload/download de PDF), criar/editar/finalizar
   montagem, ícones das equipes (`EquipeIcon`).
-  **Falta:** exportar .xlsx (aba Exportação = "em breve"); R7/R8 seguem adiados (ver seção
-  "Isolamento por paróquia"). Quadrantes: binário no filesystem do server
-  (`UPLOADS_DIR`, fallback `server/uploads/`, gitignored) — pra produção apontar num volume.
-- **Auth: stub** — `AuthController`/`AuthService`/`JwtAuthGuard` existem como esqueleto, sem
-  lógica real. `/login` no client é uma página vazia. Enquanto isso, o campo `usuario` do log
-  de atividade (R9) e o `paroquiaId` vêm do client provisoriamente.
+  **Falta:** exportação continua só CSV simples (fichas + montagem, sem o .xlsx completo
+  planejado originalmente — ver `docs/producao.md`, item 4). Quadrantes: binário no
+  filesystem do server (`UPLOADS_DIR`, fallback `server/uploads/`, gitignored) — pra produção
+  apontar num volume.
+- **Auth: pronto** — login JWT (cookie httpOnly) por credencial de paróquia (compartilhada,
+  não individual), guard global exigindo sessão em quase tudo, isolamento real entre paróquias
+  (R7) e Conselho implementado de verdade (R8) — ver seção "Isolamento por paróquia" abaixo e
+  `server/CLAUDE.md` pro padrão de guard/rota. `paroquiaId` não é mais aceito de nenhum
+  endpoint vindo do client — sempre vem do token.
 - **CI**: GitHub Actions rodando lint + typecheck + build (server e client) em push/PR pra `main`.
 
 ## Isolamento por paróquia
 
-**Decisão atual (conversa com o Lucas): manter o sistema numa paróquia só por enquanto.**
-Multi-paróquia + Conselho (ver `docs/requisitos.md`, seção 5-6) é a expansão planejada pra
-depois que o protótipo da paróquia do Lucas estiver validado — não é prioridade agora.
+**Decisão revertida em 15/09/2026** (a decisão anterior de adiar multi-paróquia/Conselho até o
+protótipo validar foi substituída por uma decisão explícita do Lucas de implementar R7/R8 de
+verdade agora — ver `docs/producao.md`, bloqueador #3). R7 (isolamento real entre paróquias) e
+R8 (Conselho: leitura cross-paróquia da Montagem, observações, gestão de credenciais de
+paróquia) estão implementados e testados no backend.
 
-Por isso, hoje: `paroquia_id` já existe em toda tabela relevante (Ficha, FichaCasal) e é
-passado manualmente pelo client (`PAROQUIA_ID_PROVISORIA`), mas o `ParoquiaScopeGuard` é só
-um stub (`return true`) — não há isolamento real aplicado ainda. **Não é uma falha a ser
-corrigida com urgência**: só passa a importar quando o Auth entrar de verdade e o sistema for
-expandido pra mais de uma paróquia. Não tratar isso como bloqueador do módulo Montagem.
+`paroquia_id` chega em toda query via `request.user.paroquiaId` (do JWT), nunca mais do client
+— `ParoquiaScopeGuard`/`MontagemScopeGuard` fazem a garantia central. O client (login,
+proteção de rota, área do Conselho) está sendo implementado/validado nesta mesma etapa.

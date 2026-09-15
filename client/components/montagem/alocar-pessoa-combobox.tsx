@@ -18,7 +18,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ApiError } from '@/lib/api-client';
-import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
 import { useCandidatosJovens, useCoordenadoresSugeridos, useCreateAlocacao, useDeleteAlocacao } from '@/lib/hooks/use-montagens';
 import { useFichasCasais } from '@/lib/hooks/use-fichas-casais';
 import type { Alocacao, StatusConvite, VagaMontagem } from '@/lib/types';
@@ -85,7 +84,7 @@ export function AlocarPessoaCombobox({
     tipoPessoa === 'JOVEM' && !ehCoordenacao ? vagaMontagemId : undefined,
   );
   const candidatosCasais = useFichasCasais(
-    { paroquiaId: PAROQUIA_ID_PROVISORIA, situacao: 'ATIVA', pageSize: 200 },
+    { situacao: 'ATIVA', pageSize: 200 },
     { enabled: tipoPessoa === 'CASAL' && !ehCoordenacao },
   );
   const coordenadores = useCoordenadoresSugeridos(montagemId, ehCoordenacao ? equipeId : undefined);

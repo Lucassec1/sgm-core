@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
-import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
 import { useCandidatosJovensGeral, useCreateListaSubstituicaoItem } from '@/lib/hooks/use-montagens';
 import { useFichasCasais } from '@/lib/hooks/use-fichas-casais';
 import { fotoSrc } from '@/lib/utils';
@@ -42,7 +41,7 @@ export function AdicionarSubstitutoBar({
 
   const createItem = useCreateListaSubstituicaoItem(montagemId);
   const jovens = useCandidatosJovensGeral(montagemId);
-  const casais = useFichasCasais({ paroquiaId: PAROQUIA_ID_PROVISORIA, situacao: 'ATIVA', pageSize: 200 });
+  const casais = useFichasCasais({ situacao: 'ATIVA', pageSize: 200 });
 
   const disponivel = (id: string) => !idsJaNaLista.has(id) && !idsNoEncontro.has(id);
 

@@ -13,6 +13,7 @@ import {
 import { CreateFichaCasalDto } from './dto/create-ficha-casal.dto';
 import { UpdateFichaCasalDto } from './dto/update-ficha-casal.dto';
 import { QueryFichasCasaisDto } from './dto/query-fichas-casais.dto';
+import { toCsv } from '../../common/export/csv.util';
 
 const FOTOS_DIR = join(process.env.UPLOADS_DIR || join(process.cwd(), 'uploads'), 'fichas-casais');
 
@@ -29,12 +30,12 @@ function parseDatasNascimento(dto: { dataNascimentoEle?: string; dataNascimentoE
 export class FichasCasaisService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateFichaCasalDto) {
-    return this.prisma.fichaCasal.create({ data: { ...dto, ...parseDatasNascimento(dto) } });
+  create(dto: CreateFichaCasalDto, paroquiaId: string) {
+    return this.prisma.fichaCasal.create({ data: { ...dto, paroquiaId, ...parseDatasNascimento(dto) } });
   }
 
-  async findAll(query: QueryFichasCasaisDto) {
-    const { paroquiaId, nome, situacao, page = 1, pageSize = 20 } = query;
+  async findAll(query: QueryFichasCasaisDto, paroquiaId: string) {
+    const { nome, situacao, page = 1, pageSize = 20 } = query;
 
     const where = {
       paroquiaId,
@@ -60,29 +61,43 @@ export class FichasCasaisService {
     return { items, total, page, pageSize };
   }
 
-  async findOne(id: string) {
+  // Exportação simples (docs/producao.md, item 4).
+  async exportCsv(paroquiaId: string) {
+    const casais = await this.prisma.fichaCasal.findMany({
+      where: { paroquiaId },
+      orderBy: { nomeEle: 'asc' },
+    });
+
+    const headers = ['Nome dele', 'Nome dela', 'Telefone dele', 'Telefone dela', 'Cidade', 'Situação'];
+    const rows = casais.map((c) => [c.nomeEle, c.nomeEla, c.telefoneEle, c.telefoneEla, c.cidade, c.situacao]);
+    return toCsv(headers, rows);
+  }
+
+  // `paroquiaId`, quando informado, garante o isolamento entre paróquias (R7) — ver
+  // comentário equivalente em FichasService.findOne.
+  async findOne(id: string, paroquiaId?: string) {
     const fichaCasal = await this.prisma.fichaCasal.findUnique({ where: { id } });
-    if (!fichaCasal) {
+    if (!fichaCasal || (paroquiaId && fichaCasal.paroquiaId !== paroquiaId)) {
       throw new NotFoundException(`Ficha de casal ${id} não encontrada`);
     }
     return fichaCasal;
   }
 
-  async update(id: string, dto: UpdateFichaCasalDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateFichaCasalDto, paroquiaId: string) {
+    await this.findOne(id, paroquiaId);
     return this.prisma.fichaCasal.update({ where: { id }, data: { ...dto, ...parseDatasNascimento(dto) } });
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, paroquiaId: string) {
+    await this.findOne(id, paroquiaId);
     await removerArquivoFoto(FOTOS_DIR, id);
     return this.prisma.fichaCasal.delete({ where: { id } });
   }
 
   // Upload de foto do casal (docs/propostas.md, proposta #4) — mesmo padrão da Ficha do
   // Jovem (ver FichasService), um arquivo por registro.
-  async uploadFoto(id: string, arquivo: ArquivoRecebido | undefined) {
-    await this.findOne(id);
+  async uploadFoto(id: string, arquivo: ArquivoRecebido | undefined, paroquiaId: string) {
+    await this.findOne(id, paroquiaId);
     if (!arquivo) throw new BadRequestException('Nenhum arquivo enviado (campo "file")');
     if (!mimetypeAceito(arquivo.mimetype)) {
       throw new BadRequestException('Formato não aceito — envie uma imagem JPEG, PNG ou WEBP');
@@ -95,13 +110,14 @@ export class FichasCasaisService {
     return this.prisma.fichaCasal.update({ where: { id }, data: { fotoUrl: `/fichas-casais/${id}/foto` } });
   }
 
-  async removerFoto(id: string) {
-    await this.findOne(id);
+  async removerFoto(id: string, paroquiaId: string) {
+    await this.findOne(id, paroquiaId);
     await removerArquivoFoto(FOTOS_DIR, id);
     return this.prisma.fichaCasal.update({ where: { id }, data: { fotoUrl: null } });
   }
 
-  async streamFoto(id: string) {
+  async streamFoto(id: string, paroquiaId: string) {
+    await this.findOne(id, paroquiaId);
     const foto = await encontrarFoto(FOTOS_DIR, id);
     if (!foto) throw new NotFoundException('Essa ficha de casal não tem foto');
     return { stream: streamArquivoFoto(foto.caminho), mimetype: foto.mimetype };
@@ -110,8 +126,8 @@ export class FichasCasaisService {
   // Histórico de equipes servidas — mesmo critério da Ficha do Jovem (ver
   // FichasService.historicoEquipes): dado gerado pelo módulo Montagem (Alocacao), não
   // armazenado na FichaCasal.
-  async historicoEquipes(id: string) {
-    await this.findOne(id);
+  async historicoEquipes(id: string, paroquiaId: string) {
+    await this.findOne(id, paroquiaId);
     return this.prisma.alocacao.findMany({
       where: { fichaCasalId: id },
       include: {

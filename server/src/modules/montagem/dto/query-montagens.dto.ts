@@ -1,12 +1,9 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
 import { StatusMontagem } from '@prisma/client';
 
-// TODO: paroquiaId deve vir do usuário autenticado, não da query — provisório até o módulo Auth existir.
+// paroquiaId vem do usuário autenticado (@ParoquiaAtual()), não da query — R7.
 export class QueryMontagensDto {
-  @IsUUID()
-  paroquiaId!: string;
-
   @IsOptional() @IsEnum(StatusMontagem) status?: StatusMontagem;
 
   @IsOptional()

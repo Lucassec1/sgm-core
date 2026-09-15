@@ -1,12 +1,9 @@
-import { IsBoolean, IsDateString, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { IsBoolean, IsDateString, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
-// TODO: paroquiaId deve vir do usuário autenticado (guard), não do body —
-// provisório até o módulo Auth existir (ver docs/arquitetura.md, seção 1).
+// paroquiaId vem do usuário autenticado (@ParoquiaAtual(), ver montagens.controller.ts), não
+// do body — R7.
 // numeroEncontro NÃO entra aqui: é calculado na Service (max + 1 por paróquia).
 export class CreateMontagemDto {
-  @IsUUID()
-  paroquiaId!: string;
-
   @IsDateString()
   data!: string;
 

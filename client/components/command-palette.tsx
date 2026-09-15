@@ -14,7 +14,6 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
 import { useFichas } from '@/lib/hooks/use-fichas';
 import { useFichasCasais } from '@/lib/hooks/use-fichas-casais';
 import { useMontagens } from '@/lib/hooks/use-montagens';
@@ -56,16 +55,16 @@ export function CommandPalette() {
   const buscaAtiva = debounced.length >= MIN_CHARS_BUSCA;
 
   const fichas = useFichas(
-    { paroquiaId: PAROQUIA_ID_PROVISORIA, nome: debounced, situacao: 'ATIVA', pageSize: 6 },
+    { nome: debounced, situacao: 'ATIVA', pageSize: 6 },
     { enabled: open && buscaAtiva },
   );
   const casais = useFichasCasais(
-    { paroquiaId: PAROQUIA_ID_PROVISORIA, nome: debounced, situacao: 'ATIVA', pageSize: 6 },
+    { nome: debounced, situacao: 'ATIVA', pageSize: 6 },
     { enabled: open && buscaAtiva },
   );
   // Montagens não tem busca por nome na API (é só um número de encontro) — busca a lista
   // uma vez que a paleta abre e filtra aqui mesmo; volume é baixo (poucos encontros/ano).
-  const montagens = useMontagens({ paroquiaId: PAROQUIA_ID_PROVISORIA, pageSize: 100 }, { enabled: open });
+  const montagens = useMontagens({ pageSize: 100 }, { enabled: open });
 
   const montagemEmAndamento = montagens.data?.items.find((m) => m.status === 'EM_ANDAMENTO');
 

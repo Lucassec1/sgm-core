@@ -6,7 +6,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useFichas } from '@/lib/hooks/use-fichas';
-import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
 import { CirculoBadge } from '@/components/fichas/circulo-badge';
 import { StatusBadge } from '@/components/fichas/status-badge';
 import { FichasFiltros, type FiltrosFichas } from '@/components/fichas/fichas-filtros';
@@ -16,7 +15,7 @@ import { fotoSrc } from '@/lib/utils';
 export default function FichasListPage() {
   const [filtros, setFiltros] = useState<FiltrosFichas>({});
 
-  const { data, isLoading, isError } = useFichas({ paroquiaId: PAROQUIA_ID_PROVISORIA, ...filtros });
+  const { data, isLoading, isError } = useFichas({ ...filtros });
 
   return (
     <div className="p-6 space-y-4">

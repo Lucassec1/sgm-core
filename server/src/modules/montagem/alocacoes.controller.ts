@@ -1,10 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AlocacoesService } from './alocacoes.service';
 import { CreateAlocacaoDto } from './dto/create-alocacao.dto';
 import { UpdateAlocacaoDto } from './dto/update-alocacao.dto';
+import { ParoquiaScopeGuard } from '../../common/guards/paroquia-scope.guard';
+import { MontagemScopeGuard } from '../../common/guards/montagem-scope.guard';
 
-// TODO: aplicar JwtAuthGuard + ParoquiaScopeGuard aqui quando o módulo Auth existir.
+@UseGuards(ParoquiaScopeGuard, MontagemScopeGuard)
 @ApiTags('alocacoes')
 @Controller('montagens/:montagemId/alocacoes')
 export class AlocacoesController {

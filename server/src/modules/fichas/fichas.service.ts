@@ -13,6 +13,7 @@ import {
 import { CreateFichaDto } from './dto/create-ficha.dto';
 import { UpdateFichaDto } from './dto/update-ficha.dto';
 import { QueryFichasDto } from './dto/query-fichas.dto';
+import { toCsv } from '../../common/export/csv.util';
 
 // UPLOADS_DIR é o mesmo diretório-raiz usado pelos Quadrantes (server/uploads/ em dev, um
 // volume em produção) — cada tipo de arquivo mora no seu subdiretório.
@@ -22,19 +23,14 @@ const FOTOS_DIR = join(process.env.UPLOADS_DIR || join(process.cwd(), 'uploads')
 export class FichasService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateFichaDto) {
-    return this.prisma.ficha.create({ data: { ...dto, dataNascimento: new Date(dto.dataNascimento) } });
+  create(dto: CreateFichaDto, paroquiaId: string) {
+    return this.prisma.ficha.create({
+      data: { ...dto, paroquiaId, dataNascimento: new Date(dto.dataNascimento) },
+    });
   }
 
-  async findAll(query: QueryFichasDto) {
-    const {
-      paroquiaId,
-      nome,
-      numeroEncontro,
-      situacao,
-      page = 1,
-      pageSize = 20,
-    } = query;
+  async findAll(query: QueryFichasDto, paroquiaId: string) {
+    const { nome, numeroEncontro, situacao, page = 1, pageSize = 20 } = query;
 
     const where = {
       paroquiaId,
@@ -66,32 +62,70 @@ export class FichasService {
     return rows.map((r) => r.numeroEncontro);
   }
 
-  async findOne(id: string) {
+  // Exportação simples (docs/producao.md, item 4) — CSV com todas as fichas da paróquia,
+  // sem paginação, pra alguém não-técnico conseguir um retrato completo dos dados.
+  async exportCsv(paroquiaId: string) {
+    const fichas = await this.prisma.ficha.findMany({
+      where: { paroquiaId },
+      orderBy: { nomeCompleto: 'asc' },
+    });
+
+    const headers = [
+      'Nome completo',
+      'Sexo',
+      'Data de nascimento',
+      'Telefone',
+      'Email',
+      'Cidade',
+      'Nº do encontro',
+      'Cor do círculo',
+      'Situação',
+      'Termo assinado',
+    ];
+    const rows = fichas.map((f) => [
+      f.nomeCompleto,
+      f.sexo,
+      f.dataNascimento.toISOString().slice(0, 10),
+      f.telefone,
+      f.email,
+      f.cidade,
+      f.numeroEncontro,
+      f.corCirculo,
+      f.situacao,
+      f.termoAssinado ? 'Sim' : 'Não',
+    ]);
+    return toCsv(headers, rows);
+  }
+
+  // `paroquiaId`, quando informado, garante o isolamento entre paróquias (R7): uma Ficha só
+  // é encontrada por quem pediu se pertencer à mesma paróquia — NotFound, não Forbidden, pra
+  // não revelar que o registro existe em outra paróquia.
+  async findOne(id: string, paroquiaId?: string) {
     const ficha = await this.prisma.ficha.findUnique({ where: { id } });
-    if (!ficha) {
+    if (!ficha || (paroquiaId && ficha.paroquiaId !== paroquiaId)) {
       throw new NotFoundException(`Ficha ${id} não encontrada`);
     }
     return ficha;
   }
 
-  async update(id: string, dto: UpdateFichaDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateFichaDto, paroquiaId: string) {
+    await this.findOne(id, paroquiaId);
     return this.prisma.ficha.update({
       where: { id },
       data: { ...dto, ...(dto.dataNascimento && { dataNascimento: new Date(dto.dataNascimento) }) },
     });
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, paroquiaId: string) {
+    await this.findOne(id, paroquiaId);
     await removerArquivoFoto(FOTOS_DIR, id);
     return this.prisma.ficha.delete({ where: { id } });
   }
 
   // Upload de foto 3x4 (docs/propostas.md, proposta #4) — substitui o campo `fotoUrl` manual.
   // Só faz sentido depois que a Ficha já existe (o arquivo em disco usa o id dela como nome).
-  async uploadFoto(id: string, arquivo: ArquivoRecebido | undefined) {
-    await this.findOne(id);
+  async uploadFoto(id: string, arquivo: ArquivoRecebido | undefined, paroquiaId: string) {
+    await this.findOne(id, paroquiaId);
     if (!arquivo) throw new BadRequestException('Nenhum arquivo enviado (campo "file")');
     if (!mimetypeAceito(arquivo.mimetype)) {
       throw new BadRequestException('Formato não aceito — envie uma imagem JPEG, PNG ou WEBP');
@@ -104,13 +138,14 @@ export class FichasService {
     return this.prisma.ficha.update({ where: { id }, data: { fotoUrl: `/fichas/${id}/foto` } });
   }
 
-  async removerFoto(id: string) {
-    await this.findOne(id);
+  async removerFoto(id: string, paroquiaId: string) {
+    await this.findOne(id, paroquiaId);
     await removerArquivoFoto(FOTOS_DIR, id);
     return this.prisma.ficha.update({ where: { id }, data: { fotoUrl: null } });
   }
 
-  async streamFoto(id: string) {
+  async streamFoto(id: string, paroquiaId: string) {
+    await this.findOne(id, paroquiaId);
     const foto = await encontrarFoto(FOTOS_DIR, id);
     if (!foto) throw new NotFoundException('Essa ficha não tem foto');
     return { stream: streamArquivoFoto(foto.caminho), mimetype: foto.mimetype };
@@ -119,8 +154,8 @@ export class FichasService {
   // Histórico de equipes servidas — dado gerado pelo módulo Montagem (Alocacao), não
   // armazenado na Ficha (ver docs/requisitos.md, 2.1). Cobre qualquer status, não só
   // ACEITO, pra também mostrar convites em aberto/recusas no histórico.
-  async historicoEquipes(id: string) {
-    await this.findOne(id);
+  async historicoEquipes(id: string, paroquiaId: string) {
+    await this.findOne(id, paroquiaId);
     return this.prisma.alocacao.findMany({
       where: { fichaId: id },
       include: {

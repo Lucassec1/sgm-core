@@ -10,10 +10,10 @@ export function useFichas(params: ListFichasParams, options?: { enabled?: boolea
   });
 }
 
-export function useEncontros(paroquiaId: string) {
+export function useEncontros() {
   return useQuery({
-    queryKey: ['fichas', 'encontros', paroquiaId],
-    queryFn: () => apiClient.listEncontros(paroquiaId),
+    queryKey: ['fichas', 'encontros'],
+    queryFn: () => apiClient.listEncontros(),
   });
 }
 

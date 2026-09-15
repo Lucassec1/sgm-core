@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEncontros } from '@/lib/hooks/use-fichas';
-import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
 
 export interface FiltrosFichas {
   nome?: string;
@@ -16,7 +15,7 @@ export interface FiltrosFichas {
 // ver docs/ux-e-fluxos.md, seção 2 ("Lista de Fichas").
 export function FichasFiltros({ value, onChange }: { value: FiltrosFichas; onChange: (value: FiltrosFichas) => void }) {
   const [nome, setNome] = useState(value.nome ?? '');
-  const { data: encontros } = useEncontros(PAROQUIA_ID_PROVISORIA);
+  const { data: encontros } = useEncontros();
 
   return (
     <div className="flex flex-wrap items-center gap-3">

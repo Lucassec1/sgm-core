@@ -8,14 +8,17 @@ import {
   Res,
   StreamableFile,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { ArquivoRecebido, QuadrantesService } from './quadrantes.service';
+import { ParoquiaScopeGuard } from '../../common/guards/paroquia-scope.guard';
+import { MontagemScopeGuard } from '../../common/guards/montagem-scope.guard';
 
-// TODO: aplicar JwtAuthGuard + ParoquiaScopeGuard aqui quando o módulo Auth existir.
+@UseGuards(ParoquiaScopeGuard, MontagemScopeGuard)
 @ApiTags('quadrantes')
 @Controller('montagens/:montagemId/quadrantes')
 export class QuadrantesController {

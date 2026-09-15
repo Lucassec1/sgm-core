@@ -2,16 +2,17 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { ListaSubstituicaoService } from './lista-substituicao.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { MontagensService } from './montagens.service';
 import { LogAtividadeService } from './log-atividade.service';
 
 // Testes unitários da lista geral de substituição (docs/ux-e-fluxos.md, seção 3) — "banco de
-// backups" da Montagem, independente de vaga/equipe. PrismaService/MontagensService mockados.
+// backups" da Montagem, independente de vaga/equipe. PrismaService mockado. Pertencimento à
+// paróquia (R7) é responsabilidade do MontagemScopeGuard no controller, não desta Service.
 
 const MONTAGEM_ID = 'montagem-1';
 
 function criarPrismaMock() {
   const mock: Record<string, unknown> = {
+    montagem: { findUnique: jest.fn().mockResolvedValue({ id: MONTAGEM_ID }) },
     listaSubstituicao: {
       create: jest.fn(),
       findMany: jest.fn(),
@@ -28,17 +29,14 @@ function criarPrismaMock() {
 
 describe('ListaSubstituicaoService', () => {
   let prisma: ReturnType<typeof criarPrismaMock>;
-  let montagensService: { findOne: jest.Mock };
   let logAtividade: { registrar: jest.Mock };
   let service: ListaSubstituicaoService;
 
   beforeEach(() => {
     prisma = criarPrismaMock();
-    montagensService = { findOne: jest.fn().mockResolvedValue({ id: MONTAGEM_ID }) };
     logAtividade = { registrar: jest.fn().mockResolvedValue(undefined) };
     service = new ListaSubstituicaoService(
       prisma as unknown as PrismaService,
-      montagensService as unknown as MontagensService,
       logAtividade as unknown as LogAtividadeService,
     );
   });
@@ -49,7 +47,7 @@ describe('ListaSubstituicaoService', () => {
 
       await service.create(MONTAGEM_ID, { tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any);
 
-      expect(montagensService.findOne).toHaveBeenCalledWith(MONTAGEM_ID);
+      expect(prisma.montagem.findUnique).toHaveBeenCalledWith({ where: { id: MONTAGEM_ID } });
       expect(prisma.listaSubstituicao.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ montagemId: MONTAGEM_ID, fichaId: 'ficha-1' }) }),
       );
@@ -86,7 +84,7 @@ describe('ListaSubstituicaoService', () => {
 
       const itens = await service.findAll(MONTAGEM_ID);
 
-      expect(montagensService.findOne).toHaveBeenCalledWith(MONTAGEM_ID);
+      expect(prisma.montagem.findUnique).toHaveBeenCalledWith({ where: { id: MONTAGEM_ID } });
       expect(prisma.listaSubstituicao.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: { montagemId: MONTAGEM_ID }, orderBy: { createdAt: 'asc' } }),
       );

@@ -7,12 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useFichas } from '@/lib/hooks/use-fichas';
 import { useFichasCasais } from '@/lib/hooks/use-fichas-casais';
 import { useMontagens } from '@/lib/hooks/use-montagens';
-import { PAROQUIA_ID_PROVISORIA } from '@/lib/constants';
+import { apiClient } from '@/lib/api-client';
 
 export default function DashboardPage() {
-  const { data: fichas } = useFichas({ paroquiaId: PAROQUIA_ID_PROVISORIA, pageSize: 1 });
-  const { data: casais } = useFichasCasais({ paroquiaId: PAROQUIA_ID_PROVISORIA, pageSize: 1 });
-  const { data: montagens } = useMontagens({ paroquiaId: PAROQUIA_ID_PROVISORIA, status: 'EM_ANDAMENTO', pageSize: 1 });
+  const { data: fichas } = useFichas({ pageSize: 1 });
+  const { data: casais } = useFichasCasais({ pageSize: 1 });
+  const { data: montagens } = useMontagens({ status: 'EM_ANDAMENTO', pageSize: 1 });
   const montagemAtual = montagens?.items[0];
 
   return (
@@ -64,13 +64,35 @@ export default function DashboardPage() {
           </Card>
         </Link>
 
-        <Card className="opacity-60">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Exportação</CardTitle>
             <FileDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <CardDescription>em breve</CardDescription>
+            <CardDescription className="mb-1">baixar dados em CSV</CardDescription>
+            <div className="flex flex-col gap-1 text-sm">
+              <a
+                className="text-primary hover:underline"
+                href={apiClient.exportFichasUrl()}
+              >
+                Fichas — Jovens
+              </a>
+              <a
+                className="text-primary hover:underline"
+                href={apiClient.exportFichasCasaisUrl()}
+              >
+                Fichas — Casais
+              </a>
+              {montagemAtual && (
+                <a
+                  className="text-primary hover:underline"
+                  href={apiClient.exportMontagemUrl(montagemAtual.id)}
+                >
+                  Montagem atual
+                </a>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

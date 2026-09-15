@@ -6,19 +6,13 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
   Min,
   MinLength,
 } from 'class-validator';
 import { CorCirculo, SituacaoFicha, Sexo } from '@prisma/client';
 import { EmptyToUndefined } from '../../../common/transformers/empty-to-undefined.transformer';
 
-// TODO: paroquiaId deve vir do usuário autenticado (guard), não do body —
-// provisório até o módulo Auth existir (ver docs/arquitetura.md, seção 1).
 export class CreateFichaDto {
-  @IsUUID()
-  paroquiaId!: string;
-
   // Identificação
   @IsString()
   @MinLength(3)
@@ -85,4 +79,8 @@ export class CreateFichaDto {
 
   // R3, Grupo B (módulo Montagem) — marcado manualmente até o Auth existir de verdade.
   @IsOptional() @IsBoolean() jaFoiEquipeDirigente?: boolean;
+
+  // Consentimento LGPD — registra que o termo em papel foi coletado (ver docs/producao.md).
+  @IsOptional() @IsBoolean() termoAssinado?: boolean;
+  @EmptyToUndefined() @IsOptional() @IsDateString() termoAssinadoEm?: string;
 }
