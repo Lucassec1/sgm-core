@@ -1,6 +1,6 @@
 # SGM Core — UX & Fluxos
 
-> Camada derivada do `requisitos.md`. Aqui ficam as decisões de *como* o sistema se comporta — não as regras do Segue-me, que continuam imutáveis no documento de requisitos.
+> Camada derivada do `requisitos.md`. Aqui ficam as decisões de _como_ o sistema se comporta — não as regras do Segue-me, que continuam imutáveis no documento de requisitos.
 
 ---
 
@@ -72,6 +72,7 @@ Exportar (.xlsx) + Visualizar no Histórico
 ### Ficha do Jovem/Casal
 
 **Organização**
+
 - **Seções empilhadas com divider**, não Wizard nem Tabs (decisão acima).
 - Página de detalhe, de cima pra baixo: **header** (foto grande + nome + badge de situação; no Jovem também badge da cor do círculo e nº do encontro) → **Histórico de Equipes** → **Dados cadastrais** (o formulário). Divider entre cada bloco.
 - Ordem das seções dentro de Dados cadastrais: Identificação → Endereço → Filiação → Escolaridade → Religião → Convite. Cada seção com um subtítulo discreto e um divider entre elas. Histórico não é seção do formulário — vem antes, logo abaixo do header.
@@ -82,6 +83,7 @@ Exportar (.xlsx) + Visualizar no Histórico
 - Foto: à esquerda, ao lado do nome, sempre visível (não dentro de uma aba) — é o principal ponto de reconhecimento visual na montagem.
 
 **Produtividade**
+
 - **Decidido:** vale investir, porque não é só um mutirão pontual — a carga inicial é pesada (cadastro retroativo dos últimos 6 encontros) e depois passa a ser um fluxo recorrente (ano a ano). Isso muda a solução: em vez de só um formulário "rápido" na UI, dois modos:
   - **Cadastro sequencial rápido**: atalho de teclado pra pular pro próximo campo, e a tela já abre pronta pra próxima ficha depois de salvar (sem voltar pra Lista a cada pessoa) — bom para o fluxo recorrente ano a ano.
   - **Importação em massa via planilha (CSV/Excel)**: para a carga retroativa dos 6 encontros, digitar um por um ainda é lento demais mesmo com atalhos. Sugiro um importador que aceita uma planilha com os campos principais (nome, telefone, encontro, cor do círculo, equipe(s) que serviu) e cria as fichas de uma vez, com uma tela de conferência antes de confirmar (mostrando o que vai ser criado, avisando duplicatas prováveis por nome). Ficha entra como rascunho — os campos que faltarem (religião, filiação etc.) são completados depois, sem bloquear a carga inicial.
@@ -91,6 +93,7 @@ Exportar (.xlsx) + Visualizar no Histórico
 - Chips: participação em outros movimentos da Igreja (pode ser mais de um).
 
 **Fluxo**
+
 - Auto-save por campo (on blur) ou por aba (ao trocar de Tab) — evita perda de dados sem exigir clique manual, mas também evita salvar campo por campo em excesso.
 - Validação: **on blur**, não em tempo real a cada tecla (validar CPF/telefone enquanto a pessoa ainda está digitando é irritante); validação de obrigatoriedade só ao tentar sair da aba ou salvar a ficha.
 - **Decidido:** sim, ficha pode ficar como "rascunho". Além de evitar perda de dado no cadastro do dia a dia, isso é essencial pro cenário de importação em massa (ficha entra incompleta e alguém completa depois) e pro fluxo ano a ano, onde fichas antigas frequentemente precisam de correção/atualização — "rascunho" e "editar depois" são, na prática, o mesmo mecanismo.
@@ -113,6 +116,7 @@ Exportar (.xlsx) + Visualizar no Histórico
 ### Estrutura das 16 equipes
 
 **Decisão sugerida:** grid de **Cards** (estilo Kanban, sem colunas de status — cada card É uma equipe), não Accordion nem Tree View.
+
 - Accordion não escala bem pra 16 itens simultâneos (vira lista de cliques).
 - Tree View sugere hierarquia entre equipes, que não existe (elas são paralelas, exceto a dependência dos Círculos).
 - Cada card mostra: nome da equipe, % preenchido (Progress), vagas restantes por função/gênero, e badge se a equipe está bloqueada aguardando Círculos.
@@ -121,6 +125,7 @@ Exportar (.xlsx) + Visualizar no Histórico
 ### Distribuição — o que aparece ao selecionar uma pessoa
 
 O requisito original pede: nome completo, endereço, telefone. Sugiro adicionar:
+
 - **Quantas vezes já serviu** (no total e nessa equipe específica) — direto relevante pra regra R2 (limite de 3x)
 - **Círculo/cor** (se for do último encontro)
 - **Nº do encontro** que vivenciou
@@ -150,13 +155,13 @@ Novo recurso: uma lista **geral** de pessoas cotadas como boas opções de subst
 
 ### Alertas visuais
 
-| Situação | Sugestão visual |
-|---|---|
-| Já serviu nessa equipe antes | Badge outline amarelo, ⚠️ "já serviu em [encontro]" |
-| Não pode coordenar | Badge vermelho discreto, some se não for uma vaga de coordenação |
-| Recusou convite | Badge vermelho sólido "Recusou", card esmaecido/riscado |
-| Do último encontro (prioridade) | Badge com a cor do círculo — mesma badge usada na Lista de Fichas, por consistência |
-| Está na lista geral de substituição | Pequeno ícone de "estrela" no card/linha da pessoa em qualquer lugar do sistema |
+| Situação                             | Sugestão visual                                                                                |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Já serviu nessa equipe antes         | Badge outline amarelo, ⚠️ "já serviu em [encontro]"                                            |
+| Não pode coordenar                   | Badge vermelho discreto, some se não for uma vaga de coordenação                               |
+| Recusou convite                      | Badge vermelho sólido "Recusou", card esmaecido/riscado                                        |
+| Do último encontro (prioridade)      | Badge com a cor do círculo — mesma badge usada na Lista de Fichas, por consistência            |
+| Está na lista geral de substituição  | Pequeno ícone de "estrela" no card/linha da pessoa em qualquer lugar do sistema                |
 | Equipe dos Círculos ainda não fechou | Aviso discreto no topo do Quadro de Equipes (não bloqueia as outras equipes — ver nota abaixo) |
 
 **Sobre o bloqueio dos Círculos (R4):** a regra em si não mudou — convite formal pras outras 14 equipes só sai depois dos Círculos fecharem. Mas isso não deve travar a **tela**: a equipe dirigente pode ir montando/rascunhando a distribuição das outras equipes em paralelo (é assim que funciona na prática), só não consegue **enviar convite** delas antes dos Círculos fecharem. Ou seja: card de equipe nunca fica "cadeado" — o que muda é só a ação de convidar, que fica desabilitada com uma explicação (tooltip: "Aguardando Eq. dos Círculos") até lá.
@@ -174,22 +179,22 @@ Novo recurso: uma lista **geral** de pessoas cotadas como boas opções de subst
 
 ## 4. Design System — mapa de uso (shadcn)
 
-| Necessidade do sistema | Componente shadcn |
-|---|---|
-| Navegação geral (Fichas / Montagem / Exportação) | Sidebar |
-| Seções da Ficha do Jovem/Casal | Separator (empilhadas, sem Tabs) |
-| Grid das 16 equipes | Card + Progress + Badge |
-| Detalhe de uma equipe ao clicar no card | Drawer |
-| Confirmações obrigatórias (repetição de equipe, recusa) | Alert Dialog |
-| Criação de nova montagem/ficha | Dialog |
-| Busca de pessoa para vaga | Command (combobox com busca) |
-| Lista de substituição (banco geral de backups da montagem) | DataTable ou List + Command para adicionar pessoas |
-| Lista de Fichas, Histórico de equipes, Controle de Convites | DataTable |
-| Status (Ativa/Inativa, Aceito/Recusado, cor do círculo) | Badge |
-| Foto da pessoa | Avatar |
-| Auto-save, confirmações de ação | Toast |
-| % de preenchimento da montagem | Progress |
-| Upload de PDF (Quadrantes) | (sem componente shadcn nativo — construir com input file + lista) |
+| Necessidade do sistema                                      | Componente shadcn                                                 |
+| ----------------------------------------------------------- | ----------------------------------------------------------------- |
+| Navegação geral (Fichas / Montagem / Exportação)            | Sidebar                                                           |
+| Seções da Ficha do Jovem/Casal                              | Separator (empilhadas, sem Tabs)                                  |
+| Grid das 16 equipes                                         | Card + Progress + Badge                                           |
+| Detalhe de uma equipe ao clicar no card                     | Drawer                                                            |
+| Confirmações obrigatórias (repetição de equipe, recusa)     | Alert Dialog                                                      |
+| Criação de nova montagem/ficha                              | Dialog                                                            |
+| Busca de pessoa para vaga                                   | Command (combobox com busca)                                      |
+| Lista de substituição (banco geral de backups da montagem)  | DataTable ou List + Command para adicionar pessoas                |
+| Lista de Fichas, Histórico de equipes, Controle de Convites | DataTable                                                         |
+| Status (Ativa/Inativa, Aceito/Recusado, cor do círculo)     | Badge                                                             |
+| Foto da pessoa                                              | Avatar                                                            |
+| Auto-save, confirmações de ação                             | Toast                                                             |
+| % de preenchimento da montagem                              | Progress                                                          |
+| Upload de PDF (Quadrantes)                                  | (sem componente shadcn nativo — construir com input file + lista) |
 
 ---
 

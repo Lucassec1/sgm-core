@@ -29,7 +29,9 @@ export function useCriarObservacao(montagemId: string) {
   return useMutation({
     mutationFn: (texto: string) => apiClient.conselhoCriarObservacao(montagemId, texto),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['conselho', 'montagens', montagemId, 'observacoes'] });
+      queryClient.invalidateQueries({
+        queryKey: ['conselho', 'montagens', montagemId, 'observacoes'],
+      });
     },
   });
 }

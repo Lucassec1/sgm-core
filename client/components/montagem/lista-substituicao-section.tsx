@@ -6,7 +6,12 @@ import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useAlocacoes, useDeleteListaSubstituicaoItem, useListaSubstituicao, useMontagem } from '@/lib/hooks/use-montagens';
+import {
+  useAlocacoes,
+  useDeleteListaSubstituicaoItem,
+  useListaSubstituicao,
+  useMontagem,
+} from '@/lib/hooks/use-montagens';
 import { fotoSrc } from '@/lib/utils';
 import { AdicionarSubstitutoBar } from './adicionar-substituto-combobox';
 import { AlocarSubstitutoCombobox } from './alocar-substituto-combobox';
@@ -19,7 +24,10 @@ import type { ListaSubstituicaoItem } from '@/lib/types';
 const STATUS_INDISPONIVEL = ['RASCUNHO', 'CONVIDADO', 'ACEITO', 'RECUSADO', 'DESISTIU'];
 
 function nomeItem(item: ListaSubstituicaoItem) {
-  return item.ficha?.nomeCompleto ?? (item.fichaCasal ? `${item.fichaCasal.nomeEle} e ${item.fichaCasal.nomeEla}` : '—');
+  return (
+    item.ficha?.nomeCompleto ??
+    (item.fichaCasal ? `${item.fichaCasal.nomeEle} e ${item.fichaCasal.nomeEla}` : '—')
+  );
 }
 
 function fotoItem(item: ListaSubstituicaoItem) {
@@ -28,7 +36,13 @@ function fotoItem(item: ListaSubstituicaoItem) {
 
 // Banco geral de backups da montagem (docs/ux-e-fluxos.md, seção 3) — independente de
 // vaga/equipe, por encontro. Não carrega automaticamente de um encontro pro outro.
-export function ListaSubstituicaoSection({ montagemId, readOnly = false }: { montagemId: string; readOnly?: boolean }) {
+export function ListaSubstituicaoSection({
+  montagemId,
+  readOnly = false,
+}: {
+  montagemId: string;
+  readOnly?: boolean;
+}) {
   const { data: itens, isLoading } = useListaSubstituicao(montagemId);
   const { data: alocacoes } = useAlocacoes(montagemId);
   const { data: montagem } = useMontagem(montagemId);
@@ -53,17 +67,23 @@ export function ListaSubstituicaoSection({ montagemId, readOnly = false }: { mon
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Pessoas cotadas como boa opção de substituição em qualquer equipe — consulte aqui primeiro quando alguém sair de
-        uma vaga.
+        Pessoas cotadas como boa opção de substituição em qualquer equipe — consulte aqui primeiro
+        quando alguém sair de uma vaga.
       </p>
 
       <div className="max-w-xl">
-        <AdicionarSubstitutoBar montagemId={montagemId} idsJaNaLista={idsJaNaLista} idsNoEncontro={idsNoEncontro} />
+        <AdicionarSubstitutoBar
+          montagemId={montagemId}
+          idsJaNaLista={idsJaNaLista}
+          idsNoEncontro={idsNoEncontro}
+        />
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
 
-      {itens && itens.length === 0 && <p className="text-sm text-muted-foreground">Ninguém na lista ainda.</p>}
+      {itens && itens.length === 0 && (
+        <p className="text-sm text-muted-foreground">Ninguém na lista ainda.</p>
+      )}
 
       {itens && itens.length > 0 && (
         <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -71,7 +91,9 @@ export function ListaSubstituicaoSection({ montagemId, readOnly = false }: { mon
             <li key={item.id} className="flex items-start gap-3 rounded-md border p-3">
               <Avatar className="h-9 w-9 shrink-0">
                 <AvatarImage src={fotoItem(item)} alt={nomeItem(item)} />
-                <AvatarFallback className="text-xs">{nomeItem(item).slice(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback className="text-xs">
+                  {nomeItem(item).slice(0, 2).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex items-start justify-between gap-1">

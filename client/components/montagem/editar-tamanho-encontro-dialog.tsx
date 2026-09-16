@@ -36,7 +36,8 @@ const schema = z
       return data.numeroJovensVivenciando >= minimo && data.numeroJovensVivenciando <= maximo;
     },
     {
-      message: 'Fora do intervalo (40-60 jovens, ou 52-72 numa implantação — já contando os 12 sementeira)',
+      message:
+        'Fora do intervalo (40-60 jovens, ou 52-72 numa implantação — já contando os 12 sementeira)',
       path: ['numeroJovensVivenciando'],
     },
   );
@@ -103,19 +104,26 @@ export function EditarTamanhoEncontroDialog({ montagem }: { montagem: Montagem }
           <DialogHeader>
             <DialogTitle>Ajustar tamanho do encontro</DialogTitle>
             <DialogDescription>
-              Atualiza o nº de jovens vivenciando e recalcula a quantidade de casais da Eq. da Visitação.
+              Atualiza o nº de jovens vivenciando e recalcula a quantidade de casais da Eq. da
+              Visitação.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div>
               <Label htmlFor="numeroJovensVivenciando">Nº de jovens vivenciando</Label>
-              <Input id="numeroJovensVivenciando" type="number" {...register('numeroJovensVivenciando')} />
+              <Input
+                id="numeroJovensVivenciando"
+                type="number"
+                {...register('numeroJovensVivenciando')}
+              />
               <p className="text-xs text-muted-foreground mt-1">
                 {ehImplantacao ? '52 a 72 (já incluindo os 12 sementeira)' : '40 a 60'}
               </p>
               {errors.numeroJovensVivenciando && (
-                <p className="text-xs text-red-600 mt-1">{errors.numeroJovensVivenciando.message}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.numeroJovensVivenciando.message}
+                </p>
               )}
             </div>
             <div className="flex items-center gap-2">
@@ -131,7 +139,8 @@ export function EditarTamanhoEncontroDialog({ montagem }: { montagem: Montagem }
             {ehImplantacao && (
               <>
                 <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
-                  Soma automaticamente 12 jovens sementeira e 4 casais afilhados na Eq. da Visitação (fixo).
+                  Soma automaticamente 12 jovens sementeira e 4 casais afilhados na Eq. da Visitação
+                  (fixo).
                 </div>
                 <div>
                   <Label htmlFor="paroquiaAfilhadaNome">Nome da paróquia afilhada</Label>

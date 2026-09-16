@@ -14,7 +14,13 @@ import type { Alocacao } from '@/lib/types';
 // Avaliação por equipe servida — mesmo modelo da ficha física do Segue-me: quem coordena
 // marca se a pessoa pode coordenar/palestrar NAQUELA equipe específica. Cada Alocacao já é
 // o registro certo pra isso (1 por equipe/encontro que a pessoa serviu).
-export function AlocacaoAvaliacaoPopover({ montagemId, alocacao }: { montagemId: string; alocacao: Alocacao }) {
+export function AlocacaoAvaliacaoPopover({
+  montagemId,
+  alocacao,
+}: {
+  montagemId: string;
+  alocacao: Alocacao;
+}) {
   const [open, setOpen] = useState(false);
   const [podeCoordenar, setPodeCoordenar] = useState(!!alocacao.podeCoordenar);
   const [podePalestrar, setPodePalestrar] = useState(!!alocacao.podePalestrar);
@@ -39,19 +45,36 @@ export function AlocacaoAvaliacaoPopover({ montagemId, alocacao }: { montagemId:
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant={jaAvaliado ? 'secondary' : 'ghost'} size="icon" className="h-6 w-6" aria-label="Avaliar">
+        <Button
+          variant={jaAvaliado ? 'secondary' : 'ghost'}
+          size="icon"
+          className="h-6 w-6"
+          aria-label="Avaliar"
+        >
           <ClipboardCheck className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72 space-y-3" align="end">
         <p className="text-sm font-medium">Avaliação nessa equipe</p>
         <div className="flex items-center gap-2">
-          <Checkbox id={`coordenar-${alocacao.id}`} checked={podeCoordenar} onCheckedChange={(v) => setPodeCoordenar(!!v)} />
-          <Label htmlFor={`coordenar-${alocacao.id}`} className="font-normal">Pode coordenar essa equipe</Label>
+          <Checkbox
+            id={`coordenar-${alocacao.id}`}
+            checked={podeCoordenar}
+            onCheckedChange={(v) => setPodeCoordenar(!!v)}
+          />
+          <Label htmlFor={`coordenar-${alocacao.id}`} className="font-normal">
+            Pode coordenar essa equipe
+          </Label>
         </div>
         <div className="flex items-center gap-2">
-          <Checkbox id={`palestrar-${alocacao.id}`} checked={podePalestrar} onCheckedChange={(v) => setPodePalestrar(!!v)} />
-          <Label htmlFor={`palestrar-${alocacao.id}`} className="font-normal">Pode palestrar</Label>
+          <Checkbox
+            id={`palestrar-${alocacao.id}`}
+            checked={podePalestrar}
+            onCheckedChange={(v) => setPodePalestrar(!!v)}
+          />
+          <Label htmlFor={`palestrar-${alocacao.id}`} className="font-normal">
+            Pode palestrar
+          </Label>
         </div>
         <div className="flex justify-end">
           <Button size="sm" onClick={salvar} disabled={updateAlocacao.isPending}>

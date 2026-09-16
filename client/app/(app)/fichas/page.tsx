@@ -4,7 +4,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useFichas } from '@/lib/hooks/use-fichas';
 import { CirculoBadge } from '@/components/fichas/circulo-badge';
 import { StatusBadge } from '@/components/fichas/status-badge';

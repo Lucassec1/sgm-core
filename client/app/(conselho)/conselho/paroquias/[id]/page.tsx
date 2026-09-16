@@ -6,7 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useConselhoMontagens } from '@/lib/hooks/use-conselho';
 
-export default function ConselhoParoquiaMontagensPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ConselhoParoquiaMontagensPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id: paroquiaId } = use(params);
   const { data, isLoading, isError } = useConselhoMontagens({ paroquiaId });
 
@@ -22,7 +26,9 @@ export default function ConselhoParoquiaMontagensPage({ params }: { params: Prom
           <Link key={montagem.id} href={`/conselho/montagem/${montagem.id}`}>
             <Card className="transition-colors hover:bg-accent/50">
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-medium">{montagem.numeroEncontro}º Encontro</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {montagem.numeroEncontro}º Encontro
+                </CardTitle>
                 <Badge variant={montagem.status === 'EM_ANDAMENTO' ? 'default' : 'secondary'}>
                   {montagem.status === 'EM_ANDAMENTO' ? 'Em andamento' : 'Finalizada'}
                 </Badge>
@@ -35,7 +41,9 @@ export default function ConselhoParoquiaMontagensPage({ params }: { params: Prom
           </Link>
         ))}
         {data?.items.length === 0 && (
-          <p className="text-sm text-muted-foreground">Nenhuma montagem encontrada pra essa paróquia.</p>
+          <p className="text-sm text-muted-foreground">
+            Nenhuma montagem encontrada pra essa paróquia.
+          </p>
         )}
       </div>
     </div>

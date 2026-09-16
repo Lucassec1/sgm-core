@@ -6,7 +6,14 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { EquipeIcon } from '@/components/equipes/equipe-icon';
 import { ApiError } from '@/lib/api-client';
 import { useCreateAlocacao } from '@/lib/hooks/use-montagens';
@@ -51,21 +58,28 @@ export function AlocarSubstitutoCombobox({
       return { vaga: v, falta: cota - ocupadasMesmoSexo };
     })
     .filter((o) => o.falta > 0)
-    .sort((a, b) => a.vaga.equipe.ordem - b.vaga.equipe.ordem || a.vaga.cargo.ordem - b.vaga.cargo.ordem);
+    .sort(
+      (a, b) =>
+        a.vaga.equipe.ordem - b.vaga.equipe.ordem || a.vaga.cargo.ordem - b.vaga.cargo.ordem,
+    );
 
   async function alocar(vaga: VagaMontagem) {
     try {
       await createAlocacao.mutateAsync({
         vagaMontagemId: vaga.id,
         tipoPessoa: item.tipoPessoa,
-        ...(item.fichaId ? { fichaId: item.fichaId } : { fichaCasalId: item.fichaCasalId ?? undefined }),
+        ...(item.fichaId
+          ? { fichaId: item.fichaId }
+          : { fichaCasalId: item.fichaCasalId ?? undefined }),
         status: 'CONVIDADO',
       });
       toast.success(`Alocado em ${vaga.equipe.nome} · ${vaga.cargo.nome}.`);
       setOpen(false);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
-        toast.error('Já serviu nessa equipe antes — aloque pela Lista completa pra confirmar a repetição (R2).');
+        toast.error(
+          'Já serviu nessa equipe antes — aloque pela Lista completa pra confirmar a repetição (R2).',
+        );
         setOpen(false);
         return;
       }
@@ -96,7 +110,8 @@ export function AlocarSubstitutoCombobox({
                 >
                   <EquipeIcon slug={vaga.equipe.slug} nome={vaga.equipe.nome} size={18} />
                   <span className="flex-1">
-                    {vaga.equipe.nome} <span className="text-muted-foreground">· {vaga.cargo.nome}</span>
+                    {vaga.equipe.nome}{' '}
+                    <span className="text-muted-foreground">· {vaga.cargo.nome}</span>
                   </span>
                   <span className="text-xs text-muted-foreground">faltam {falta}</span>
                 </CommandItem>

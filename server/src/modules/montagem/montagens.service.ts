@@ -101,7 +101,13 @@ export class MontagensService {
         })),
       });
 
-      await this.logAtividade.registrar(criada.id, dto.usuario, 'CRIOU_MONTAGEM', `Encontro nº ${numeroEncontro}`, tx);
+      await this.logAtividade.registrar(
+        criada.id,
+        dto.usuario,
+        'CRIOU_MONTAGEM',
+        `Encontro nº ${numeroEncontro}`,
+        tx,
+      );
 
       return criada;
     });
@@ -160,7 +166,10 @@ export class MontagensService {
       vaga.alocacoes.map((alocacao) => [
         vaga.equipe.nome,
         vaga.cargo.nome,
-        alocacao.ficha?.nomeCompleto ?? (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : ''),
+        alocacao.ficha?.nomeCompleto ??
+          (alocacao.fichaCasal
+            ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}`
+            : ''),
         alocacao.status,
       ]),
     );
@@ -176,7 +185,8 @@ export class MontagensService {
     // o número final de jovens só fecha depois de criada a Montagem (ver docs/ux-e-fluxos.md).
     const numeroJovensVivenciando = dto.numeroJovensVivenciando ?? anterior.numeroJovensVivenciando;
     const ehImplantacao = dto.ehImplantacao ?? anterior.ehImplantacao;
-    const precisaRecalcular = dto.numeroJovensVivenciando !== undefined || dto.ehImplantacao !== undefined;
+    const precisaRecalcular =
+      dto.numeroJovensVivenciando !== undefined || dto.ehImplantacao !== undefined;
 
     if (precisaRecalcular) {
       const minimo = 40 + (ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : 0);
@@ -208,13 +218,21 @@ export class MontagensService {
         if (vagaDinamica) {
           await tx.vagaMontagem.update({
             where: { id: vagaDinamica.id },
-            data: { quantidadeCasais: calcularCasaisVisitacao(numeroJovensVivenciando, ehImplantacao) },
+            data: {
+              quantidadeCasais: calcularCasaisVisitacao(numeroJovensVivenciando, ehImplantacao),
+            },
           });
         }
       }
 
       if (dto.status && dto.status !== anterior.status) {
-        await this.logAtividade.registrar(id, usuario, 'MUDOU_STATUS', `${anterior.status} -> ${dto.status}`, tx);
+        await this.logAtividade.registrar(
+          id,
+          usuario,
+          'MUDOU_STATUS',
+          `${anterior.status} -> ${dto.status}`,
+          tx,
+        );
       } else {
         await this.logAtividade.registrar(id, usuario, 'ATUALIZOU_MONTAGEM', undefined, tx);
       }
@@ -235,29 +253,53 @@ export class MontagensService {
     }
     const comandoGeral = await this.prisma.equipe.findUnique({ where: { slug: 'comando-geral' } });
 
-    const [grupoAFichas, grupoAFichasCasais, dirigentesFichas, dirigentesFichasCasais, comandoGeralFichas, comandoGeralFichasCasais] =
-      await Promise.all([
-        this.prisma.ficha.findMany({
-          where: { situacao: 'ATIVA', alocacoes: { some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId } } } },
-        }),
-        this.prisma.fichaCasal.findMany({
-          where: { situacao: 'ATIVA', alocacoes: { some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId } } } },
-        }),
-        this.prisma.ficha.findMany({ where: { situacao: 'ATIVA', jaFoiEquipeDirigente: true } }),
-        this.prisma.fichaCasal.findMany({ where: { situacao: 'ATIVA', jaFoiEquipeDirigente: true } }),
-        comandoGeral
-          ? this.prisma.ficha.findMany({
-              where: { situacao: 'ATIVA', alocacoes: { some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId: comandoGeral.id } } } },
-            })
-          : Promise.resolve([]),
-        comandoGeral
-          ? this.prisma.fichaCasal.findMany({
-              where: { situacao: 'ATIVA', alocacoes: { some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId: comandoGeral.id } } } },
-            })
-          : Promise.resolve([]),
-      ]);
+    const [
+      grupoAFichas,
+      grupoAFichasCasais,
+      dirigentesFichas,
+      dirigentesFichasCasais,
+      comandoGeralFichas,
+      comandoGeralFichasCasais,
+    ] = await Promise.all([
+      this.prisma.ficha.findMany({
+        where: {
+          situacao: 'ATIVA',
+          alocacoes: { some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId } } },
+        },
+      }),
+      this.prisma.fichaCasal.findMany({
+        where: {
+          situacao: 'ATIVA',
+          alocacoes: { some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId } } },
+        },
+      }),
+      this.prisma.ficha.findMany({ where: { situacao: 'ATIVA', jaFoiEquipeDirigente: true } }),
+      this.prisma.fichaCasal.findMany({ where: { situacao: 'ATIVA', jaFoiEquipeDirigente: true } }),
+      comandoGeral
+        ? this.prisma.ficha.findMany({
+            where: {
+              situacao: 'ATIVA',
+              alocacoes: {
+                some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId: comandoGeral.id } },
+              },
+            },
+          })
+        : Promise.resolve([]),
+      comandoGeral
+        ? this.prisma.fichaCasal.findMany({
+            where: {
+              situacao: 'ATIVA',
+              alocacoes: {
+                some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId: comandoGeral.id } },
+              },
+            },
+          })
+        : Promise.resolve([]),
+    ]);
 
-    const uniquePorId = <T extends { id: string }>(items: T[]) => [...new Map(items.map((i) => [i.id, i])).values()];
+    const uniquePorId = <T extends { id: string }>(items: T[]) => [
+      ...new Map(items.map((i) => [i.id, i])).values(),
+    ];
 
     return {
       grupoA: {
@@ -282,7 +324,9 @@ export class MontagensService {
     if (vagaMontagemId) {
       const vaga = montagem.vagas.find((v) => v.id === vagaMontagemId);
       if (!vaga) {
-        throw new BadRequestException(`Vaga ${vagaMontagemId} não pertence à montagem ${montagemId}`);
+        throw new BadRequestException(
+          `Vaga ${vagaMontagemId} não pertence à montagem ${montagemId}`,
+        );
       }
       sexos = [
         ...(vaga.quantidadeRapazes > 0 ? [Sexo.RAPAZ] : []),
@@ -336,26 +380,32 @@ export class MontagensService {
   async resumo(montagemId: string, paroquiaId: string) {
     const montagem = await this.findOne(montagemId, paroquiaId);
 
-    const [logsMovimentacao, totalRecusasDesistencias, totalSubstituicoes, duracaoMs] = await Promise.all([
-      this.prisma.logAtividade.findMany({
-        where: { montagemId, acao: { in: ['CRIOU_ALOCACAO', 'REMOVEU_ALOCACAO'] } },
-        select: { detalhes: true },
-      }),
-      this.prisma.alocacao.count({
-        where: { vagaMontagem: { montagemId }, status: { in: [StatusConvite.RECUSADO, StatusConvite.DESISTIU] } },
-      }),
-      this.prisma.alocacao.count({
-        where: { vagaMontagem: { montagemId }, status: StatusConvite.SUBSTITUIDO },
-      }),
-      this.duracaoAteFinalizarMs(montagemId, montagem.createdAt, montagem.status),
-    ]);
+    const [logsMovimentacao, totalRecusasDesistencias, totalSubstituicoes, duracaoMs] =
+      await Promise.all([
+        this.prisma.logAtividade.findMany({
+          where: { montagemId, acao: { in: ['CRIOU_ALOCACAO', 'REMOVEU_ALOCACAO'] } },
+          select: { detalhes: true },
+        }),
+        this.prisma.alocacao.count({
+          where: {
+            vagaMontagem: { montagemId },
+            status: { in: [StatusConvite.RECUSADO, StatusConvite.DESISTIU] },
+          },
+        }),
+        this.prisma.alocacao.count({
+          where: { vagaMontagem: { montagemId }, status: StatusConvite.SUBSTITUIDO },
+        }),
+        this.duracaoAteFinalizarMs(montagemId, montagem.createdAt, montagem.status),
+      ]);
 
     return {
       montagemId,
       numeroEncontro: montagem.numeroEncontro,
       status: montagem.status,
       duracaoMs,
-      equipeMaisMovimentada: this.equipeComMaisMovimentacao(logsMovimentacao.map((l) => l.detalhes)),
+      equipeMaisMovimentada: this.equipeComMaisMovimentacao(
+        logsMovimentacao.map((l) => l.detalhes),
+      ),
       totalRecusasDesistencias,
       totalSubstituicoes,
       historico: await this.historicoDuracao(montagem.paroquiaId, montagem.numeroEncontro),
@@ -375,7 +425,11 @@ export class MontagensService {
     return nome ? { nome, movimentacoes: movimentacoes as number } : null;
   }
 
-  private async duracaoAteFinalizarMs(montagemId: string, criadoEm: Date, status: string): Promise<number | null> {
+  private async duracaoAteFinalizarMs(
+    montagemId: string,
+    criadoEm: Date,
+    status: string,
+  ): Promise<number | null> {
     if (status !== 'FINALIZADA') return null;
     // Se a montagem foi reaberta e finalizada de novo, usa a finalização mais recente —
     // é o marco de quando ela chegou no estado atual.

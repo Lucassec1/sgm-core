@@ -27,6 +27,12 @@ import { QuadrantesService } from './quadrantes.service';
     LogAtividadeService,
     QuadrantesService,
   ],
-  exports: [EquipesService, MontagensService, AlocacoesService, ListaSubstituicaoService, LogAtividadeService],
+  exports: [
+    EquipesService,
+    MontagensService,
+    AlocacoesService,
+    ListaSubstituicaoService,
+    LogAtividadeService,
+  ],
 })
 export class MontagemModule {}

@@ -22,14 +22,24 @@ import type { Alocacao } from '@/lib/types';
 // 1.2 "Controle de Convites"). Tanto recusa quanto desistência exigem registrar o motivo
 // da saída — fica no histórico da ficha e na aba Convites do encontro. R1 bloqueia a
 // pessoa no resto do encontro assim que qualquer um dos dois é registrado (backend).
-export function AlocacaoRowActions({ montagemId, alocacao }: { montagemId: string; alocacao: Alocacao }) {
+export function AlocacaoRowActions({
+  montagemId,
+  alocacao,
+}: {
+  montagemId: string;
+  alocacao: Alocacao;
+}) {
   const [saidaAberta, setSaidaAberta] = useState<null | 'RECUSADO' | 'DESISTIU'>(null);
   const [motivo, setMotivo] = useState('');
   const updateAlocacao = useUpdateAlocacao(montagemId);
 
   async function mudarStatus(status: 'ACEITO' | 'RECUSADO' | 'DESISTIU', motivoRecusa?: string) {
     try {
-      await updateAlocacao.mutateAsync({ id: alocacao.id, status, ...(motivoRecusa && { motivoRecusa }) });
+      await updateAlocacao.mutateAsync({
+        id: alocacao.id,
+        status,
+        ...(motivoRecusa && { motivoRecusa }),
+      });
       toast.success('Status atualizado.');
       setSaidaAberta(null);
       setMotivo('');
@@ -42,13 +52,19 @@ export function AlocacaoRowActions({ montagemId, alocacao }: { montagemId: strin
     <AlertDialog open={saidaAberta !== null} onOpenChange={(v) => !v && setSaidaAberta(null)}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{saidaAberta === 'DESISTIU' ? 'Registrar desistência' : 'Registrar recusa'}</AlertDialogTitle>
+          <AlertDialogTitle>
+            {saidaAberta === 'DESISTIU' ? 'Registrar desistência' : 'Registrar recusa'}
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            Essa pessoa fica bloqueada pro restante deste encontro (R1) — só pode ser convidada de novo no próximo. O
-            motivo aparece no histórico da ficha e na aba Convites.
+            Essa pessoa fica bloqueada pro restante deste encontro (R1) — só pode ser convidada de
+            novo no próximo. O motivo aparece no histórico da ficha e na aba Convites.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <Textarea placeholder="Motivo da saída" value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+        <Textarea
+          placeholder="Motivo da saída"
+          value={motivo}
+          onChange={(e) => setMotivo(e.target.value)}
+        />
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction
@@ -65,10 +81,20 @@ export function AlocacaoRowActions({ montagemId, alocacao }: { montagemId: strin
   if (alocacao.status === 'CONVIDADO') {
     return (
       <div className="flex items-center gap-1">
-        <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => mudarStatus('ACEITO')}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 px-2 text-xs"
+          onClick={() => mudarStatus('ACEITO')}
+        >
           Aceitar
         </Button>
-        <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => setSaidaAberta('RECUSADO')}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 px-2 text-xs"
+          onClick={() => setSaidaAberta('RECUSADO')}
+        >
           Recusar
         </Button>
         {dialogoMotivo}
@@ -79,7 +105,12 @@ export function AlocacaoRowActions({ montagemId, alocacao }: { montagemId: strin
   if (alocacao.status === 'ACEITO') {
     return (
       <>
-        <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => setSaidaAberta('DESISTIU')}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 px-2 text-xs"
+          onClick={() => setSaidaAberta('DESISTIU')}
+        >
           Desistiu
         </Button>
         {dialogoMotivo}

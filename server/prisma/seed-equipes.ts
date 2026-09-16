@@ -44,7 +44,13 @@ export const EQUIPES: EquipeSeed[] = [
     bloqueiaConvitePosCirculos: false,
     cargos: [
       { nome: 'Comandantes Gerais', ordem: 1, quantidadeCasais: 1, ehCoordenacao: true },
-      { nome: 'Comandantes Jovens', ordem: 2, quantidadeRapazes: 1, quantidadeMocas: 1, ehCoordenacao: true },
+      {
+        nome: 'Comandantes Jovens',
+        ordem: 2,
+        quantidadeRapazes: 1,
+        quantidadeMocas: 1,
+        ehCoordenacao: true,
+      },
     ],
   },
   {
@@ -55,7 +61,13 @@ export const EQUIPES: EquipeSeed[] = [
     bloqueiaConvitePosCirculos: false,
     cargos: [
       { nome: 'Coordenação', ordem: 1, quantidadeCasais: 1, ehCoordenacao: true },
-      { nome: 'Componentes', ordem: 2, quantidadeCasais: 6, quantidadeRapazes: 6, quantidadeMocas: 6 },
+      {
+        nome: 'Componentes',
+        ordem: 2,
+        quantidadeCasais: 6,
+        quantidadeRapazes: 6,
+        quantidadeMocas: 6,
+      },
     ],
   },
   {
@@ -72,7 +84,13 @@ export const EQUIPES: EquipeSeed[] = [
     slug: 'animacao',
     ordem: 4,
     cargos: [
-      { nome: 'Coordenação', ordem: 1, quantidadeRapazes: 1, quantidadeMocas: 1, ehCoordenacao: true },
+      {
+        nome: 'Coordenação',
+        ordem: 1,
+        quantidadeRapazes: 1,
+        quantidadeMocas: 1,
+        ehCoordenacao: true,
+      },
       { nome: 'Apoio', ordem: 2, quantidadeCasais: 1 },
       { nome: 'Componentes', ordem: 3, quantidadeRapazes: 6, quantidadeMocas: 6 },
     ],
@@ -82,7 +100,13 @@ export const EQUIPES: EquipeSeed[] = [
     slug: 'canto',
     ordem: 5,
     cargos: [
-      { nome: 'Coordenação', ordem: 1, quantidadeRapazes: 1, quantidadeMocas: 1, ehCoordenacao: true },
+      {
+        nome: 'Coordenação',
+        ordem: 1,
+        quantidadeRapazes: 1,
+        quantidadeMocas: 1,
+        ehCoordenacao: true,
+      },
       { nome: 'Apoio', ordem: 2, quantidadeCasais: 1 },
       { nome: 'Componentes', ordem: 3, quantidadeRapazes: 4, quantidadeMocas: 4 },
     ],
@@ -94,7 +118,13 @@ export const EQUIPES: EquipeSeed[] = [
     cargos: [
       { nome: 'Coordenação', ordem: 1, quantidadeCasais: 1, ehCoordenacao: true },
       { nome: 'Apoio', ordem: 2, quantidadeRapazes: 1, quantidadeMocas: 1 },
-      { nome: 'Componentes', ordem: 3, quantidadeCasais: 3, quantidadeRapazes: 3, quantidadeMocas: 3 },
+      {
+        nome: 'Componentes',
+        ordem: 3,
+        quantidadeCasais: 3,
+        quantidadeRapazes: 3,
+        quantidadeMocas: 3,
+      },
     ],
   },
   {
@@ -102,9 +132,21 @@ export const EQUIPES: EquipeSeed[] = [
     slug: 'estacionamento',
     ordem: 7,
     cargos: [
-      { nome: 'Coordenação', ordem: 1, quantidadeRapazes: 1, quantidadeMocas: 1, ehCoordenacao: true },
+      {
+        nome: 'Coordenação',
+        ordem: 1,
+        quantidadeRapazes: 1,
+        quantidadeMocas: 1,
+        ehCoordenacao: true,
+      },
       { nome: 'Apoio', ordem: 2, quantidadeCasais: 1 },
-      { nome: 'Componentes', ordem: 3, quantidadeCasais: 1, quantidadeRapazes: 3, quantidadeMocas: 3 },
+      {
+        nome: 'Componentes',
+        ordem: 3,
+        quantidadeCasais: 1,
+        quantidadeRapazes: 3,
+        quantidadeMocas: 3,
+      },
     ],
   },
   {
@@ -112,9 +154,21 @@ export const EQUIPES: EquipeSeed[] = [
     slug: 'faxina',
     ordem: 8,
     cargos: [
-      { nome: 'Coordenação', ordem: 1, quantidadeRapazes: 1, quantidadeMocas: 1, ehCoordenacao: true },
+      {
+        nome: 'Coordenação',
+        ordem: 1,
+        quantidadeRapazes: 1,
+        quantidadeMocas: 1,
+        ehCoordenacao: true,
+      },
       { nome: 'Apoio', ordem: 2, quantidadeCasais: 1 },
-      { nome: 'Componentes', ordem: 3, quantidadeCasais: 1, quantidadeRapazes: 4, quantidadeMocas: 4 },
+      {
+        nome: 'Componentes',
+        ordem: 3,
+        quantidadeCasais: 1,
+        quantidadeRapazes: 4,
+        quantidadeMocas: 4,
+      },
     ],
   },
   {
@@ -122,9 +176,21 @@ export const EQUIPES: EquipeSeed[] = [
     slug: 'grafica',
     ordem: 9,
     cargos: [
-      { nome: 'Coordenação', ordem: 1, quantidadeRapazes: 1, quantidadeMocas: 1, ehCoordenacao: true },
+      {
+        nome: 'Coordenação',
+        ordem: 1,
+        quantidadeRapazes: 1,
+        quantidadeMocas: 1,
+        ehCoordenacao: true,
+      },
       { nome: 'Apoio', ordem: 2, quantidadeCasais: 1 },
-      { nome: 'Componentes', ordem: 3, quantidadeCasais: 1, quantidadeRapazes: 3, quantidadeMocas: 3 },
+      {
+        nome: 'Componentes',
+        ordem: 3,
+        quantidadeCasais: 1,
+        quantidadeRapazes: 3,
+        quantidadeMocas: 3,
+      },
     ],
   },
   {
@@ -132,9 +198,21 @@ export const EQUIPES: EquipeSeed[] = [
     slug: 'lanche',
     ordem: 10,
     cargos: [
-      { nome: 'Coordenação', ordem: 1, quantidadeRapazes: 1, quantidadeMocas: 1, ehCoordenacao: true },
+      {
+        nome: 'Coordenação',
+        ordem: 1,
+        quantidadeRapazes: 1,
+        quantidadeMocas: 1,
+        ehCoordenacao: true,
+      },
       { nome: 'Apoio', ordem: 2, quantidadeCasais: 1 },
-      { nome: 'Componentes', ordem: 3, quantidadeCasais: 1, quantidadeRapazes: 3, quantidadeMocas: 3 },
+      {
+        nome: 'Componentes',
+        ordem: 3,
+        quantidadeCasais: 1,
+        quantidadeRapazes: 3,
+        quantidadeMocas: 3,
+      },
     ],
   },
   {
@@ -142,9 +220,21 @@ export const EQUIPES: EquipeSeed[] = [
     slug: 'liturgia-e-vigilia',
     ordem: 11,
     cargos: [
-      { nome: 'Coordenação', ordem: 1, quantidadeRapazes: 1, quantidadeMocas: 1, ehCoordenacao: true },
+      {
+        nome: 'Coordenação',
+        ordem: 1,
+        quantidadeRapazes: 1,
+        quantidadeMocas: 1,
+        ehCoordenacao: true,
+      },
       { nome: 'Apoio', ordem: 2, quantidadeCasais: 1 },
-      { nome: 'Componentes', ordem: 3, quantidadeCasais: 1, quantidadeRapazes: 6, quantidadeMocas: 6 },
+      {
+        nome: 'Componentes',
+        ordem: 3,
+        quantidadeCasais: 1,
+        quantidadeRapazes: 6,
+        quantidadeMocas: 6,
+      },
     ],
   },
   {
@@ -152,7 +242,13 @@ export const EQUIPES: EquipeSeed[] = [
     slug: 'minimercado',
     ordem: 12,
     cargos: [
-      { nome: 'Coordenação', ordem: 1, quantidadeRapazes: 1, quantidadeMocas: 1, ehCoordenacao: true },
+      {
+        nome: 'Coordenação',
+        ordem: 1,
+        quantidadeRapazes: 1,
+        quantidadeMocas: 1,
+        ehCoordenacao: true,
+      },
       { nome: 'Apoio', ordem: 2, quantidadeCasais: 1 },
       { nome: 'Componentes', ordem: 3, quantidadeRapazes: 2, quantidadeMocas: 2 },
     ],
@@ -185,7 +281,13 @@ export const EQUIPES: EquipeSeed[] = [
     slug: 'vigilia-paroquial',
     ordem: 15,
     cargos: [
-      { nome: 'Coordenação', ordem: 1, quantidadeRapazes: 1, quantidadeMocas: 1, ehCoordenacao: true },
+      {
+        nome: 'Coordenação',
+        ordem: 1,
+        quantidadeRapazes: 1,
+        quantidadeMocas: 1,
+        ehCoordenacao: true,
+      },
       // Um dos dois membros do Apoio costuma ser ministro da eucaristia — não modelado como
       // campo próprio nesta etapa, fica como observação de texto na Alocação se necessário.
       { nome: 'Apoio', ordem: 2, quantidadeCasais: 1 },

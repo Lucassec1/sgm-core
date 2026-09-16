@@ -17,7 +17,10 @@ import type { Alocacao, VagaMontagem } from '@/lib/types';
 const STATUS_INATIVO = ['RECUSADO', 'DESISTIU', 'SUBSTITUIDO'];
 
 function nomeAlocacao(alocacao: Alocacao) {
-  return alocacao.ficha?.nomeCompleto ?? (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : '—');
+  return (
+    alocacao.ficha?.nomeCompleto ??
+    (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : '—')
+  );
 }
 
 function plural(n: number, singular: string, plural: string) {
@@ -65,7 +68,13 @@ function LinhaAlocacao({
             {alocacao.status === 'ACEITO' && !vaga.cargo.ehCoordenacao && (
               <AlocacaoAvaliacaoPopover montagemId={montagemId} alocacao={alocacao} />
             )}
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onRemover(alocacao.id)} aria-label="Remover alocação">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => onRemover(alocacao.id)}
+              aria-label="Remover alocação"
+            >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </>
@@ -137,7 +146,11 @@ export function VagaAlocacoes({
   const blocoJovens = (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        {misto && <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Jovens</h4>}
+        {misto && (
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Jovens
+          </h4>
+        )}
         {contagem(
           jovensPreenchidas,
           jovens.total,
@@ -181,7 +194,11 @@ export function VagaAlocacoes({
   const blocoCasais = (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        {misto && <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Casais</h4>}
+        {misto && (
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Casais
+          </h4>
+        )}
         {contagem(casaisPreenchidas, casais.total, faltamCasais)}
       </div>
       {casais.ativas.length > 0 && (

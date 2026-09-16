@@ -16,24 +16,75 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 const NOMES_M = [
-  'João', 'Pedro', 'Lucas', 'Gabriel', 'Matheus', 'Rafael', 'Felipe', 'Bruno',
-  'Daniel', 'Thiago', 'Vinícius', 'Gustavo', 'Igor', 'Marcos', 'André', 'Caio',
+  'João',
+  'Pedro',
+  'Lucas',
+  'Gabriel',
+  'Matheus',
+  'Rafael',
+  'Felipe',
+  'Bruno',
+  'Daniel',
+  'Thiago',
+  'Vinícius',
+  'Gustavo',
+  'Igor',
+  'Marcos',
+  'André',
+  'Caio',
 ];
 const NOMES_F = [
-  'Maria', 'Ana', 'Beatriz', 'Camila', 'Fernanda', 'Juliana', 'Larissa', 'Mariana',
-  'Patrícia', 'Rafaela', 'Sabrina', 'Talita', 'Vitória', 'Yasmin', 'Letícia', 'Carla',
+  'Maria',
+  'Ana',
+  'Beatriz',
+  'Camila',
+  'Fernanda',
+  'Juliana',
+  'Larissa',
+  'Mariana',
+  'Patrícia',
+  'Rafaela',
+  'Sabrina',
+  'Talita',
+  'Vitória',
+  'Yasmin',
+  'Letícia',
+  'Carla',
 ];
 const SOBRENOMES = [
-  'Silva', 'Souza', 'Oliveira', 'Santos', 'Pereira', 'Costa', 'Rodrigues', 'Almeida',
-  'Nascimento', 'Lima', 'Araújo', 'Ribeiro', 'Carvalho', 'Gomes', 'Martins', 'Barbosa',
+  'Silva',
+  'Souza',
+  'Oliveira',
+  'Santos',
+  'Pereira',
+  'Costa',
+  'Rodrigues',
+  'Almeida',
+  'Nascimento',
+  'Lima',
+  'Araújo',
+  'Ribeiro',
+  'Carvalho',
+  'Gomes',
+  'Martins',
+  'Barbosa',
 ];
 const BAIRROS = ['Centro', 'São José', 'Pimenta', 'Seminário', 'Muriti', 'Lagoinha', 'Vila Alta'];
 const IGREJAS = ['Paróquia Nossa Senhora', 'Capela São Sebastião', 'Paróquia Sagrado Coração'];
 const INSTITUICOES = ['URCA', 'IFCE Campus Crato', 'Escola Estadual Padre Cícero', 'UFCA'];
 const CORES: Array<'VERMELHO' | 'AZUL' | 'VERDE' | 'AMARELO' | 'ROSA' | 'LARANJA'> = [
-  'VERMELHO', 'AZUL', 'VERDE', 'AMARELO', 'ROSA', 'LARANJA',
+  'VERMELHO',
+  'AZUL',
+  'VERDE',
+  'AMARELO',
+  'ROSA',
+  'LARANJA',
 ];
-const MOTIVOS_DESATIVACAO = ['Mudou de cidade', 'Não tem mais disponibilidade', 'A pedido da pessoa'];
+const MOTIVOS_DESATIVACAO = [
+  'Mudou de cidade',
+  'Não tem mais disponibilidade',
+  'A pedido da pessoa',
+];
 
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -44,7 +95,7 @@ function pickSeeded(seed: number, arr: unknown[]) {
 }
 
 function telefone(seed: number) {
-  return `88 9${String(8000 + (seed * 37) % 1999).padStart(4, '0')}-${String((seed * 91) % 9000 + 1000)}`;
+  return `88 9${String(8000 + ((seed * 37) % 1999)).padStart(4, '0')}-${String(((seed * 91) % 9000) + 1000)}`;
 }
 
 function nomeCompleto(seed: number, genero: 'M' | 'F') {
@@ -57,11 +108,11 @@ function nomeCompleto(seed: number, genero: 'M' | 'F') {
 function endereco(seed: number) {
   return {
     logradouro: `Rua ${pickSeeded(seed, SOBRENOMES)}`,
-    numero: String(100 + (seed * 13) % 900),
+    numero: String(100 + ((seed * 13) % 900)),
     bairro: pickSeeded(seed, BAIRROS) as string,
     cidade: 'Crato',
     estado: 'CE',
-    cep: `63${String(100 + (seed * 17) % 800).padStart(3, '0')}-${String((seed * 29) % 900 + 100)}`,
+    cep: `63${String(100 + ((seed * 17) % 800)).padStart(3, '0')}-${String(((seed * 29) % 900) + 100)}`,
   };
 }
 
@@ -98,7 +149,8 @@ async function seedFichas() {
       sacramentoCrisma: seed % 3 === 0,
       nomeConvidante: `${pickSeeded(seed + 5, NOMES_F)} ${pickSeeded(seed + 6, SOBRENOMES)}`,
       telefoneConvidante: telefone(seed + 100),
-      observacoes: seed % 7 === 0 ? 'Tem facilidade com música, já ajudou no Canto informalmente.' : undefined,
+      observacoes:
+        seed % 7 === 0 ? 'Tem facilidade com música, já ajudou no Canto informalmente.' : undefined,
       numeroEncontro,
       corCirculo: pick(CORES),
       situacao: inativa ? ('INATIVA' as const) : ('ATIVA' as const),
@@ -149,7 +201,12 @@ async function seedUsuarioParoquiaDev() {
   await prisma.usuario.upsert({
     where: { login: PAROQUIA_LOGIN_DEV },
     update: { senhaHash, role: RoleUsuario.PAROQUIA, paroquiaId: PAROQUIA_ID, ativo: true },
-    create: { login: PAROQUIA_LOGIN_DEV, senhaHash, role: RoleUsuario.PAROQUIA, paroquiaId: PAROQUIA_ID },
+    create: {
+      login: PAROQUIA_LOGIN_DEV,
+      senhaHash,
+      role: RoleUsuario.PAROQUIA,
+      paroquiaId: PAROQUIA_ID,
+    },
   });
 }
 
@@ -168,7 +225,9 @@ async function main() {
   const historico = await seedHistoricoEquipes(prisma, PAROQUIA_ID);
 
   console.log(`Login de dev: usuário "${PAROQUIA_LOGIN_DEV}" / senha "${PAROQUIA_SENHA_DEV}".`);
-  console.log(`Seed concluído: ${totalFichas} fichas (jovens) + ${totalCasais} casais na paróquia "${PAROQUIA_NOME}".`);
+  console.log(
+    `Seed concluído: ${totalFichas} fichas (jovens) + ${totalCasais} casais na paróquia "${PAROQUIA_NOME}".`,
+  );
   console.log(`Catálogo de Montagem: ${totalEquipes} equipes, ${totalCargos} cargos.`);
   console.log(`Montagem de exemplo: ${totalVagas} vagas, ${totalAlocacoes} alocações.`);
   console.log(

@@ -10,7 +10,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -127,7 +133,10 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
         <div className="grid grid-cols-2 gap-4 rounded-md border p-4">
           <div>
             <Label>Situação</Label>
-            <Select value={watch('situacao')} onValueChange={(v) => setValue('situacao', v as 'ATIVA' | 'INATIVA')}>
+            <Select
+              value={watch('situacao')}
+              onValueChange={(v) => setValue('situacao', v as 'ATIVA' | 'INATIVA')}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -154,42 +163,64 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
               <div>
                 <Label htmlFor="nomeEle">Nome (dele)</Label>
                 <Input id="nomeEle" {...register('nomeEle')} />
-                {errors.nomeEle && <p className="text-xs text-red-600 mt-1">{errors.nomeEle.message}</p>}
+                {errors.nomeEle && (
+                  <p className="text-xs text-red-600 mt-1">{errors.nomeEle.message}</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="nomeEla">Nome (dela)</Label>
                 <Input id="nomeEla" {...register('nomeEla')} />
-                {errors.nomeEla && <p className="text-xs text-red-600 mt-1">{errors.nomeEla.message}</p>}
+                {errors.nomeEla && (
+                  <p className="text-xs text-red-600 mt-1">{errors.nomeEla.message}</p>
+                )}
               </div>
             </>
           )}
           <div>
             <Label htmlFor="dataNascimentoEle">Data de nascimento (dele)</Label>
-            <Input id="dataNascimentoEle" type="date" disabled={bloqueado} {...register('dataNascimentoEle')} />
+            <Input
+              id="dataNascimentoEle"
+              type="date"
+              disabled={bloqueado}
+              {...register('dataNascimentoEle')}
+            />
           </div>
           <div>
             <Label htmlFor="dataNascimentoEla">Data de nascimento (dela)</Label>
-            <Input id="dataNascimentoEla" type="date" disabled={bloqueado} {...register('dataNascimentoEla')} />
+            <Input
+              id="dataNascimentoEla"
+              type="date"
+              disabled={bloqueado}
+              {...register('dataNascimentoEla')}
+            />
           </div>
           <div>
             <Label htmlFor="telefoneEle">Telefone (dele)</Label>
             <Input id="telefoneEle" {...register('telefoneEle')} />
-            {errors.telefoneEle && <p className="text-xs text-red-600 mt-1">{errors.telefoneEle.message}</p>}
+            {errors.telefoneEle && (
+              <p className="text-xs text-red-600 mt-1">{errors.telefoneEle.message}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="telefoneEla">Telefone (dela)</Label>
             <Input id="telefoneEla" {...register('telefoneEla')} />
-            {errors.telefoneEla && <p className="text-xs text-red-600 mt-1">{errors.telefoneEla.message}</p>}
+            {errors.telefoneEla && (
+              <p className="text-xs text-red-600 mt-1">{errors.telefoneEla.message}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="emailEle">E-mail (dele)</Label>
             <Input id="emailEle" type="email" {...register('emailEle')} />
-            {errors.emailEle && <p className="text-xs text-red-600 mt-1">{errors.emailEle.message}</p>}
+            {errors.emailEle && (
+              <p className="text-xs text-red-600 mt-1">{errors.emailEle.message}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="emailEla">E-mail (dela)</Label>
             <Input id="emailEla" type="email" {...register('emailEla')} />
-            {errors.emailEla && <p className="text-xs text-red-600 mt-1">{errors.emailEla.message}</p>}
+            {errors.emailEla && (
+              <p className="text-xs text-red-600 mt-1">{errors.emailEla.message}</p>
+            )}
           </div>
 
           <div className="col-span-2 flex items-center gap-2">
@@ -250,7 +281,11 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
 
       <div>
         <Label htmlFor="observacoes">Observações</Label>
-        <Textarea id="observacoes" placeholder="Ex.: teve bebê recentemente, não possui transporte próprio..." {...register('observacoes')} />
+        <Textarea
+          id="observacoes"
+          placeholder="Ex.: teve bebê recentemente, não possui transporte próprio..."
+          {...register('observacoes')}
+        />
       </div>
 
       <Button type="submit" disabled={isSubmitting}>

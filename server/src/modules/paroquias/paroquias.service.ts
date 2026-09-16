@@ -18,7 +18,12 @@ export class ParoquiasService {
   findAll() {
     return this.prisma.paroquia.findMany({
       orderBy: { nome: 'asc' },
-      include: { usuarios: { where: { role: RoleUsuario.PAROQUIA }, select: { id: true, login: true, ativo: true } } },
+      include: {
+        usuarios: {
+          where: { role: RoleUsuario.PAROQUIA },
+          select: { id: true, login: true, ativo: true },
+        },
+      },
     });
   }
 
@@ -48,7 +53,10 @@ export class ParoquiasService {
     }
 
     const senhaHash = await bcrypt.hash(dto.senha, SALT_ROUNDS);
-    await this.prisma.usuario.update({ where: { id: usuario.id }, data: { senhaHash, ativo: true } });
+    await this.prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { senhaHash, ativo: true },
+    });
     return { ok: true };
   }
 }

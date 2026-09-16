@@ -31,23 +31,37 @@ describe('AuthService', () => {
   describe('validarUsuario', () => {
     it('rejeita login inexistente', async () => {
       prisma.usuario.findUnique.mockResolvedValue(null);
-      await expect(service.validarUsuario('ninguem', 'senha')).rejects.toThrow(UnauthorizedException);
+      await expect(service.validarUsuario('ninguem', 'senha')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('rejeita usuário inativo', async () => {
-      prisma.usuario.findUnique.mockResolvedValue({ id: USUARIO_ID, ativo: false, senhaHash: 'hash' });
+      prisma.usuario.findUnique.mockResolvedValue({
+        id: USUARIO_ID,
+        ativo: false,
+        senhaHash: 'hash',
+      });
       await expect(service.validarUsuario('login', 'senha')).rejects.toThrow(UnauthorizedException);
     });
 
     it('rejeita senha errada', async () => {
       const senhaHash = await bcrypt.hash('senha-certa', 10);
       prisma.usuario.findUnique.mockResolvedValue({ id: USUARIO_ID, ativo: true, senhaHash });
-      await expect(service.validarUsuario('login', 'senha-errada')).rejects.toThrow(UnauthorizedException);
+      await expect(service.validarUsuario('login', 'senha-errada')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('aceita senha correta e devolve o usuário', async () => {
       const senhaHash = await bcrypt.hash('senha-certa', 10);
-      const usuario = { id: USUARIO_ID, ativo: true, senhaHash, role: 'PAROQUIA', paroquiaId: 'p1' };
+      const usuario = {
+        id: USUARIO_ID,
+        ativo: true,
+        senhaHash,
+        role: 'PAROQUIA',
+        paroquiaId: 'p1',
+      };
       prisma.usuario.findUnique.mockResolvedValue(usuario);
       await expect(service.validarUsuario('login', 'senha-certa')).resolves.toEqual(usuario);
     });
@@ -56,7 +70,11 @@ describe('AuthService', () => {
   describe('login', () => {
     it('assina um JWT com sub/role/paroquiaId', async () => {
       await service.login({ id: USUARIO_ID, role: 'PAROQUIA', paroquiaId: 'p1' });
-      expect(jwtService.signAsync).toHaveBeenCalledWith({ sub: USUARIO_ID, role: 'PAROQUIA', paroquiaId: 'p1' });
+      expect(jwtService.signAsync).toHaveBeenCalledWith({
+        sub: USUARIO_ID,
+        role: 'PAROQUIA',
+        paroquiaId: 'p1',
+      });
     });
   });
 

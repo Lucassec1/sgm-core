@@ -13,15 +13,24 @@ export async function seedMontagemExemplo(prisma: PrismaClient, paroquiaId: stri
   if (idsAntigas.length) {
     await prisma.logAtividade.deleteMany({ where: { montagemId: { in: idsAntigas } } });
     await prisma.listaSubstituicao.deleteMany({ where: { montagemId: { in: idsAntigas } } });
-    await prisma.alocacao.deleteMany({ where: { vagaMontagem: { montagemId: { in: idsAntigas } } } });
+    await prisma.alocacao.deleteMany({
+      where: { vagaMontagem: { montagemId: { in: idsAntigas } } },
+    });
     await prisma.vagaMontagem.deleteMany({ where: { montagemId: { in: idsAntigas } } });
     await prisma.montagem.deleteMany({ where: { id: { in: idsAntigas } } });
   }
 
-  const fichasAtivas = await prisma.ficha.findMany({ where: { paroquiaId, situacao: 'ATIVA' }, orderBy: { numeroEncontro: 'desc' } });
-  const casaisAtivos = await prisma.fichaCasal.findMany({ where: { paroquiaId, situacao: 'ATIVA' } });
+  const fichasAtivas = await prisma.ficha.findMany({
+    where: { paroquiaId, situacao: 'ATIVA' },
+    orderBy: { numeroEncontro: 'desc' },
+  });
+  const casaisAtivos = await prisma.fichaCasal.findMany({
+    where: { paroquiaId, situacao: 'ATIVA' },
+  });
   if (fichasAtivas.length < 10 || casaisAtivos.length < 5) {
-    throw new Error('seedMontagemExemplo precisa de pelo menos 10 fichas e 5 casais ATIVA — rode o seed de fichas antes.');
+    throw new Error(
+      'seedMontagemExemplo precisa de pelo menos 10 fichas e 5 casais ATIVA — rode o seed de fichas antes.',
+    );
   }
 
   // R3, Grupo B: marca 2 jovens + 1 casal como "já foi Equipe Dirigente", pra dar exemplo de
@@ -32,7 +41,10 @@ export async function seedMontagemExemplo(prisma: PrismaClient, paroquiaId: stri
     where: { id: { in: dirigentesJovens.map((f) => f.id) } },
     data: { jaFoiEquipeDirigente: true },
   });
-  await prisma.fichaCasal.update({ where: { id: dirigenteCasal.id }, data: { jaFoiEquipeDirigente: true } });
+  await prisma.fichaCasal.update({
+    where: { id: dirigenteCasal.id },
+    data: { jaFoiEquipeDirigente: true },
+  });
 
   const numeroJovensVivenciando = 45;
   const casaisVisitacao = Math.ceil(numeroJovensVivenciando / 3);
@@ -103,14 +115,31 @@ export async function seedMontagemExemplo(prisma: PrismaClient, paroquiaId: stri
   };
 
   // Comando Geral — completo e aceito (é quem cuida das outras 15 equipes)
-  add(vaga('comando-geral', 'Comandantes Gerais'), 'CASAL', dirigenteCasal.id, StatusConvite.ACEITO);
-  add(vaga('comando-geral', 'Comandantes Jovens'), 'JOVEM', dirigentesJovens[0].id, StatusConvite.ACEITO);
-  add(vaga('comando-geral', 'Comandantes Jovens'), 'JOVEM', dirigentesJovens[1].id, StatusConvite.ACEITO);
+  add(
+    vaga('comando-geral', 'Comandantes Gerais'),
+    'CASAL',
+    dirigenteCasal.id,
+    StatusConvite.ACEITO,
+  );
+  add(
+    vaga('comando-geral', 'Comandantes Jovens'),
+    'JOVEM',
+    dirigentesJovens[0].id,
+    StatusConvite.ACEITO,
+  );
+  add(
+    vaga('comando-geral', 'Comandantes Jovens'),
+    'JOVEM',
+    dirigentesJovens[1].id,
+    StatusConvite.ACEITO,
+  );
 
   // Eq. dos Círculos — fechada (tudo ACEITO), já libera o convite das outras 14 equipes (R4)
   add(vaga('circulos', 'Coordenação'), 'CASAL', nextCasal().id, StatusConvite.ACEITO);
-  for (let i = 0; i < 3; i++) add(vaga('circulos', 'Componentes'), 'CASAL', nextCasal().id, StatusConvite.ACEITO);
-  for (let i = 0; i < 4; i++) add(vaga('circulos', 'Componentes'), 'JOVEM', nextJovem().id, StatusConvite.ACEITO);
+  for (let i = 0; i < 3; i++)
+    add(vaga('circulos', 'Componentes'), 'CASAL', nextCasal().id, StatusConvite.ACEITO);
+  for (let i = 0; i < 4; i++)
+    add(vaga('circulos', 'Componentes'), 'JOVEM', nextJovem().id, StatusConvite.ACEITO);
 
   // Eq. da Animação — coordenação já convidada (Grupo B), resto em progresso
   add(vaga('animacao', 'Coordenação'), 'JOVEM', dirigentesJovens[1].id, StatusConvite.CONVIDADO);
@@ -120,7 +149,13 @@ export async function seedMontagemExemplo(prisma: PrismaClient, paroquiaId: stri
   add(vaga('animacao', 'Componentes'), 'JOVEM', nextJovem().id, StatusConvite.RASCUNHO);
 
   // Eq. da Cozinha — mostra recusa (R1) seguida de realocação
-  add(vaga('cozinha', 'Componentes'), 'JOVEM', nextJovem().id, StatusConvite.RECUSADO, 'Mudança de cidade de última hora');
+  add(
+    vaga('cozinha', 'Componentes'),
+    'JOVEM',
+    nextJovem().id,
+    StatusConvite.RECUSADO,
+    'Mudança de cidade de última hora',
+  );
   add(vaga('cozinha', 'Componentes'), 'JOVEM', nextJovem().id, StatusConvite.RASCUNHO);
 
   // Eq. do Lanche — estágio inicial (só um rascunho)
@@ -130,9 +165,24 @@ export async function seedMontagemExemplo(prisma: PrismaClient, paroquiaId: stri
 
   await prisma.logAtividade.createMany({
     data: [
-      { montagemId: montagem.id, usuario: 'Lucas', acao: 'CRIOU_MONTAGEM', detalhes: 'Encontro nº 1 (exemplo)' },
-      { montagemId: montagem.id, usuario: 'Lucas', acao: 'FECHOU_CIRCULOS', detalhes: 'Eq. dos Círculos 100% aceita' },
-      { montagemId: montagem.id, usuario: 'Lucas', acao: 'REGISTROU_RECUSA', detalhes: 'Eq. da Cozinha — mudança de cidade' },
+      {
+        montagemId: montagem.id,
+        usuario: 'Lucas',
+        acao: 'CRIOU_MONTAGEM',
+        detalhes: 'Encontro nº 1 (exemplo)',
+      },
+      {
+        montagemId: montagem.id,
+        usuario: 'Lucas',
+        acao: 'FECHOU_CIRCULOS',
+        detalhes: 'Eq. dos Círculos 100% aceita',
+      },
+      {
+        montagemId: montagem.id,
+        usuario: 'Lucas',
+        acao: 'REGISTROU_RECUSA',
+        detalhes: 'Eq. da Cozinha — mudança de cidade',
+      },
     ],
   });
 

@@ -20,7 +20,9 @@ export function ThemeToggle() {
   useEffect(() => setMontado(true), []);
   if (!montado) return <Button variant="ghost" size="icon" disabled aria-hidden />;
 
-  const atual = (ORDEM as readonly string[]).includes(theme ?? '') ? (theme as (typeof ORDEM)[number]) : 'system';
+  const atual = (ORDEM as readonly string[]).includes(theme ?? '')
+    ? (theme as (typeof ORDEM)[number])
+    : 'system';
   const proximo = ORDEM[(ORDEM.indexOf(atual) + 1) % ORDEM.length];
   const Icon = atual === 'light' ? Sun : atual === 'dark' ? Moon : Monitor;
 

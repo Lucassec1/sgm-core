@@ -160,7 +160,11 @@ export class FichasService {
       where: { fichaId: id },
       include: {
         vagaMontagem: {
-          include: { equipe: true, cargo: true, montagem: { select: { numeroEncontro: true, data: true, status: true } } },
+          include: {
+            equipe: true,
+            cargo: true,
+            montagem: { select: { numeroEncontro: true, data: true, status: true } },
+          },
         },
       },
       orderBy: { createdAt: 'desc' },

@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export interface FiltrosFichasCasais {
   nome?: string;
@@ -31,7 +37,9 @@ export function FichasCasaisFiltros({
 
       <Select
         value={value.situacao ?? 'todos'}
-        onValueChange={(v) => onChange({ ...value, situacao: v === 'todos' ? undefined : (v as 'ATIVA' | 'INATIVA') })}
+        onValueChange={(v) =>
+          onChange({ ...value, situacao: v === 'todos' ? undefined : (v as 'ATIVA' | 'INATIVA') })
+        }
       >
         <SelectTrigger className="w-36">
           <SelectValue placeholder="Status" />

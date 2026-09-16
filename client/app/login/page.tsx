@@ -63,7 +63,12 @@ export default function LoginPage() {
             </div>
             <div>
               <Label htmlFor="senha">Senha</Label>
-              <Input id="senha" type="password" autoComplete="current-password" {...register('senha')} />
+              <Input
+                id="senha"
+                type="password"
+                autoComplete="current-password"
+                {...register('senha')}
+              />
               {errors.senha && <p className="mt-1 text-xs text-red-600">{errors.senha.message}</p>}
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>

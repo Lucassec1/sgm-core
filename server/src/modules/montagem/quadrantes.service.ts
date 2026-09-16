@@ -42,7 +42,8 @@ export class QuadrantesService {
   async adicionar(montagemId: string, arquivo: ArquivoRecebido | undefined, usuario?: string) {
     await this.garantirMontagem(montagemId);
     if (!arquivo) throw new BadRequestException('Nenhum arquivo enviado (campo "file")');
-    if (arquivo.mimetype !== 'application/pdf') throw new BadRequestException('Só PDF é aceito nos Quadrantes');
+    if (arquivo.mimetype !== 'application/pdf')
+      throw new BadRequestException('Só PDF é aceito nos Quadrantes');
     if (arquivo.size > MAX_BYTES) throw new BadRequestException('Arquivo acima de 50 MB');
 
     const dir = join(UPLOADS_DIR, montagemId);
@@ -61,7 +62,12 @@ export class QuadrantesService {
       },
     });
 
-    await this.logAtividade.registrar(montagemId, usuario, 'ADICIONOU_QUADRANTE', arquivo.originalname);
+    await this.logAtividade.registrar(
+      montagemId,
+      usuario,
+      'ADICIONOU_QUADRANTE',
+      arquivo.originalname,
+    );
     return registro;
   }
 
@@ -81,7 +87,12 @@ export class QuadrantesService {
     }
     await unlink(join(UPLOADS_DIR, montagemId, registro.armazenadoComo)).catch(() => undefined);
     await this.prisma.quadranteArquivo.delete({ where: { id } });
-    await this.logAtividade.registrar(montagemId, usuario, 'REMOVEU_QUADRANTE', registro.nomeOriginal);
+    await this.logAtividade.registrar(
+      montagemId,
+      usuario,
+      'REMOVEU_QUADRANTE',
+      registro.nomeOriginal,
+    );
     return registro;
   }
 }

@@ -4,10 +4,20 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useFichasCasais } from '@/lib/hooks/use-fichas-casais';
 import { StatusBadge } from '@/components/fichas/status-badge';
-import { FichasCasaisFiltros, type FiltrosFichasCasais } from '@/components/fichas/fichas-casais-filtros';
+import {
+  FichasCasaisFiltros,
+  type FiltrosFichasCasais,
+} from '@/components/fichas/fichas-casais-filtros';
 import { FichasTabsNav } from '@/components/fichas/fichas-tabs-nav';
 import { fotoSrc } from '@/lib/utils';
 

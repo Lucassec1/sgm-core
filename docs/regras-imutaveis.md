@@ -37,6 +37,7 @@
 
 1. 1º: jovens que vivenciaram o encontro **imediatamente anterior** (ex.: para o VI, prioridade dos jovens do V).
 2. 2º: jovens de encontros anteriores a esse.
+
 - Fichas **inativas** não entram nas sugestões de montagem.
 
 ## R6 — Tamanho e composição do encontro
@@ -75,9 +76,9 @@
 
 O documento original tinha algumas inconsistências numéricas que foram esclarecidas em conversa com o Lucas — as regras acima já refletem a versão corrigida:
 
-| Onde o documento original dizia | Está corrigido para |
-|---|---|
-| Conselho: "13 contas no total" | 12 contas (8 jovens + 4 casais) — o "13" era erro de digitação, confundido com as 13 paróquias |
-| Eq. da Sala: soma dos cargos batia 14, cabeçalho dizia 16 | Bate 16 — há um casal que coordena além do que estava listado |
-| Total de 233 participantes não batia com a soma das 16 equipes (dava 232) | O total de 233 inclui o diretor espiritual, que não é contado dentro da soma das 16 equipes |
-| Eq. da Visitação com tamanho fixo (42 ou 50) | Tamanho variável, proporcional (~1 casal : 3 jovens), calculado dinamicamente |
+| Onde o documento original dizia                                           | Está corrigido para                                                                            |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Conselho: "13 contas no total"                                            | 12 contas (8 jovens + 4 casais) — o "13" era erro de digitação, confundido com as 13 paróquias |
+| Eq. da Sala: soma dos cargos batia 14, cabeçalho dizia 16                 | Bate 16 — há um casal que coordena além do que estava listado                                  |
+| Total de 233 participantes não batia com a soma das 16 equipes (dava 232) | O total de 233 inclui o diretor espiritual, que não é contado dentro da soma das 16 equipes    |
+| Eq. da Visitação com tamanho fixo (42 ou 50)                              | Tamanho variável, proporcional (~1 casal : 3 jovens), calculado dinamicamente                  |

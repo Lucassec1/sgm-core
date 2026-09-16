@@ -9,7 +9,13 @@ import type { HistoricoEquipeItem } from '@/lib/types';
 // Alocacao (por equipe/encontro que a pessoa serviu). Avaliação aqui é só pode
 // coordenar/palestrar, específicos daquela equipe, não um selo geral. Dado gerado pelo
 // módulo Montagem, não editável aqui.
-function HistoricoEquipesLista({ historico, isLoading }: { historico?: HistoricoEquipeItem[]; isLoading: boolean }) {
+function HistoricoEquipesLista({
+  historico,
+  isLoading,
+}: {
+  historico?: HistoricoEquipeItem[];
+  isLoading: boolean;
+}) {
   if (isLoading) return <p className="text-sm text-muted-foreground">Carregando...</p>;
   if (!historico || historico.length === 0) {
     return <p className="text-sm text-muted-foreground">Ainda não serviu em nenhuma equipe.</p>;
@@ -21,12 +27,15 @@ function HistoricoEquipesLista({ historico, isLoading }: { historico?: Historico
         <li key={item.id} className="rounded-md border p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5">
-              <EquipeIcon slug={item.vagaMontagem.equipe.slug} nome={item.vagaMontagem.equipe.nome} />
+              <EquipeIcon
+                slug={item.vagaMontagem.equipe.slug}
+                nome={item.vagaMontagem.equipe.nome}
+              />
               <div>
                 <p className="text-sm font-medium">{item.vagaMontagem.equipe.nome}</p>
                 <p className="text-xs text-muted-foreground">
-                  {item.vagaMontagem.cargo.nome} · {item.vagaMontagem.montagem.numeroEncontro}º Encontro (
-                  {new Date(item.vagaMontagem.montagem.data).toLocaleDateString('pt-BR')})
+                  {item.vagaMontagem.cargo.nome} · {item.vagaMontagem.montagem.numeroEncontro}º
+                  Encontro ({new Date(item.vagaMontagem.montagem.data).toLocaleDateString('pt-BR')})
                 </p>
               </div>
             </div>
@@ -36,12 +45,18 @@ function HistoricoEquipesLista({ historico, isLoading }: { historico?: Historico
           {(item.podeCoordenar || item.podePalestrar) && (
             <div className="flex gap-2">
               {item.podeCoordenar && (
-                <Badge variant="outline" className="border-transparent bg-green-50 text-green-700 font-medium dark:bg-green-950 dark:text-green-400">
+                <Badge
+                  variant="outline"
+                  className="border-transparent bg-green-50 text-green-700 font-medium dark:bg-green-950 dark:text-green-400"
+                >
                   Pode coordenar essa equipe
                 </Badge>
               )}
               {item.podePalestrar && (
-                <Badge variant="outline" className="border-transparent bg-blue-50 text-blue-700 font-medium">
+                <Badge
+                  variant="outline"
+                  className="border-transparent bg-blue-50 text-blue-700 font-medium"
+                >
                   Pode palestrar
                 </Badge>
               )}

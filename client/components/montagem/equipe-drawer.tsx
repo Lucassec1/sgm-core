@@ -4,7 +4,13 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { EquipeIcon } from '@/components/equipes/equipe-icon';
 import { ApiError } from '@/lib/api-client';
@@ -13,7 +19,10 @@ import { VagaAlocacoes } from './vaga-alocacoes';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
 
 function nomeAlocacao(alocacao: Alocacao) {
-  return alocacao.ficha?.nomeCompleto ?? (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : '—');
+  return (
+    alocacao.ficha?.nomeCompleto ??
+    (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : '—')
+  );
 }
 
 // Drawer lateral de distribuição de uma equipe (docs/ux-e-fluxos.md, seção 3) — mantém o
@@ -45,7 +54,9 @@ export function EquipeDrawer({
   const equipe = vagas[0]?.equipe;
   const updateAlocacao = useUpdateAlocacao(montagemId);
 
-  const emRascunho = vagas.flatMap((v) => alocacoesPorVaga.get(v.id) ?? []).filter((a) => a.status === 'RASCUNHO');
+  const emRascunho = vagas
+    .flatMap((v) => alocacoesPorVaga.get(v.id) ?? [])
+    .filter((a) => a.status === 'RASCUNHO');
   const convitesBloqueados = !!equipe?.bloqueiaConvitePosCirculos && !circulosFechado;
 
   async function convidarEquipe() {

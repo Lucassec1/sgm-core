@@ -35,18 +35,30 @@ async function arquivosDoId(dir: string, id: string): Promise<string[]> {
 // Antes de salvar uma foto nova, remove qualquer arquivo antigo desse id — inclusive se veio
 // com outra extensão (pessoa trocou de .jpg pra .png, por exemplo). Sem isso, o antigo ficaria
 // órfão no disco pra sempre (o registro no banco só aponta pra um nome de cada vez).
-export async function salvarFoto(dir: string, id: string, mimetype: string, buffer: Buffer): Promise<void> {
+export async function salvarFoto(
+  dir: string,
+  id: string,
+  mimetype: string,
+  buffer: Buffer,
+): Promise<void> {
   const extensao = EXTENSAO_POR_MIMETYPE[mimetype];
   await mkdir(dir, { recursive: true });
-  await Promise.all((await arquivosDoId(dir, id)).map((nome) => unlink(join(dir, nome)).catch(() => undefined)));
+  await Promise.all(
+    (await arquivosDoId(dir, id)).map((nome) => unlink(join(dir, nome)).catch(() => undefined)),
+  );
   await writeFile(join(dir, `${id}.${extensao}`), buffer);
 }
 
 export async function removerFoto(dir: string, id: string): Promise<void> {
-  await Promise.all((await arquivosDoId(dir, id)).map((nome) => unlink(join(dir, nome)).catch(() => undefined)));
+  await Promise.all(
+    (await arquivosDoId(dir, id)).map((nome) => unlink(join(dir, nome)).catch(() => undefined)),
+  );
 }
 
-export async function encontrarFoto(dir: string, id: string): Promise<{ caminho: string; mimetype: string } | null> {
+export async function encontrarFoto(
+  dir: string,
+  id: string,
+): Promise<{ caminho: string; mimetype: string } | null> {
   const [nome] = await arquivosDoId(dir, id);
   if (!nome) return null;
   const extensao = nome.split('.').pop() ?? '';

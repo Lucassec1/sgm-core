@@ -23,7 +23,10 @@ export function EquipeCard({
   const equipe = vagas[0]?.equipe;
   if (!equipe) return null;
 
-  const totalVagas = vagas.reduce((soma, v) => soma + v.quantidadeCasais + v.quantidadeRapazes + v.quantidadeMocas, 0);
+  const totalVagas = vagas.reduce(
+    (soma, v) => soma + v.quantidadeCasais + v.quantidadeRapazes + v.quantidadeMocas,
+    0,
+  );
   const preenchidas = alocacoes.filter((a) => STATUS_OCUPA_VAGA.includes(a.status)).length;
   const percentual = totalVagas > 0 ? Math.round((preenchidas / totalVagas) * 100) : 0;
 

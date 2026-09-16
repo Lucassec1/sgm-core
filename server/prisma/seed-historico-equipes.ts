@@ -21,19 +21,29 @@ export async function seedHistoricoEquipes(prisma: PrismaClient, paroquiaId: str
   if (idsAntigas.length) {
     await prisma.logAtividade.deleteMany({ where: { montagemId: { in: idsAntigas } } });
     await prisma.listaSubstituicao.deleteMany({ where: { montagemId: { in: idsAntigas } } });
-    await prisma.alocacao.deleteMany({ where: { vagaMontagem: { montagemId: { in: idsAntigas } } } });
+    await prisma.alocacao.deleteMany({
+      where: { vagaMontagem: { montagemId: { in: idsAntigas } } },
+    });
     await prisma.vagaMontagem.deleteMany({ where: { montagemId: { in: idsAntigas } } });
     await prisma.montagem.deleteMany({ where: { id: { in: idsAntigas } } });
   }
 
-  const fichasAtivas = await prisma.ficha.findMany({ where: { paroquiaId, situacao: 'ATIVA' }, orderBy: { id: 'asc' } });
-  const casaisAtivos = await prisma.fichaCasal.findMany({ where: { paroquiaId, situacao: 'ATIVA' }, orderBy: { id: 'asc' } });
+  const fichasAtivas = await prisma.ficha.findMany({
+    where: { paroquiaId, situacao: 'ATIVA' },
+    orderBy: { id: 'asc' },
+  });
+  const casaisAtivos = await prisma.fichaCasal.findMany({
+    where: { paroquiaId, situacao: 'ATIVA' },
+    orderBy: { id: 'asc' },
+  });
   const cargos = await prisma.cargo.findMany({ include: { equipe: true } });
 
   const fichasRapazes = fichasAtivas.filter((f) => f.sexo === 'RAPAZ');
   const fichasMocas = fichasAtivas.filter((f) => f.sexo === 'MOCA');
   if (fichasRapazes.length < 5 || fichasMocas.length < 5 || casaisAtivos.length < 5) {
-    throw new Error('seedHistoricoEquipes precisa de pelo menos 5 rapazes, 5 moças e 5 casais ATIVA.');
+    throw new Error(
+      'seedHistoricoEquipes precisa de pelo menos 5 rapazes, 5 moças e 5 casais ATIVA.',
+    );
   }
 
   // Cria os 3 encontros passados (com o catálogo inteiro de vagas cada um, igual a uma

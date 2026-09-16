@@ -70,7 +70,9 @@ export function CommandPalette() {
 
   const montagensEncontradas = useMemo(() => {
     if (!buscaAtiva) return [];
-    return (montagens.data?.items ?? []).filter((m) => String(m.numeroEncontro).includes(debounced));
+    return (montagens.data?.items ?? []).filter((m) =>
+      String(m.numeroEncontro).includes(debounced),
+    );
   }, [montagens.data, debounced, buscaAtiva]);
 
   function ir(caminho: string) {
@@ -91,11 +93,18 @@ export function CommandPalette() {
           },
         ]
       : []),
-  ].filter((acao) => !query.trim() || acao.label.toLowerCase().includes(query.trim().toLowerCase()));
+  ].filter(
+    (acao) => !query.trim() || acao.label.toLowerCase().includes(query.trim().toLowerCase()),
+  );
 
   return (
     <>
-      <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={() => setOpen(true)}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="gap-1.5 text-muted-foreground"
+        onClick={() => setOpen(true)}
+      >
         <Search className="h-3.5 w-3.5" />
         Buscar
         <kbd className="ml-1 rounded border bg-muted px-1.5 py-0.5 text-[10px] font-medium">⌘K</kbd>
@@ -142,7 +151,11 @@ export function CommandPalette() {
               {buscaAtiva && (casais.data?.items.length ?? 0) > 0 && (
                 <CommandGroup heading="Casais">
                   {casais.data!.items.map((c) => (
-                    <CommandItem key={c.id} value={c.id} onSelect={() => ir(`/fichas/casais/${c.id}`)}>
+                    <CommandItem
+                      key={c.id}
+                      value={c.id}
+                      onSelect={() => ir(`/fichas/casais/${c.id}`)}
+                    >
                       <Users className="mr-2 h-4 w-4 text-muted-foreground" />
                       {c.nomeEle} e {c.nomeEla}
                     </CommandItem>

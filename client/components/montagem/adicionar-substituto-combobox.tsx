@@ -5,8 +5,19 @@ import { Users2, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
-import { useCandidatosJovensGeral, useCreateListaSubstituicaoItem } from '@/lib/hooks/use-montagens';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from '@/components/ui/command';
+import {
+  useCandidatosJovensGeral,
+  useCreateListaSubstituicaoItem,
+} from '@/lib/hooks/use-montagens';
 import { useFichasCasais } from '@/lib/hooks/use-fichas-casais';
 import { fotoSrc } from '@/lib/utils';
 
@@ -47,11 +58,21 @@ export function AdicionarSubstitutoBar({
 
   const opcoesJovens: PessoaOpcao[] = (jovens.data ?? [])
     .filter((f) => disponivel(f.id))
-    .map((f) => ({ id: f.id, nome: f.nomeCompleto, tipoPessoa: 'JOVEM' as const, fotoUrl: f.fotoUrl }));
+    .map((f) => ({
+      id: f.id,
+      nome: f.nomeCompleto,
+      tipoPessoa: 'JOVEM' as const,
+      fotoUrl: f.fotoUrl,
+    }));
 
   const opcoesCasais: PessoaOpcao[] = (casais.data?.items ?? [])
     .filter((c) => disponivel(c.id))
-    .map((c) => ({ id: c.id, nome: `${c.nomeEle} e ${c.nomeEla}`, tipoPessoa: 'CASAL' as const, fotoUrl: c.fotoUrl }));
+    .map((c) => ({
+      id: c.id,
+      nome: `${c.nomeEle} e ${c.nomeEla}`,
+      tipoPessoa: 'CASAL' as const,
+      fotoUrl: c.fotoUrl,
+    }));
 
   async function adicionar(pessoa: PessoaOpcao) {
     try {
@@ -88,63 +109,65 @@ export function AdicionarSubstitutoBar({
         onBlur={() => setTimeout(() => setFocado(false), 150)}
       />
       {aberto && (
-      <CommandList className="max-h-72">
-        {carregando ? (
-          <p className="px-3 py-6 text-center text-sm text-muted-foreground">Carregando...</p>
-        ) : (
-          <>
-            <CommandEmpty>Ninguém encontrado.</CommandEmpty>
-            {!temBusca && (jovensExibidos.length > 0 || casaisExibidos.length > 0) && (
-              <p className="px-3 pt-2 text-xs text-muted-foreground">Sugestões — digite pra buscar todos</p>
-            )}
-            <CommandGroup
-              heading={
-                <span className="flex items-center gap-1.5">
-                  <UserRound className="h-3.5 w-3.5" /> Jovens
-                </span>
-              }
-            >
-              {jovensExibidos.map((pessoa) => (
-                <CommandItem
-                  key={pessoa.id}
-                  value={pessoa.nome}
-                  onSelect={() => adicionar(pessoa)}
-                  className="gap-2 py-2"
-                >
-                  <Avatar className="h-7 w-7 shrink-0">
-                    <AvatarImage src={fotoSrc(pessoa.fotoUrl)} alt={pessoa.nome} />
-                    <AvatarFallback className="text-xs">{iniciais(pessoa.nome)}</AvatarFallback>
-                  </Avatar>
-                  {pessoa.nome}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-            <CommandSeparator />
-            <CommandGroup
-              heading={
-                <span className="flex items-center gap-1.5">
-                  <Users2 className="h-3.5 w-3.5" /> Casais
-                </span>
-              }
-            >
-              {casaisExibidos.map((pessoa) => (
-                <CommandItem
-                  key={pessoa.id}
-                  value={pessoa.nome}
-                  onSelect={() => adicionar(pessoa)}
-                  className="gap-2 py-2"
-                >
-                  <Avatar className="h-7 w-7 shrink-0">
-                    <AvatarImage src={fotoSrc(pessoa.fotoUrl)} alt={pessoa.nome} />
-                    <AvatarFallback className="text-xs">{iniciais(pessoa.nome)}</AvatarFallback>
-                  </Avatar>
-                  {pessoa.nome}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </>
-        )}
-      </CommandList>
+        <CommandList className="max-h-72">
+          {carregando ? (
+            <p className="px-3 py-6 text-center text-sm text-muted-foreground">Carregando...</p>
+          ) : (
+            <>
+              <CommandEmpty>Ninguém encontrado.</CommandEmpty>
+              {!temBusca && (jovensExibidos.length > 0 || casaisExibidos.length > 0) && (
+                <p className="px-3 pt-2 text-xs text-muted-foreground">
+                  Sugestões — digite pra buscar todos
+                </p>
+              )}
+              <CommandGroup
+                heading={
+                  <span className="flex items-center gap-1.5">
+                    <UserRound className="h-3.5 w-3.5" /> Jovens
+                  </span>
+                }
+              >
+                {jovensExibidos.map((pessoa) => (
+                  <CommandItem
+                    key={pessoa.id}
+                    value={pessoa.nome}
+                    onSelect={() => adicionar(pessoa)}
+                    className="gap-2 py-2"
+                  >
+                    <Avatar className="h-7 w-7 shrink-0">
+                      <AvatarImage src={fotoSrc(pessoa.fotoUrl)} alt={pessoa.nome} />
+                      <AvatarFallback className="text-xs">{iniciais(pessoa.nome)}</AvatarFallback>
+                    </Avatar>
+                    {pessoa.nome}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+              <CommandSeparator />
+              <CommandGroup
+                heading={
+                  <span className="flex items-center gap-1.5">
+                    <Users2 className="h-3.5 w-3.5" /> Casais
+                  </span>
+                }
+              >
+                {casaisExibidos.map((pessoa) => (
+                  <CommandItem
+                    key={pessoa.id}
+                    value={pessoa.nome}
+                    onSelect={() => adicionar(pessoa)}
+                    className="gap-2 py-2"
+                  >
+                    <Avatar className="h-7 w-7 shrink-0">
+                      <AvatarImage src={fotoSrc(pessoa.fotoUrl)} alt={pessoa.nome} />
+                      <AvatarFallback className="text-xs">{iniciais(pessoa.nome)}</AvatarFallback>
+                    </Avatar>
+                    {pessoa.nome}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </>
+          )}
+        </CommandList>
       )}
     </Command>
   );

@@ -59,7 +59,9 @@ export default function DashboardPage() {
               <div className="text-2xl font-semibold">
                 {montagemAtual ? `${montagemAtual.numeroEncontro}º` : '—'}
               </div>
-              <CardDescription>{montagemAtual ? 'encontro em andamento' : 'nenhum encontro em andamento'}</CardDescription>
+              <CardDescription>
+                {montagemAtual ? 'encontro em andamento' : 'nenhum encontro em andamento'}
+              </CardDescription>
             </CardContent>
           </Card>
         </Link>
@@ -72,16 +74,10 @@ export default function DashboardPage() {
           <CardContent>
             <CardDescription className="mb-1">baixar dados em CSV</CardDescription>
             <div className="flex flex-col gap-1 text-sm">
-              <a
-                className="text-primary hover:underline"
-                href={apiClient.exportFichasUrl()}
-              >
+              <a className="text-primary hover:underline" href={apiClient.exportFichasUrl()}>
                 Fichas — Jovens
               </a>
-              <a
-                className="text-primary hover:underline"
-                href={apiClient.exportFichasCasaisUrl()}
-              >
+              <a className="text-primary hover:underline" href={apiClient.exportFichasCasaisUrl()}>
                 Fichas — Casais
               </a>
               {montagemAtual && (

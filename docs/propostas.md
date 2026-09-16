@@ -1,4 +1,3 @@
-
 # Propostas de evolução — SGM Core
 
 Ideias de design e funcionalidade pra evoluir o protótipo, lidas depois de revisar
@@ -58,6 +57,7 @@ resumo na tela de Montagem finalizada.
 `ResumoEncontroCard` na Montagem finalizada. As duas métricas do escopo original que dependiam
 de dado que o log não guarda viraram uma versão honesta do mesmo espírito (detalhe em
 `MontagensService.resumo()`):
+
 - "tempo até 100% preenchida" → **tempo até finalizar** (criação → `MUDOU_STATUS -> FINALIZADA`
   mais recente). `ATUALIZOU_ALOCACAO` não grava qual vaga mudou de status, só o texto da
   mudança, então não dá pra saber quando cada vaga bateu o total exigido.
@@ -114,6 +114,7 @@ de tela de conferência que `ux-e-fluxos.md` já propõe pro importador CSV).
 
 **Status (11/09/2026): upload individual implementado; upload em lote adiado.** Decisões
 tomadas com o Lucas nesta rodada:
+
 - **Storage: filesystem do server**, não bucket S3-compatible — mesmo padrão dos Quadrantes
   (`UPLOADS_DIR`, fallback `server/uploads/`, gitignored), em vez de Cloudflare R2/Backblaze.
   Evita depender de conta externa pro protótipo; a mesma ressalva dos Quadrantes vale aqui —
@@ -181,6 +182,7 @@ origem — a API roda num host separado) — o resto passa direto pelo Service W
 interferência, inclusive todo POST/PATCH/DELETE. Estratégia: tenta a rede primeiro, guarda a
 resposta no Cache Storage; se a rede falhar, serve a última versão cacheada com um header
 próprio (`X-From-Cache`). Decisões desta rodada, com o Lucas:
+
 - **Service Worker de verdade** (Cache API), não persistência do React Query em localStorage
   — mais fiel ao texto original e mais resiliente (funciona mesmo num reload da página
   durante a queda), ao custo do ciclo de ativação/atualização de SW de sempre.

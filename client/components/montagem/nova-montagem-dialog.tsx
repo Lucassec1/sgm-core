@@ -40,7 +40,8 @@ const montagemSchema = z
       return data.numeroJovensVivenciando >= minimo && data.numeroJovensVivenciando <= maximo;
     },
     {
-      message: 'Fora do intervalo (40-60 jovens, ou 52-72 numa implantação — já contando os 12 sementeira)',
+      message:
+        'Fora do intervalo (40-60 jovens, ou 52-72 numa implantação — já contando os 12 sementeira)',
       path: ['numeroJovensVivenciando'],
     },
   );
@@ -83,7 +84,8 @@ export function NovaMontagemDialog() {
           <DialogHeader>
             <DialogTitle>Nova Montagem</DialogTitle>
             <DialogDescription>
-              O número do encontro é calculado automaticamente. Preencha os dados abaixo pra abrir o quadro das 16 equipes.
+              O número do encontro é calculado automaticamente. Preencha os dados abaixo pra abrir o
+              quadro das 16 equipes.
             </DialogDescription>
           </DialogHeader>
 
@@ -95,12 +97,18 @@ export function NovaMontagemDialog() {
             </div>
             <div>
               <Label htmlFor="numeroJovensVivenciando">Nº de jovens vivenciando</Label>
-              <Input id="numeroJovensVivenciando" type="number" {...register('numeroJovensVivenciando')} />
+              <Input
+                id="numeroJovensVivenciando"
+                type="number"
+                {...register('numeroJovensVivenciando')}
+              />
               <p className="text-xs text-muted-foreground mt-1">
                 {ehImplantacao ? '52 a 72 (já incluindo os 12 sementeira)' : '40 a 60'}
               </p>
               {errors.numeroJovensVivenciando && (
-                <p className="text-xs text-red-600 mt-1">{errors.numeroJovensVivenciando.message}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.numeroJovensVivenciando.message}
+                </p>
               )}
             </div>
             <div>
@@ -124,8 +132,8 @@ export function NovaMontagemDialog() {
             {ehImplantacao && (
               <>
                 <div className="col-span-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
-                  Soma automaticamente 12 jovens sementeira da paróquia afilhada e 4 casais afilhados na Eq. da Visitação
-                  (fixo, não editável).
+                  Soma automaticamente 12 jovens sementeira da paróquia afilhada e 4 casais
+                  afilhados na Eq. da Visitação (fixo, não editável).
                 </div>
                 <div className="col-span-2">
                   <Label htmlFor="paroquiaAfilhadaNome">Nome da paróquia afilhada</Label>

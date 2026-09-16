@@ -30,7 +30,11 @@ export class MontagensController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateMontagemDto, @ParoquiaAtual() paroquiaId: string) {
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateMontagemDto,
+    @ParoquiaAtual() paroquiaId: string,
+  ) {
     return this.montagensService.update(id, dto, paroquiaId);
   }
 

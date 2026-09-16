@@ -42,7 +42,11 @@ export class AlocacoesService {
     }
   }
 
-  private async getVagaOuFalha(tx: Prisma.TransactionClient, montagemId: string, vagaMontagemId: string) {
+  private async getVagaOuFalha(
+    tx: Prisma.TransactionClient,
+    montagemId: string,
+    vagaMontagemId: string,
+  ) {
     const vaga = await tx.vagaMontagem.findUnique({
       where: { id: vagaMontagemId },
       include: { equipe: true, cargo: true },
@@ -68,7 +72,9 @@ export class AlocacoesService {
       },
     });
     if (bloqueio) {
-      throw new ForbiddenException('Pessoa recusou ou desistiu deste encontro — não pode ser realocada (R1)');
+      throw new ForbiddenException(
+        'Pessoa recusou ou desistiu deste encontro — não pode ser realocada (R1)',
+      );
     }
   }
 
@@ -92,7 +98,9 @@ export class AlocacoesService {
     if (vezesServidas === 0) return;
 
     if (vezesServidas >= 3 && !equipe.repeticaoLimiteFlexivel) {
-      throw new ForbiddenException(`Pessoa já serviu ${vezesServidas}x em ${equipe.nome} — limite de 3x atingido (R2)`);
+      throw new ForbiddenException(
+        `Pessoa já serviu ${vezesServidas}x em ${equipe.nome} — limite de 3x atingido (R2)`,
+      );
     }
 
     if (!confirmarRepeticao) {
@@ -152,7 +160,11 @@ export class AlocacoesService {
 
   // R4 — Eq. dos Círculos primeiro: as demais equipes (exceto Círculos e Comando Geral) só
   // enviam convite depois que todos os membros dos Círculos aceitaram.
-  private async verificarBloqueioConvite(tx: Prisma.TransactionClient, equipe: Equipe, montagemId: string) {
+  private async verificarBloqueioConvite(
+    tx: Prisma.TransactionClient,
+    equipe: Equipe,
+    montagemId: string,
+  ) {
     if (!equipe.bloqueiaConvitePosCirculos) return;
 
     const circulos = await tx.equipe.findUnique({ where: { slug: 'circulos' } });
@@ -163,15 +175,19 @@ export class AlocacoesService {
       select: { status: true },
     });
 
-    const fechado = alocacoesCirculos.length > 0 && alocacoesCirculos.every((a) => a.status === StatusConvite.ACEITO);
+    const fechado =
+      alocacoesCirculos.length > 0 &&
+      alocacoesCirculos.every((a) => a.status === StatusConvite.ACEITO);
     if (!fechado) {
-      throw new ForbiddenException('Aguardando Eq. dos Círculos fechar (todos aceitos) antes de convidar outras equipes (R4)');
+      throw new ForbiddenException(
+        'Aguardando Eq. dos Círculos fechar (todos aceitos) antes de convidar outras equipes (R4)',
+      );
     }
   }
 
-  private ocultarSubstituicaoSeFinalizada<T extends { substituidaPorId: string | null; vagaMontagem: { montagem: { status: string } } }>(
-    alocacao: T,
-  ): T {
+  private ocultarSubstituicaoSeFinalizada<
+    T extends { substituidaPorId: string | null; vagaMontagem: { montagem: { status: string } } },
+  >(alocacao: T): T {
     if (alocacao.vagaMontagem.montagem.status === 'FINALIZADA') {
       return { ...alocacao, substituidaPorId: null };
     }
@@ -189,11 +205,25 @@ export class AlocacoesService {
           const vaga = await this.getVagaOuFalha(tx, montagemId, dto.vagaMontagemId);
 
           await this.verificarBloqueioRecusa(tx, montagemId, dto.fichaId, dto.fichaCasalId);
-          await this.verificarRepeticaoEquipe(tx, vaga.equipe, montagemId, dto.fichaId, dto.fichaCasalId, dto.confirmarRepeticao);
+          await this.verificarRepeticaoEquipe(
+            tx,
+            vaga.equipe,
+            montagemId,
+            dto.fichaId,
+            dto.fichaCasalId,
+            dto.confirmarRepeticao,
+          );
           const exigeCoordenacao =
-            vaga.cargo.ehCoordenacao && (dto.tipoPessoa === 'JOVEM' || vaga.equipe.coordenacaoCasalExigeHistorico);
+            vaga.cargo.ehCoordenacao &&
+            (dto.tipoPessoa === 'JOVEM' || vaga.equipe.coordenacaoCasalExigeHistorico);
           if (exigeCoordenacao) {
-            await this.verificarCoordenacao(tx, vaga.equipe, montagemId, dto.fichaId, dto.fichaCasalId);
+            await this.verificarCoordenacao(
+              tx,
+              vaga.equipe,
+              montagemId,
+              dto.fichaId,
+              dto.fichaCasalId,
+            );
           }
           if (dto.status === StatusConvite.CONVIDADO) {
             await this.verificarBloqueioConvite(tx, vaga.equipe, montagemId);
@@ -215,7 +245,10 @@ export class AlocacoesService {
           // alocada — a lista é só "prontos pra entrar", quem entrou não fica mais lá
           // (ver docs/ux-e-fluxos.md, seção 3).
           await tx.listaSubstituicao.deleteMany({
-            where: { montagemId, ...(dto.fichaId ? { fichaId: dto.fichaId } : { fichaCasalId: dto.fichaCasalId }) },
+            where: {
+              montagemId,
+              ...(dto.fichaId ? { fichaId: dto.fichaId } : { fichaCasalId: dto.fichaCasalId }),
+            },
           });
 
           await this.logAtividade.registrar(

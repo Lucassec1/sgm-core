@@ -2,7 +2,11 @@
 
 import { use } from 'react';
 import { toast } from 'sonner';
-import { useFichaCasal, useRemoverFotoFichaCasal, useUploadFotoFichaCasal } from '@/lib/hooks/use-fichas-casais';
+import {
+  useFichaCasal,
+  useRemoverFotoFichaCasal,
+  useUploadFotoFichaCasal,
+} from '@/lib/hooks/use-fichas-casais';
 import { FichaCasalForm } from '@/components/fichas/ficha-casal-form';
 import { FotoUploadAvatar } from '@/components/fichas/foto-upload-avatar';
 import { HistoricoEquipesCasalSection } from '@/components/fichas/historico-equipes-section';

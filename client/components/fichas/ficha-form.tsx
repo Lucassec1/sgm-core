@@ -10,7 +10,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -96,7 +102,8 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
   });
 
   useEffect(() => {
-    if (ficha) reset({ ...nullsToUndefined(ficha), dataNascimento: ficha.dataNascimento.slice(0, 10) });
+    if (ficha)
+      reset({ ...nullsToUndefined(ficha), dataNascimento: ficha.dataNascimento.slice(0, 10) });
   }, [ficha, reset]);
 
   const createFicha = useCreateFicha();
@@ -141,7 +148,10 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
         <div className="grid grid-cols-2 gap-4 rounded-md border p-4">
           <div>
             <Label>Situação</Label>
-            <Select value={watch('situacao')} onValueChange={(v) => setValue('situacao', v as 'ATIVA' | 'INATIVA')}>
+            <Select
+              value={watch('situacao')}
+              onValueChange={(v) => setValue('situacao', v as 'ATIVA' | 'INATIVA')}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -167,12 +177,18 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
             <div className="col-span-2">
               <Label htmlFor="nomeCompleto">Nome completo</Label>
               <Input id="nomeCompleto" {...register('nomeCompleto')} />
-              {errors.nomeCompleto && <p className="text-xs text-red-600 mt-1">{errors.nomeCompleto.message}</p>}
+              {errors.nomeCompleto && (
+                <p className="text-xs text-red-600 mt-1">{errors.nomeCompleto.message}</p>
+              )}
             </div>
           )}
           <div>
             <Label>Sexo</Label>
-            <Select value={watch('sexo')} onValueChange={(v) => setValue('sexo', v as FichaFormValues['sexo'])} disabled={bloqueado}>
+            <Select
+              value={watch('sexo')}
+              onValueChange={(v) => setValue('sexo', v as FichaFormValues['sexo'])}
+              disabled={bloqueado}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
@@ -185,8 +201,15 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
           </div>
           <div>
             <Label htmlFor="dataNascimento">Data de nascimento</Label>
-            <Input id="dataNascimento" type="date" disabled={bloqueado} {...register('dataNascimento')} />
-            {errors.dataNascimento && <p className="text-xs text-red-600 mt-1">{errors.dataNascimento.message}</p>}
+            <Input
+              id="dataNascimento"
+              type="date"
+              disabled={bloqueado}
+              {...register('dataNascimento')}
+            />
+            {errors.dataNascimento && (
+              <p className="text-xs text-red-600 mt-1">{errors.dataNascimento.message}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="naturalidade">Naturalidade</Label>
@@ -195,7 +218,9 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
           <div>
             <Label htmlFor="telefone">Telefone</Label>
             <Input id="telefone" {...register('telefone')} />
-            {errors.telefone && <p className="text-xs text-red-600 mt-1">{errors.telefone.message}</p>}
+            {errors.telefone && (
+              <p className="text-xs text-red-600 mt-1">{errors.telefone.message}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="email">E-mail</Label>
@@ -204,8 +229,15 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
           </div>
           <div>
             <Label htmlFor="numeroEncontro">Nº do encontro</Label>
-            <Input id="numeroEncontro" type="number" disabled={bloqueado} {...register('numeroEncontro')} />
-            {errors.numeroEncontro && <p className="text-xs text-red-600 mt-1">{errors.numeroEncontro.message}</p>}
+            <Input
+              id="numeroEncontro"
+              type="number"
+              disabled={bloqueado}
+              {...register('numeroEncontro')}
+            />
+            {errors.numeroEncontro && (
+              <p className="text-xs text-red-600 mt-1">{errors.numeroEncontro.message}</p>
+            )}
           </div>
           <div>
             <Label>Cor do círculo</Label>
@@ -225,7 +257,9 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
                 ))}
               </SelectContent>
             </Select>
-            {errors.corCirculo && <p className="text-xs text-red-600 mt-1">{errors.corCirculo.message}</p>}
+            {errors.corCirculo && (
+              <p className="text-xs text-red-600 mt-1">{errors.corCirculo.message}</p>
+            )}
           </div>
         </div>
       </section>
@@ -293,7 +327,12 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
           </div>
           <div>
             <Label htmlFor="situacaoEscolar">Situação</Label>
-            <Input id="situacaoEscolar" disabled={bloqueado} {...register('situacaoEscolar')} placeholder="Cursando, formado..." />
+            <Input
+              id="situacaoEscolar"
+              disabled={bloqueado}
+              {...register('situacaoEscolar')}
+              placeholder="Cursando, formado..."
+            />
           </div>
           <div>
             <Label htmlFor="curso">Curso</Label>
@@ -317,7 +356,11 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
           </div>
           <div>
             <Label htmlFor="igrejaQueFrequenta">Igreja que frequenta</Label>
-            <Input id="igrejaQueFrequenta" disabled={bloqueado} {...register('igrejaQueFrequenta')} />
+            <Input
+              id="igrejaQueFrequenta"
+              disabled={bloqueado}
+              {...register('igrejaQueFrequenta')}
+            />
           </div>
           <div className="col-span-2 flex items-center gap-2">
             <Checkbox
@@ -343,7 +386,9 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
                 onCheckedChange={(v) => setValue('sacramentoBatismo', !!v)}
                 disabled={bloqueado}
               />
-              <Label htmlFor="sacramentoBatismo" className="font-normal">Batismo</Label>
+              <Label htmlFor="sacramentoBatismo" className="font-normal">
+                Batismo
+              </Label>
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
@@ -352,7 +397,9 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
                 onCheckedChange={(v) => setValue('sacramentoEucaristia', !!v)}
                 disabled={bloqueado}
               />
-              <Label htmlFor="sacramentoEucaristia" className="font-normal">Eucaristia</Label>
+              <Label htmlFor="sacramentoEucaristia" className="font-normal">
+                Eucaristia
+              </Label>
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
@@ -361,7 +408,9 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
                 onCheckedChange={(v) => setValue('sacramentoCrisma', !!v)}
                 disabled={bloqueado}
               />
-              <Label htmlFor="sacramentoCrisma" className="font-normal">Crisma</Label>
+              <Label htmlFor="sacramentoCrisma" className="font-normal">
+                Crisma
+              </Label>
             </div>
           </div>
         </div>
@@ -378,11 +427,19 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
           </div>
           <div>
             <Label htmlFor="telefoneConvidante">Telefone do convidante</Label>
-            <Input id="telefoneConvidante" disabled={bloqueado} {...register('telefoneConvidante')} />
+            <Input
+              id="telefoneConvidante"
+              disabled={bloqueado}
+              {...register('telefoneConvidante')}
+            />
           </div>
           <div className="col-span-2">
             <Label htmlFor="enderecoConvidante">Endereço do convidante</Label>
-            <Input id="enderecoConvidante" disabled={bloqueado} {...register('enderecoConvidante')} />
+            <Input
+              id="enderecoConvidante"
+              disabled={bloqueado}
+              {...register('enderecoConvidante')}
+            />
           </div>
         </div>
       </section>
@@ -391,7 +448,11 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
 
       <div>
         <Label htmlFor="observacoes">Observações</Label>
-        <Textarea id="observacoes" placeholder="Ex.: alergia a amendoim, não possui transporte próprio..." {...register('observacoes')} />
+        <Textarea
+          id="observacoes"
+          placeholder="Ex.: alergia a amendoim, não possui transporte próprio..."
+          {...register('observacoes')}
+        />
       </div>
 
       <Button type="submit" disabled={isSubmitting}>

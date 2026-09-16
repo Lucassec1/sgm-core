@@ -31,7 +31,9 @@ export class FichasCasaisService {
   constructor(private readonly prisma: PrismaService) {}
 
   create(dto: CreateFichaCasalDto, paroquiaId: string) {
-    return this.prisma.fichaCasal.create({ data: { ...dto, paroquiaId, ...parseDatasNascimento(dto) } });
+    return this.prisma.fichaCasal.create({
+      data: { ...dto, paroquiaId, ...parseDatasNascimento(dto) },
+    });
   }
 
   async findAll(query: QueryFichasCasaisDto, paroquiaId: string) {
@@ -68,8 +70,22 @@ export class FichasCasaisService {
       orderBy: { nomeEle: 'asc' },
     });
 
-    const headers = ['Nome dele', 'Nome dela', 'Telefone dele', 'Telefone dela', 'Cidade', 'Situação'];
-    const rows = casais.map((c) => [c.nomeEle, c.nomeEla, c.telefoneEle, c.telefoneEla, c.cidade, c.situacao]);
+    const headers = [
+      'Nome dele',
+      'Nome dela',
+      'Telefone dele',
+      'Telefone dela',
+      'Cidade',
+      'Situação',
+    ];
+    const rows = casais.map((c) => [
+      c.nomeEle,
+      c.nomeEla,
+      c.telefoneEle,
+      c.telefoneEla,
+      c.cidade,
+      c.situacao,
+    ]);
     return toCsv(headers, rows);
   }
 
@@ -85,7 +101,10 @@ export class FichasCasaisService {
 
   async update(id: string, dto: UpdateFichaCasalDto, paroquiaId: string) {
     await this.findOne(id, paroquiaId);
-    return this.prisma.fichaCasal.update({ where: { id }, data: { ...dto, ...parseDatasNascimento(dto) } });
+    return this.prisma.fichaCasal.update({
+      where: { id },
+      data: { ...dto, ...parseDatasNascimento(dto) },
+    });
   }
 
   async remove(id: string, paroquiaId: string) {
@@ -107,7 +126,10 @@ export class FichasCasaisService {
     }
 
     await salvarFoto(FOTOS_DIR, id, arquivo.mimetype, arquivo.buffer);
-    return this.prisma.fichaCasal.update({ where: { id }, data: { fotoUrl: `/fichas-casais/${id}/foto` } });
+    return this.prisma.fichaCasal.update({
+      where: { id },
+      data: { fotoUrl: `/fichas-casais/${id}/foto` },
+    });
   }
 
   async removerFoto(id: string, paroquiaId: string) {
@@ -132,7 +154,11 @@ export class FichasCasaisService {
       where: { fichaCasalId: id },
       include: {
         vagaMontagem: {
-          include: { equipe: true, cargo: true, montagem: { select: { numeroEncontro: true, data: true, status: true } } },
+          include: {
+            equipe: true,
+            cargo: true,
+            montagem: { select: { numeroEncontro: true, data: true, status: true } },
+          },
         },
       },
       orderBy: { createdAt: 'desc' },
