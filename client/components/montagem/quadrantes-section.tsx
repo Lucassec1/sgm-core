@@ -15,7 +15,13 @@ function formatarTamanho(bytes: number) {
 
 // Aba Quadrantes (docs/requisitos.md, 2.3) — só anexo de PDF da Eq. da Gráfica, sem campos
 // cadastráveis. Upload e download; o binário fica no server, aqui é a lista + ações.
-export function QuadrantesSection({ montagemId, readOnly = false }: { montagemId: string; readOnly?: boolean }) {
+export function QuadrantesSection({
+  montagemId,
+  readOnly = false,
+}: {
+  montagemId: string;
+  readOnly?: boolean;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -59,8 +65,19 @@ export function QuadrantesSection({ montagemId, readOnly = false }: { montagemId
         </p>
         {!readOnly && (
           <>
-            <input ref={inputRef} type="file" accept="application/pdf" hidden onChange={aoEscolher} />
-            <Button size="sm" className="gap-1.5" disabled={enviando} onClick={() => inputRef.current?.click()}>
+            <input
+              ref={inputRef}
+              type="file"
+              accept="application/pdf"
+              hidden
+              onChange={aoEscolher}
+            />
+            <Button
+              size="sm"
+              className="gap-1.5"
+              disabled={enviando}
+              onClick={() => inputRef.current?.click()}
+            >
               <Upload className="h-3.5 w-3.5" />
               {enviando ? 'Enviando...' : 'Enviar PDF'}
             </Button>
@@ -69,7 +86,9 @@ export function QuadrantesSection({ montagemId, readOnly = false }: { montagemId
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
-      {arquivos && arquivos.length === 0 && <p className="text-sm text-muted-foreground">Nenhum quadrante anexado ainda.</p>}
+      {arquivos && arquivos.length === 0 && (
+        <p className="text-sm text-muted-foreground">Nenhum quadrante anexado ainda.</p>
+      )}
 
       {arquivos && arquivos.length > 0 && (
         <ul className="divide-y rounded-md border">
@@ -79,7 +98,8 @@ export function QuadrantesSection({ montagemId, readOnly = false }: { montagemId
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{a.nomeOriginal}</p>
                 <p className="text-xs text-muted-foreground">
-                  {formatarTamanho(a.tamanhoBytes)} · {new Date(a.createdAt).toLocaleDateString('pt-BR')}
+                  {formatarTamanho(a.tamanhoBytes)} ·{' '}
+                  {new Date(a.createdAt).toLocaleDateString('pt-BR')}
                   {a.usuario && ` · ${a.usuario}`}
                 </p>
               </div>

@@ -6,7 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { agruparVagasPorEquipe } from '@/lib/utils';
-import { useConselhoMontagem, useConselhoObservacoes, useCriarObservacao } from '@/lib/hooks/use-conselho';
+import {
+  useConselhoMontagem,
+  useConselhoObservacoes,
+  useCriarObservacao,
+} from '@/lib/hooks/use-conselho';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
 
 // Visão read-only do Conselho (R8) — mostra TODOS os status de alocação (não só ACEITO, ao
@@ -23,7 +27,8 @@ export default function ConselhoMontagemPage({ params }: { params: Promise<{ id:
   const { data: montagem, isLoading, isError } = useConselhoMontagem(id);
 
   if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando...</p>;
-  if (isError || !montagem) return <p className="p-6 text-sm text-red-600">Não foi possível carregar a montagem.</p>;
+  if (isError || !montagem)
+    return <p className="p-6 text-sm text-red-600">Não foi possível carregar a montagem.</p>;
 
   const gruposPorEquipe = agruparVagasPorEquipe(montagem.vagas as VagaMontagem[]);
 
@@ -41,7 +46,10 @@ export default function ConselhoMontagemPage({ params }: { params: Promise<{ id:
 
       <div className="grid gap-4 sm:grid-cols-2">
         {gruposPorEquipe.map((vagas) => (
-          <BlocoEquipe key={vagas[0].equipeId} vagas={vagas as (VagaMontagem & { alocacoes: Alocacao[] })[]} />
+          <BlocoEquipe
+            key={vagas[0].equipeId}
+            vagas={vagas as (VagaMontagem & { alocacoes: Alocacao[] })[]}
+          />
         ))}
       </div>
 
@@ -67,7 +75,10 @@ function BlocoEquipe({ vagas }: { vagas: (VagaMontagem & { alocacoes: Alocacao[]
             {vaga.alocacoes.length > 0 ? (
               <span className="space-x-1">
                 {vaga.alocacoes.map((alocacao) => (
-                  <Badge key={alocacao.id} variant={alocacao.status === 'ACEITO' ? 'default' : 'secondary'}>
+                  <Badge
+                    key={alocacao.id}
+                    variant={alocacao.status === 'ACEITO' ? 'default' : 'secondary'}
+                  >
                     {nomeAlocacao(alocacao)}
                   </Badge>
                 ))}
@@ -99,7 +110,8 @@ function ObservacoesPanel({ montagemId }: { montagemId: string }) {
           <div key={observacao.id} className="text-sm">
             <p>{observacao.texto}</p>
             <p className="text-xs text-muted-foreground">
-              {observacao.usuario.nome ?? 'Conselho'} · {new Date(observacao.createdAt).toLocaleString('pt-BR')}
+              {observacao.usuario.nome ?? 'Conselho'} ·{' '}
+              {new Date(observacao.createdAt).toLocaleString('pt-BR')}
             </p>
           </div>
         ))}

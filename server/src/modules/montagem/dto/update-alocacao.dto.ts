@@ -1,11 +1,4 @@
-import {
-  IsBoolean,
-  IsDateString,
-  IsEnum,
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator';
+import { IsBoolean, IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import { StatusConvite } from '@prisma/client';
 import { EmptyToUndefined } from '../../../common/transformers/empty-to-undefined.transformer';
 

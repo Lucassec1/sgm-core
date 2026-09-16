@@ -6,7 +6,14 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,7 +25,12 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ApiError } from '@/lib/api-client';
-import { useCandidatosJovens, useCoordenadoresSugeridos, useCreateAlocacao, useDeleteAlocacao } from '@/lib/hooks/use-montagens';
+import {
+  useCandidatosJovens,
+  useCoordenadoresSugeridos,
+  useCreateAlocacao,
+  useDeleteAlocacao,
+} from '@/lib/hooks/use-montagens';
 import { useFichasCasais } from '@/lib/hooks/use-fichas-casais';
 import type { Alocacao, StatusConvite, VagaMontagem } from '@/lib/types';
 
@@ -75,7 +87,9 @@ export function AlocarPessoaCombobox({
 }) {
   const [open, setOpen] = useState(false);
   const [conflito, setConflito] = useState<RepeticaoConflito | null>(null);
-  const [movimentacaoPendente, setMovimentacaoPendente] = useState<MovimentacaoPendente | null>(null);
+  const [movimentacaoPendente, setMovimentacaoPendente] = useState<MovimentacaoPendente | null>(
+    null,
+  );
 
   const createAlocacao = useCreateAlocacao(montagemId);
   const deleteAlocacao = useDeleteAlocacao(montagemId);
@@ -104,8 +118,16 @@ export function AlocarPessoaCombobox({
   const opcoesBase = ehCoordenacao
     ? tipoPessoa === 'JOVEM'
       ? [
-          ...(coordenadores.data?.grupoA.fichas ?? []).map((f) => ({ id: f.id, nome: f.nomeCompleto, grupo: 'A' as const })),
-          ...(coordenadores.data?.grupoB.fichas ?? []).map((f) => ({ id: f.id, nome: f.nomeCompleto, grupo: 'B' as const })),
+          ...(coordenadores.data?.grupoA.fichas ?? []).map((f) => ({
+            id: f.id,
+            nome: f.nomeCompleto,
+            grupo: 'A' as const,
+          })),
+          ...(coordenadores.data?.grupoB.fichas ?? []).map((f) => ({
+            id: f.id,
+            nome: f.nomeCompleto,
+            grupo: 'B' as const,
+          })),
         ]
       : [
           ...(coordenadores.data?.grupoA.fichasCasais ?? []).map((c) => ({
@@ -120,8 +142,16 @@ export function AlocarPessoaCombobox({
           })),
         ]
     : tipoPessoa === 'JOVEM'
-      ? (candidatosJovens.data ?? []).map((f) => ({ id: f.id, nome: f.nomeCompleto, grupo: undefined }))
-      : (candidatosCasais.data?.items ?? []).map((c) => ({ id: c.id, nome: `${c.nomeEle} e ${c.nomeEla}`, grupo: undefined }));
+      ? (candidatosJovens.data ?? []).map((f) => ({
+          id: f.id,
+          nome: f.nomeCompleto,
+          grupo: undefined,
+        }))
+      : (candidatosCasais.data?.items ?? []).map((c) => ({
+          id: c.id,
+          nome: `${c.nomeEle} e ${c.nomeEla}`,
+          grupo: undefined,
+        }));
 
   // Quem ainda não está em nenhuma equipe desse encontro aparece primeiro na lista — é
   // quem mais precisa de vaga; ordenação por prioridade (R5) e busca por texto continuam
@@ -153,7 +183,11 @@ export function AlocarPessoaCombobox({
   function selecionar(pessoaId: string, nome: string) {
     const antiga = alocacaoAtualDaPessoa(pessoaId);
     if (antiga) {
-      setMovimentacaoPendente({ pessoaId, nome, equipeAtual: nomeEquipeDaVaga(antiga.vagaMontagemId) });
+      setMovimentacaoPendente({
+        pessoaId,
+        nome,
+        equipeAtual: nomeEquipeDaVaga(antiga.vagaMontagemId),
+      });
       setOpen(false);
       return;
     }
@@ -177,9 +211,12 @@ export function AlocarPessoaCombobox({
 
       if (antiga) {
         await deleteAlocacao.mutateAsync(antiga.id);
-        toast(`${nome} movido de ${nomeEquipeDaVaga(antiga.vagaMontagemId)} para ${nomeEquipeDaVaga(vagaMontagemId)}`, {
-          action: { label: 'Desfazer', onClick: () => desfazer(nova.id, antiga) },
-        });
+        toast(
+          `${nome} movido de ${nomeEquipeDaVaga(antiga.vagaMontagemId)} para ${nomeEquipeDaVaga(vagaMontagemId)}`,
+          {
+            action: { label: 'Desfazer', onClick: () => desfazer(nova.id, antiga) },
+          },
+        );
       } else {
         toast.success(`${nome} alocado(a) na vaga.`, {
           action: { label: 'Desfazer', onClick: () => deleteAlocacao.mutate(nova.id) },
@@ -230,7 +267,9 @@ export function AlocarPessoaCombobox({
                       <div className="flex flex-col">
                         <span>{pessoa.nome}</span>
                         {pessoa.grupo === 'B' && (
-                          <span className="text-xs text-muted-foreground">Já foi Equipe Dirigente/Comando Geral</span>
+                          <span className="text-xs text-muted-foreground">
+                            Já foi Equipe Dirigente/Comando Geral
+                          </span>
                         )}
                         {jaAlocadaEm && (
                           <span className="text-xs text-muted-foreground">
@@ -247,20 +286,24 @@ export function AlocarPessoaCombobox({
         </PopoverContent>
       </Popover>
 
-      <AlertDialog open={!!movimentacaoPendente} onOpenChange={(v) => !v && setMovimentacaoPendente(null)}>
+      <AlertDialog
+        open={!!movimentacaoPendente}
+        onOpenChange={(v) => !v && setMovimentacaoPendente(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Mover pessoa de equipe?</AlertDialogTitle>
             <AlertDialogDescription>
-              {movimentacaoPendente?.nome} já está em {movimentacaoPendente?.equipeAtual}. Confirmar vai mover essa pessoa
-              pra cá, tirando de lá.
+              {movimentacaoPendente?.nome} já está em {movimentacaoPendente?.equipeAtual}. Confirmar
+              vai mover essa pessoa pra cá, tirando de lá.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (movimentacaoPendente) alocar(movimentacaoPendente.pessoaId, movimentacaoPendente.nome);
+                if (movimentacaoPendente)
+                  alocar(movimentacaoPendente.pessoaId, movimentacaoPendente.nome);
               }}
             >
               Mover

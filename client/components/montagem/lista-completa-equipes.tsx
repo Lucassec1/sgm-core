@@ -10,7 +10,10 @@ import type { Alocacao, VagaMontagem } from '@/lib/types';
 const STATUS_INATIVO = ['RECUSADO', 'DESISTIU', 'SUBSTITUIDO'];
 
 function nomeAlocacao(alocacao: Alocacao) {
-  return alocacao.ficha?.nomeCompleto ?? (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : '—');
+  return (
+    alocacao.ficha?.nomeCompleto ??
+    (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : '—')
+  );
 }
 
 function plural(n: number, singular: string, plural: string) {
@@ -23,7 +26,9 @@ function faltaDaEquipe(vagas: VagaMontagem[], alocacoesPorVaga: Map<string, Aloc
   let jovens = 0;
   let casais = 0;
   for (const vaga of vagas) {
-    const ativas = (alocacoesPorVaga.get(vaga.id) ?? []).filter((a) => !STATUS_INATIVO.includes(a.status));
+    const ativas = (alocacoesPorVaga.get(vaga.id) ?? []).filter(
+      (a) => !STATUS_INATIVO.includes(a.status),
+    );
     const j = ativas.filter((a) => a.tipoPessoa === 'JOVEM').length;
     const c = ativas.filter((a) => a.tipoPessoa === 'CASAL').length;
     jovens += Math.max(0, vaga.quantidadeRapazes + vaga.quantidadeMocas - j);
@@ -97,7 +102,9 @@ export function ListaCompletaEquipes({
                 <EquipeIcon slug={equipe.slug} nome={equipe.nome} size={20} />
                 <span>
                   {equipe.nome}{' '}
-                  <span className={`text-sm font-normal ${completa ? 'text-green-600 dark:text-green-500' : 'text-amber-600 dark:text-amber-500'}`}>
+                  <span
+                    className={`text-sm font-normal ${completa ? 'text-green-600 dark:text-green-500' : 'text-amber-600 dark:text-amber-500'}`}
+                  >
                     {completa ? '· completa' : `· faltam ${resumoFalta}`}
                   </span>
                 </span>

@@ -38,7 +38,8 @@ export default function TelaoPage({ params }: { params: Promise<{ id: string }> 
   const { data: montagem, isLoading, isError } = useTelaoMontagem(id);
 
   if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando...</p>;
-  if (isError || !montagem) return <p className="p-6 text-sm text-red-600">Não foi possível carregar a montagem.</p>;
+  if (isError || !montagem)
+    return <p className="p-6 text-sm text-red-600">Não foi possível carregar a montagem.</p>;
 
   const gruposPorEquipe = agruparPorEquipe(montagem.vagas);
 
@@ -60,7 +61,8 @@ export default function TelaoPage({ params }: { params: Promise<{ id: string }> 
       <div className="mb-6 text-center print:mb-8">
         <h1 className="text-2xl font-bold print:text-3xl">Quadro de Equipes</h1>
         <p className="text-muted-foreground print:text-black">
-          {montagem.numeroEncontro}º Encontro · {new Date(montagem.data).toLocaleDateString('pt-BR')}
+          {montagem.numeroEncontro}º Encontro ·{' '}
+          {new Date(montagem.data).toLocaleDateString('pt-BR')}
           {montagem.padroeiro && ` · ${montagem.padroeiro}`}
         </p>
       </div>
@@ -93,7 +95,9 @@ function BlocoEquipe({ vagas }: { vagas: TelaoVaga[] }) {
               {nomes.length > 0 ? (
                 <span>{nomes.join(', ')}</span>
               ) : (
-                <span className="italic text-muted-foreground print:text-black/60">a confirmar</span>
+                <span className="italic text-muted-foreground print:text-black/60">
+                  a confirmar
+                </span>
               )}
             </div>
           );

@@ -1,0 +1,17 @@
+{
+  "name": "sgm-core",
+  "private": true,
+  "description": "Raiz do monorepo — só ferramentas de formatação/hooks (server/ e client/ são projetos npm independentes, com dependências e testes próprios).",
+  "scripts": {
+    "prepare": "husky",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,md}": "prettier --write"
+  }
+}

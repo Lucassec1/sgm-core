@@ -90,7 +90,8 @@ export interface FichaCasalListResponse {
 
 export type StatusMontagem = 'EM_ANDAMENTO' | 'FINALIZADA';
 export type TipoPessoa = 'JOVEM' | 'CASAL';
-export type StatusConvite = 'RASCUNHO' | 'CONVIDADO' | 'ACEITO' | 'RECUSADO' | 'DESISTIU' | 'SUBSTITUIDO';
+export type StatusConvite =
+  'RASCUNHO' | 'CONVIDADO' | 'ACEITO' | 'RECUSADO' | 'DESISTIU' | 'SUBSTITUIDO';
 
 export interface Equipe {
   id: string;

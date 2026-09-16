@@ -1,11 +1,21 @@
+import './instrument';
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger } from 'nestjs-pino';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(Logger));
+
+  // contentSecurityPolicy desligada: essa API não serve HTML pro navegador do usuário final
+  // (o client Next.js é servido separado) — CSP existe pra proteger página renderizada, não
+  // faz sentido aqui e bloquearia os assets do Swagger UI em /docs sem trazer proteção real.
+  app.use(helmet({ contentSecurityPolicy: false }));
 
   app.use(cookieParser());
 

@@ -34,14 +34,18 @@ export default function MontagemPage() {
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               {new Date(emAndamento.data).toLocaleDateString('pt-BR')}
-              {emAndamento.padroeiro && ` · ${emAndamento.padroeiro}`} · {emAndamento.numeroJovensVivenciando} jovens vivenciando
+              {emAndamento.padroeiro && ` · ${emAndamento.padroeiro}`} ·{' '}
+              {emAndamento.numeroJovensVivenciando} jovens vivenciando
             </CardContent>
           </Card>
         </Link>
       )}
 
       {data && !emAndamento && !isLoading && (
-        <p className="text-sm text-muted-foreground">Nenhuma montagem em andamento. Clique em &quot;Nova Montagem&quot; pra abrir o quadro das 16 equipes.</p>
+        <p className="text-sm text-muted-foreground">
+          Nenhuma montagem em andamento. Clique em &quot;Nova Montagem&quot; pra abrir o quadro das
+          16 equipes.
+        </p>
       )}
 
       {finalizadas.length > 0 && (
@@ -52,7 +56,9 @@ export default function MontagemPage() {
               <Link key={montagem.id} href={`/montagem/${montagem.id}`}>
                 <Card className="transition-colors hover:bg-accent/50">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">{montagem.numeroEncontro}º Encontro</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      {montagem.numeroEncontro}º Encontro
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="text-xs text-muted-foreground">
                     {new Date(montagem.data).toLocaleDateString('pt-BR')}

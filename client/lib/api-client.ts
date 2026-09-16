@@ -109,7 +109,10 @@ export const apiClient = {
   baseUrl: API_URL,
 
   login(login: string, senha: string) {
-    return request<SessaoAtual>('/auth/login', { method: 'POST', body: JSON.stringify({ login, senha }) });
+    return request<SessaoAtual>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ login, senha }),
+    });
   },
 
   logout() {
@@ -149,7 +152,11 @@ export const apiClient = {
   async uploadFotoFicha(id: string, file: File) {
     const form = new FormData();
     form.append('file', file);
-    const res = await fetch(`${API_URL}/fichas/${id}/foto`, { method: 'POST', body: form, credentials: 'include' });
+    const res = await fetch(`${API_URL}/fichas/${id}/foto`, {
+      method: 'POST',
+      body: form,
+      credentials: 'include',
+    });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       const message = (body?.message as string) ?? `Erro ${res.status} ao enviar a foto`;
@@ -179,7 +186,10 @@ export const apiClient = {
   },
 
   updateFichaCasal(id: string, data: Partial<FichaCasal>) {
-    return request<FichaCasal>(`/fichas-casais/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+    return request<FichaCasal>(`/fichas-casais/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
   },
 
   deleteFichaCasal(id: string) {
@@ -193,7 +203,11 @@ export const apiClient = {
   async uploadFotoFichaCasal(id: string, file: File) {
     const form = new FormData();
     form.append('file', file);
-    const res = await fetch(`${API_URL}/fichas-casais/${id}/foto`, { method: 'POST', body: form, credentials: 'include' });
+    const res = await fetch(`${API_URL}/fichas-casais/${id}/foto`, {
+      method: 'POST',
+      body: form,
+      credentials: 'include',
+    });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       const message = (body?.message as string) ?? `Erro ${res.status} ao enviar a foto`;
@@ -242,7 +256,10 @@ export const apiClient = {
       usuario?: string;
     },
   ) {
-    return request<Alocacao>(`/montagens/${montagemId}/alocacoes`, { method: 'POST', body: JSON.stringify(data) });
+    return request<Alocacao>(`/montagens/${montagemId}/alocacoes`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 
   deleteAlocacao(montagemId: string, id: string) {
@@ -260,15 +277,22 @@ export const apiClient = {
       usuario?: string;
     },
   ) {
-    return request<Alocacao>(`/montagens/${montagemId}/alocacoes/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+    return request<Alocacao>(`/montagens/${montagemId}/alocacoes/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
   },
 
   listCandidatosJovens(montagemId: string, vagaMontagemId?: string) {
-    return request<Ficha[]>(`/montagens/${montagemId}/candidatos-jovens?${buildQuery({ vagaMontagemId })}`);
+    return request<Ficha[]>(
+      `/montagens/${montagemId}/candidatos-jovens?${buildQuery({ vagaMontagemId })}`,
+    );
   },
 
   coordenadoresSugeridos(montagemId: string, equipeId: string) {
-    return request<CoordenadoresSugeridos>(`/montagens/${montagemId}/equipes/${equipeId}/coordenadores-sugeridos`);
+    return request<CoordenadoresSugeridos>(
+      `/montagens/${montagemId}/equipes/${equipeId}/coordenadores-sugeridos`,
+    );
   },
 
   listListaSubstituicao(montagemId: string) {
@@ -277,7 +301,13 @@ export const apiClient = {
 
   createListaSubstituicaoItem(
     montagemId: string,
-    data: { tipoPessoa: 'JOVEM' | 'CASAL'; fichaId?: string; fichaCasalId?: string; nota?: string; usuario?: string },
+    data: {
+      tipoPessoa: 'JOVEM' | 'CASAL';
+      fichaId?: string;
+      fichaCasalId?: string;
+      nota?: string;
+      usuario?: string;
+    },
   ) {
     return request<ListaSubstituicaoItem>(`/montagens/${montagemId}/lista-substituicao`, {
       method: 'POST',
@@ -286,7 +316,9 @@ export const apiClient = {
   },
 
   deleteListaSubstituicaoItem(montagemId: string, id: string) {
-    return request<ListaSubstituicaoItem>(`/montagens/${montagemId}/lista-substituicao/${id}`, { method: 'DELETE' });
+    return request<ListaSubstituicaoItem>(`/montagens/${montagemId}/lista-substituicao/${id}`, {
+      method: 'DELETE',
+    });
   },
 
   listLog(montagemId: string) {
@@ -306,7 +338,11 @@ export const apiClient = {
     const form = new FormData();
     form.append('file', file);
     if (usuario) form.append('usuario', usuario);
-    const res = await fetch(`${API_URL}/montagens/${montagemId}/quadrantes`, { method: 'POST', body: form, credentials: 'include' });
+    const res = await fetch(`${API_URL}/montagens/${montagemId}/quadrantes`, {
+      method: 'POST',
+      body: form,
+      credentials: 'include',
+    });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       const message = (body?.message as string) ?? `Erro ${res.status} ao enviar o arquivo`;
@@ -320,7 +356,9 @@ export const apiClient = {
   },
 
   deleteQuadrante(montagemId: string, id: string) {
-    return request<QuadranteArquivo>(`/montagens/${montagemId}/quadrantes/${id}`, { method: 'DELETE' });
+    return request<QuadranteArquivo>(`/montagens/${montagemId}/quadrantes/${id}`, {
+      method: 'DELETE',
+    });
   },
 
   // Exportação simples (docs/producao.md, item 4) — link direto de download, mesmo padrão do
@@ -351,27 +389,39 @@ export const apiClient = {
         id: string;
         equipe: { id: string; nome: string; slug: string; ordem: number };
         cargo: { id: string; nome: string; ordem: number };
-        alocacoes: { id: string; ficha: { nomeCompleto: string } | null; fichaCasal: { nomeEle: string; nomeEla: string } | null }[];
+        alocacoes: {
+          id: string;
+          ficha: { nomeCompleto: string } | null;
+          fichaCasal: { nomeEle: string; nomeEla: string } | null;
+        }[];
       }[];
     }>(`/telao/montagens/${id}`);
   },
 
   // Conselho (R8) — leitura cross-paróquia de Montagem + observações.
   listParoquias() {
-    return request<{ id: string; nome: string; usuarios: { id: string; login: string; ativo: boolean }[] }[]>(
-      '/paroquias',
-    );
+    return request<
+      { id: string; nome: string; usuarios: { id: string; login: string; ativo: boolean }[] }[]
+    >('/paroquias');
   },
 
   createParoquia(data: { nome: string; login: string; senha: string }) {
-    return request<{ id: string; nome: string }>('/paroquias', { method: 'POST', body: JSON.stringify(data) });
+    return request<{ id: string; nome: string }>('/paroquias', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 
   resetCredenciaisParoquia(id: string, senha: string) {
-    return request<{ ok: true }>(`/paroquias/${id}/credenciais`, { method: 'PATCH', body: JSON.stringify({ senha }) });
+    return request<{ ok: true }>(`/paroquias/${id}/credenciais`, {
+      method: 'PATCH',
+      body: JSON.stringify({ senha }),
+    });
   },
 
-  conselhoListMontagens(params: { paroquiaId?: string; status?: string; page?: number; pageSize?: number } = {}) {
+  conselhoListMontagens(
+    params: { paroquiaId?: string; status?: string; page?: number; pageSize?: number } = {},
+  ) {
     return request<{
       items: (Omit<Montagem, 'vagas'> & { paroquia: { id: string; nome: string } })[];
       total: number;
@@ -390,9 +440,9 @@ export const apiClient = {
   },
 
   conselhoListObservacoes(montagemId: string) {
-    return request<{ id: string; texto: string; createdAt: string; usuario: { nome: string | null } }[]>(
-      `/conselho/montagens/${montagemId}/observacoes`,
-    );
+    return request<
+      { id: string; texto: string; createdAt: string; usuario: { nome: string | null } }[]
+    >(`/conselho/montagens/${montagemId}/observacoes`);
   },
 
   conselhoCriarObservacao(montagemId: string, texto: string) {

@@ -66,9 +66,14 @@ export class ListaSubstituicaoService {
   }
 
   async remove(montagemId: string, id: string) {
-    const item = await this.prisma.listaSubstituicao.findUnique({ where: { id }, include: ITEM_INCLUDE });
+    const item = await this.prisma.listaSubstituicao.findUnique({
+      where: { id },
+      include: ITEM_INCLUDE,
+    });
     if (!item || item.montagemId !== montagemId) {
-      throw new NotFoundException(`Item ${id} não encontrado na lista de substituição da montagem ${montagemId}`);
+      throw new NotFoundException(
+        `Item ${id} não encontrado na lista de substituição da montagem ${montagemId}`,
+      );
     }
 
     await this.prisma.$transaction(async (tx) => {

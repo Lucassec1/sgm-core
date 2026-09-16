@@ -66,7 +66,11 @@ export class FichasController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateFichaDto, @ParoquiaAtual() paroquiaId: string) {
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateFichaDto,
+    @ParoquiaAtual() paroquiaId: string,
+  ) {
     return this.fichasService.update(id, dto, paroquiaId);
   }
 
@@ -77,7 +81,9 @@ export class FichasController {
 
   @Post(':id/foto')
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiBody({
+    schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } },
+  })
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_FOTO_BYTES } }))
   uploadFoto(
     @Param('id') id: string,
@@ -93,7 +99,11 @@ export class FichasController {
   }
 
   @Get(':id/foto')
-  async streamFoto(@Param('id') id: string, @ParoquiaAtual() paroquiaId: string, @Res({ passthrough: true }) res: Response) {
+  async streamFoto(
+    @Param('id') id: string,
+    @ParoquiaAtual() paroquiaId: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const { stream, mimetype } = await this.fichasService.streamFoto(id, paroquiaId);
     res.set({ 'Content-Type': mimetype });
     return new StreamableFile(stream);

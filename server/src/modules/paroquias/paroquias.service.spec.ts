@@ -14,7 +14,12 @@ function criarPrismaMock() {
       findMany: jest.fn(),
       create: jest.fn(),
     },
-    $transaction: jest.fn((cb: any) => cb({ paroquia: { create: jest.fn().mockResolvedValue({ id: 'p1' }) }, usuario: { create: jest.fn() } })),
+    $transaction: jest.fn((cb: any) =>
+      cb({
+        paroquia: { create: jest.fn().mockResolvedValue({ id: 'p1' }) },
+        usuario: { create: jest.fn() },
+      }),
+    ),
   };
 }
 
@@ -37,7 +42,11 @@ describe('ParoquiasService', () => {
 
     it('cria paróquia + usuário numa transação', async () => {
       prisma.usuario.findUnique.mockResolvedValue(null);
-      const paroquia = await service.create({ nome: 'Paróquia X', login: 'nova', senha: 'senha-forte' });
+      const paroquia = await service.create({
+        nome: 'Paróquia X',
+        login: 'nova',
+        senha: 'senha-forte',
+      });
       expect(paroquia).toEqual({ id: 'p1' });
       expect(prisma.$transaction).toHaveBeenCalled();
     });

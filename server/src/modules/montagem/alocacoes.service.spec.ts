@@ -55,7 +55,9 @@ function criarPrismaMock() {
   };
   // Passthrough: roda o callback com o próprio mock no lugar do client transacional.
   mock.$transaction = jest.fn((arg: unknown) =>
-    typeof arg === 'function' ? (arg as (tx: unknown) => unknown)(mock) : Promise.all(arg as unknown[]),
+    typeof arg === 'function'
+      ? (arg as (tx: unknown) => unknown)(mock)
+      : Promise.all(arg as unknown[]),
   );
   return mock as Record<string, any>;
 }
@@ -68,13 +70,18 @@ describe('AlocacoesService', () => {
   beforeEach(() => {
     prisma = criarPrismaMock();
     logAtividade = { registrar: jest.fn().mockResolvedValue(undefined), listar: jest.fn() };
-    service = new AlocacoesService(prisma as unknown as PrismaService, logAtividade as unknown as LogAtividadeService);
+    service = new AlocacoesService(
+      prisma as unknown as PrismaService,
+      logAtividade as unknown as LogAtividadeService,
+    );
 
     // padrão "sem histórico nenhum" pras regras R2/R3, sobrescrito por teste quando precisar
     prisma.alocacao.count.mockResolvedValue(0);
     prisma.alocacao.findFirst.mockResolvedValue(null);
     prisma.alocacao.findMany.mockResolvedValue([]);
-    prisma.equipe.findUnique.mockResolvedValue(equipeFake({ slug: 'comando-geral', id: 'comando-geral-id' }));
+    prisma.equipe.findUnique.mockResolvedValue(
+      equipeFake({ slug: 'comando-geral', id: 'comando-geral-id' }),
+    );
   });
 
   function mockVaga(equipe: Equipe, cargo: Record<string, unknown>) {
@@ -92,7 +99,11 @@ describe('AlocacoesService', () => {
       prisma.alocacao.findFirst.mockResolvedValue({ id: 'antiga', status: StatusConvite.RECUSADO });
 
       await expect(
-        service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any),
+        service.create(MONTAGEM_ID, {
+          vagaMontagemId: VAGA_ID,
+          tipoPessoa: 'JOVEM',
+          fichaId: 'ficha-1',
+        } as any),
       ).rejects.toThrow(ForbiddenException);
       expect(prisma.alocacao.create).not.toHaveBeenCalled();
     });
@@ -101,7 +112,11 @@ describe('AlocacoesService', () => {
       mockVaga(equipeFake(), cargoFake());
       prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
 
-      await service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any);
+      await service.create(MONTAGEM_ID, {
+        vagaMontagemId: VAGA_ID,
+        tipoPessoa: 'JOVEM',
+        fichaId: 'ficha-1',
+      } as any);
       expect(prisma.alocacao.create).toHaveBeenCalled();
     });
   });
@@ -112,7 +127,11 @@ describe('AlocacoesService', () => {
       prisma.alocacao.count.mockResolvedValue(1);
 
       await expect(
-        service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any),
+        service.create(MONTAGEM_ID, {
+          vagaMontagemId: VAGA_ID,
+          tipoPessoa: 'JOVEM',
+          fichaId: 'ficha-1',
+        } as any),
       ).rejects.toThrow(ConflictException);
       expect(prisma.alocacao.create).not.toHaveBeenCalled();
     });
@@ -171,7 +190,11 @@ describe('AlocacoesService', () => {
       prisma.ficha.findUnique.mockResolvedValue({ id: 'ficha-1', jaFoiEquipeDirigente: false });
 
       await expect(
-        service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any),
+        service.create(MONTAGEM_ID, {
+          vagaMontagemId: VAGA_ID,
+          tipoPessoa: 'JOVEM',
+          fichaId: 'ficha-1',
+        } as any),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -195,28 +218,45 @@ describe('AlocacoesService', () => {
       prisma.ficha.findUnique.mockResolvedValue({ id: 'ficha-1', jaFoiEquipeDirigente: true });
       prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
 
-      await service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any);
+      await service.create(MONTAGEM_ID, {
+        vagaMontagemId: VAGA_ID,
+        tipoPessoa: 'JOVEM',
+        fichaId: 'ficha-1',
+      } as any);
       expect(prisma.alocacao.create).toHaveBeenCalled();
     });
 
     it('Grupo B: permite quem já serviu no Comando Geral', async () => {
       mockVaga(equipeAnimacao, cargoCoordenacao);
       prisma.ficha.findUnique.mockResolvedValue({ id: 'ficha-1', jaFoiEquipeDirigente: false });
-      prisma.equipe.findUnique.mockResolvedValue(equipeFake({ slug: 'comando-geral', id: 'comando-geral-id' }));
+      prisma.equipe.findUnique.mockResolvedValue(
+        equipeFake({ slug: 'comando-geral', id: 'comando-geral-id' }),
+      );
       prisma.alocacao.count.mockImplementation(async (args: any) => {
         return args.where.vagaMontagem.equipeId === 'comando-geral-id' ? 1 : 0;
       });
       prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
 
-      await service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any);
+      await service.create(MONTAGEM_ID, {
+        vagaMontagemId: VAGA_ID,
+        tipoPessoa: 'JOVEM',
+        fichaId: 'ficha-1',
+      } as any);
       expect(prisma.alocacao.create).toHaveBeenCalled();
     });
 
     it('coordenação de CASAL numa equipe comum não exige histórico (não é Visitação)', async () => {
-      mockVaga(equipeFake({ id: 'animacao-id', coordenacaoCasalExigeHistorico: false }), cargoCoordenacao);
+      mockVaga(
+        equipeFake({ id: 'animacao-id', coordenacaoCasalExigeHistorico: false }),
+        cargoCoordenacao,
+      );
       prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
 
-      await service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'CASAL', fichaCasalId: 'casal-1' } as any);
+      await service.create(MONTAGEM_ID, {
+        vagaMontagemId: VAGA_ID,
+        tipoPessoa: 'CASAL',
+        fichaCasalId: 'casal-1',
+      } as any);
 
       expect(prisma.alocacao.create).toHaveBeenCalled();
       expect(prisma.ficha.findUnique).not.toHaveBeenCalled();
@@ -224,12 +264,22 @@ describe('AlocacoesService', () => {
     });
 
     it('coordenação de CASAL na Visitação exige histórico (Grupo A/B) igual à de jovem', async () => {
-      mockVaga(equipeFake({ slug: 'visitacao', coordenacaoCasalExigeHistorico: true }), cargoCoordenacao);
+      mockVaga(
+        equipeFake({ slug: 'visitacao', coordenacaoCasalExigeHistorico: true }),
+        cargoCoordenacao,
+      );
       prisma.alocacao.count.mockResolvedValue(0);
-      prisma.fichaCasal.findUnique.mockResolvedValue({ id: 'casal-1', jaFoiEquipeDirigente: false });
+      prisma.fichaCasal.findUnique.mockResolvedValue({
+        id: 'casal-1',
+        jaFoiEquipeDirigente: false,
+      });
 
       await expect(
-        service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'CASAL', fichaCasalId: 'casal-1' } as any),
+        service.create(MONTAGEM_ID, {
+          vagaMontagemId: VAGA_ID,
+          tipoPessoa: 'CASAL',
+          fichaCasalId: 'casal-1',
+        } as any),
       ).rejects.toThrow(ForbiddenException);
     });
   });
@@ -237,8 +287,13 @@ describe('AlocacoesService', () => {
   describe('create/update — R4 (Círculos primeiro)', () => {
     it('bloqueia CONVIDADO numa equipe comum se os Círculos não fecharam', async () => {
       mockVaga(equipeFake({ bloqueiaConvitePosCirculos: true }), cargoFake());
-      prisma.equipe.findUnique.mockResolvedValue(equipeFake({ slug: 'circulos', id: 'circulos-id' }));
-      prisma.alocacao.findMany.mockResolvedValue([{ status: StatusConvite.ACEITO }, { status: StatusConvite.RASCUNHO }]);
+      prisma.equipe.findUnique.mockResolvedValue(
+        equipeFake({ slug: 'circulos', id: 'circulos-id' }),
+      );
+      prisma.alocacao.findMany.mockResolvedValue([
+        { status: StatusConvite.ACEITO },
+        { status: StatusConvite.RASCUNHO },
+      ]);
 
       await expect(
         service.create(MONTAGEM_ID, {
@@ -252,8 +307,13 @@ describe('AlocacoesService', () => {
 
     it('libera CONVIDADO quando todos os Círculos estão ACEITO', async () => {
       mockVaga(equipeFake({ bloqueiaConvitePosCirculos: true }), cargoFake());
-      prisma.equipe.findUnique.mockResolvedValue(equipeFake({ slug: 'circulos', id: 'circulos-id' }));
-      prisma.alocacao.findMany.mockResolvedValue([{ status: StatusConvite.ACEITO }, { status: StatusConvite.ACEITO }]);
+      prisma.equipe.findUnique.mockResolvedValue(
+        equipeFake({ slug: 'circulos', id: 'circulos-id' }),
+      );
+      prisma.alocacao.findMany.mockResolvedValue([
+        { status: StatusConvite.ACEITO },
+        { status: StatusConvite.ACEITO },
+      ]);
       prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
 
       await service.create(MONTAGEM_ID, {
@@ -290,12 +350,14 @@ describe('AlocacoesService', () => {
           montagem: { status: 'EM_ANDAMENTO' },
         },
       });
-      prisma.equipe.findUnique.mockResolvedValue(equipeFake({ slug: 'circulos', id: 'circulos-id' }));
+      prisma.equipe.findUnique.mockResolvedValue(
+        equipeFake({ slug: 'circulos', id: 'circulos-id' }),
+      );
       prisma.alocacao.findMany.mockResolvedValue([]);
 
-      await expect(service.update(MONTAGEM_ID, 'aloc-1', { status: StatusConvite.CONVIDADO } as any)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.update(MONTAGEM_ID, 'aloc-1', { status: StatusConvite.CONVIDADO } as any),
+      ).rejects.toThrow(ForbiddenException);
       expect(prisma.alocacao.update).not.toHaveBeenCalled();
     });
   });
@@ -325,7 +387,11 @@ describe('AlocacoesService', () => {
       mockVaga(equipeFake(), cargoFake());
       prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
 
-      await service.create(MONTAGEM_ID, { vagaMontagemId: VAGA_ID, tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any);
+      await service.create(MONTAGEM_ID, {
+        vagaMontagemId: VAGA_ID,
+        tipoPessoa: 'JOVEM',
+        fichaId: 'ficha-1',
+      } as any);
 
       expect(prisma.listaSubstituicao.deleteMany).toHaveBeenCalledWith({
         where: { montagemId: MONTAGEM_ID, fichaId: 'ficha-1' },
@@ -336,7 +402,12 @@ describe('AlocacoesService', () => {
       prisma.alocacao.findUnique.mockResolvedValue({
         id: 'aloc-1',
         substituidaPorId: 'aloc-2',
-        vagaMontagem: { montagemId: MONTAGEM_ID, equipe: equipeFake(), cargo: cargoFake(), montagem: { status: 'FINALIZADA' } },
+        vagaMontagem: {
+          montagemId: MONTAGEM_ID,
+          equipe: equipeFake(),
+          cargo: cargoFake(),
+          montagem: { status: 'FINALIZADA' },
+        },
       });
 
       const resultado = await service.findOne(MONTAGEM_ID, 'aloc-1');
@@ -347,7 +418,12 @@ describe('AlocacoesService', () => {
       prisma.alocacao.findUnique.mockResolvedValue({
         id: 'aloc-1',
         substituidaPorId: 'aloc-2',
-        vagaMontagem: { montagemId: MONTAGEM_ID, equipe: equipeFake(), cargo: cargoFake(), montagem: { status: 'EM_ANDAMENTO' } },
+        vagaMontagem: {
+          montagemId: MONTAGEM_ID,
+          equipe: equipeFake(),
+          cargo: cargoFake(),
+          montagem: { status: 'EM_ANDAMENTO' },
+        },
       });
 
       const resultado = await service.findOne(MONTAGEM_ID, 'aloc-1');

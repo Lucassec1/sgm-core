@@ -43,9 +43,7 @@ describe('ConselhoService', () => {
   describe('listarMontagens', () => {
     it('lista sem filtro de paroquiaId quando não informado', async () => {
       await service.listarMontagens({});
-      expect(prisma.montagem.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: {} }),
-      );
+      expect(prisma.montagem.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: {} }));
     });
 
     it('filtra por paroquiaId quando informado', async () => {
@@ -61,7 +59,9 @@ describe('ConselhoService', () => {
       prisma.montagem.findUnique.mockResolvedValue({ id: MONTAGEM_ID });
       await service.criarObservacao(MONTAGEM_ID, 'usuario-1', 'Observação de teste');
       expect(prisma.observacaoMontagem.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { montagemId: MONTAGEM_ID, usuarioId: 'usuario-1', texto: 'Observação de teste' } }),
+        expect.objectContaining({
+          data: { montagemId: MONTAGEM_ID, usuarioId: 'usuario-1', texto: 'Observação de teste' },
+        }),
       );
     });
 

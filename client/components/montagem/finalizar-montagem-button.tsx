@@ -54,7 +54,9 @@ export function FinalizarMontagemButton({
     .filter((e) => e.total > 0 && e.confirmadas < e.total);
 
   const totalVagas = gruposPorEquipe.flat().reduce((soma, v) => soma + totalDaVaga(v), 0);
-  const confirmadas = [...alocacoesPorVaga.values()].flat().filter((a) => a.status === 'ACEITO').length;
+  const confirmadas = [...alocacoesPorVaga.values()]
+    .flat()
+    .filter((a) => a.status === 'ACEITO').length;
 
   async function finalizar() {
     try {
@@ -90,19 +92,28 @@ export function FinalizarMontagemButton({
         Finalizar Montagem
       </Button>
 
-      <AlertDialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setCienteIncompletas(false); }}>
+      <AlertDialog
+        open={open}
+        onOpenChange={(v) => {
+          setOpen(v);
+          if (!v) setCienteIncompletas(false);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Finalizar montagem?</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <p>
-                  {confirmadas} de {totalVagas} vagas confirmadas (aceitas). Depois de finalizada, a distribuição vira
-                  somente leitura e o histórico de substituição deste encontro deixa de aparecer.
+                  {confirmadas} de {totalVagas} vagas confirmadas (aceitas). Depois de finalizada, a
+                  distribuição vira somente leitura e o histórico de substituição deste encontro
+                  deixa de aparecer.
                 </p>
                 {equipesIncompletas.length > 0 && (
                   <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
-                    <p className="font-medium">Essas equipes ainda não estão com a quantidade certa de pessoas:</p>
+                    <p className="font-medium">
+                      Essas equipes ainda não estão com a quantidade certa de pessoas:
+                    </p>
                     <ul className="mt-1 list-inside list-disc">
                       {equipesIncompletas.map((e) => (
                         <li key={e.nome}>
@@ -132,7 +143,10 @@ export function FinalizarMontagemButton({
 
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={finalizar} disabled={equipesIncompletas.length > 0 && !cienteIncompletas}>
+            <AlertDialogAction
+              onClick={finalizar}
+              disabled={equipesIncompletas.length > 0 && !cienteIncompletas}
+            >
               Finalizar
             </AlertDialogAction>
           </AlertDialogFooter>

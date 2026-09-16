@@ -70,24 +70,24 @@ Substitui o processo atual em planilha Excel + material impresso.
 
 Encontro com 233 pessoas (incluindo diretor espiritual — ver correção em `regras-imutaveis.md`) distribuídas em 16 equipes. Jovens = rapazes e moças; Casais = ECC (adultos).
 
-| Equipe | Pessoas |
-|---|---|
-| Comando Geral | 4 |
-| Eq. Espiritualizadora | 4 |
-| Eq. da Animação | 16 |
-| Eq. do Canto | 12 |
-| Eq. dos Círculos | 26 |
-| Eq. da Cozinha | 16 |
-| Eq. do Estacionamento | 12 |
-| Eq. da Faxina | 14 |
-| Eq. da Gráfica | 12 |
-| Eq. do Lanche | 12 |
-| Eq. da Liturgia e Vigília | 18 |
-| Eq. do Minimercado | 8 |
-| Eq. do Prover | 4 |
-| Eq. da Sala | 16 |
-| Eq. da Vigília Paroquial | 16 |
-| Eq. da Visitação | variável (~1 casal : 3 jovens vivenciando — ver `regras-imutaveis.md`) |
+| Equipe                    | Pessoas                                                                |
+| ------------------------- | ---------------------------------------------------------------------- |
+| Comando Geral             | 4                                                                      |
+| Eq. Espiritualizadora     | 4                                                                      |
+| Eq. da Animação           | 16                                                                     |
+| Eq. do Canto              | 12                                                                     |
+| Eq. dos Círculos          | 26                                                                     |
+| Eq. da Cozinha            | 16                                                                     |
+| Eq. do Estacionamento     | 12                                                                     |
+| Eq. da Faxina             | 14                                                                     |
+| Eq. da Gráfica            | 12                                                                     |
+| Eq. do Lanche             | 12                                                                     |
+| Eq. da Liturgia e Vigília | 18                                                                     |
+| Eq. do Minimercado        | 8                                                                      |
+| Eq. do Prover             | 4                                                                      |
+| Eq. da Sala               | 16                                                                     |
+| Eq. da Vigília Paroquial  | 16                                                                     |
+| Eq. da Visitação          | variável (~1 casal : 3 jovens vivenciando — ver `regras-imutaveis.md`) |
 
 A composição detalhada de cargos (coordenadores, apoio, equipe) por equipe está no documento original enviado pelo Segue-me — reproduzida integralmente na primeira mensagem desta conversa.
 

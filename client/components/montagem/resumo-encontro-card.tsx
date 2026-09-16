@@ -23,9 +23,13 @@ export function ResumoEncontroCard({ montagemId }: { montagemId: string }) {
 
   const anterioresComDuracao = resumo.historico.filter((h) => h.duracaoMs != null);
   const mediaAnterioresMs = anterioresComDuracao.length
-    ? anterioresComDuracao.reduce((soma, h) => soma + (h.duracaoMs as number), 0) / anterioresComDuracao.length
+    ? anterioresComDuracao.reduce((soma, h) => soma + (h.duracaoMs as number), 0) /
+      anterioresComDuracao.length
     : null;
-  const linhaDoTempo = [...resumo.historico, { numeroEncontro: resumo.numeroEncontro, duracaoMs: resumo.duracaoMs }];
+  const linhaDoTempo = [
+    ...resumo.historico,
+    { numeroEncontro: resumo.numeroEncontro, duracaoMs: resumo.duracaoMs },
+  ];
 
   return (
     <Card>
@@ -42,14 +46,18 @@ export function ResumoEncontroCard({ montagemId }: { montagemId: string }) {
           <p className="text-xs text-muted-foreground">Tempo até finalizar</p>
           <p className="text-2xl font-semibold">{formatarDuracao(resumo.duracaoMs)}</p>
           {mediaAnterioresMs != null && (
-            <p className="text-xs text-muted-foreground">média dos anteriores: {formatarDuracao(mediaAnterioresMs)}</p>
+            <p className="text-xs text-muted-foreground">
+              média dos anteriores: {formatarDuracao(mediaAnterioresMs)}
+            </p>
           )}
         </div>
         <div>
           <p className="text-xs text-muted-foreground">Equipe com mais movimentação</p>
           <p className="text-lg font-medium">{resumo.equipeMaisMovimentada?.nome ?? '—'}</p>
           {resumo.equipeMaisMovimentada && (
-            <p className="text-xs text-muted-foreground">{resumo.equipeMaisMovimentada.movimentacoes} idas e vindas</p>
+            <p className="text-xs text-muted-foreground">
+              {resumo.equipeMaisMovimentada.movimentacoes} idas e vindas
+            </p>
           )}
         </div>
         <div>
@@ -67,7 +75,11 @@ export function ResumoEncontroCard({ montagemId }: { montagemId: string }) {
           {linhaDoTempo.map((h) => (
             <span
               key={h.numeroEncontro}
-              className={h.numeroEncontro === resumo.numeroEncontro ? 'font-semibold' : 'text-muted-foreground'}
+              className={
+                h.numeroEncontro === resumo.numeroEncontro
+                  ? 'font-semibold'
+                  : 'text-muted-foreground'
+              }
             >
               nº {h.numeroEncontro}: {formatarDuracao(h.duracaoMs)}
             </span>

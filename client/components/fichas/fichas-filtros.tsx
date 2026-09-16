@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useEncontros } from '@/lib/hooks/use-fichas';
 
 export interface FiltrosFichas {
@@ -13,7 +19,13 @@ export interface FiltrosFichas {
 
 // Busca por nome (texto livre) + Select de encontro + Select de status —
 // ver docs/ux-e-fluxos.md, seção 2 ("Lista de Fichas").
-export function FichasFiltros({ value, onChange }: { value: FiltrosFichas; onChange: (value: FiltrosFichas) => void }) {
+export function FichasFiltros({
+  value,
+  onChange,
+}: {
+  value: FiltrosFichas;
+  onChange: (value: FiltrosFichas) => void;
+}) {
   const [nome, setNome] = useState(value.nome ?? '');
   const { data: encontros } = useEncontros();
 
@@ -30,7 +42,9 @@ export function FichasFiltros({ value, onChange }: { value: FiltrosFichas; onCha
 
       <Select
         value={value.numeroEncontro ? String(value.numeroEncontro) : 'todos'}
-        onValueChange={(v) => onChange({ ...value, numeroEncontro: v === 'todos' ? undefined : Number(v) })}
+        onValueChange={(v) =>
+          onChange({ ...value, numeroEncontro: v === 'todos' ? undefined : Number(v) })
+        }
       >
         <SelectTrigger className="w-40">
           <SelectValue placeholder="Encontro" />
@@ -47,7 +61,9 @@ export function FichasFiltros({ value, onChange }: { value: FiltrosFichas; onCha
 
       <Select
         value={value.situacao ?? 'todos'}
-        onValueChange={(v) => onChange({ ...value, situacao: v === 'todos' ? undefined : (v as 'ATIVA' | 'INATIVA') })}
+        onValueChange={(v) =>
+          onChange({ ...value, situacao: v === 'todos' ? undefined : (v as 'ATIVA' | 'INATIVA') })
+        }
       >
         <SelectTrigger className="w-36">
           <SelectValue placeholder="Status" />

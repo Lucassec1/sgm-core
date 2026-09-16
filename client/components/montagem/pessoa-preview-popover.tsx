@@ -25,7 +25,10 @@ export function PessoaPreviewPopover({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" className="block w-full truncate text-left hover:underline underline-offset-2">
+        <button
+          type="button"
+          className="block w-full truncate text-left hover:underline underline-offset-2"
+        >
           {children}
         </button>
       </PopoverTrigger>
@@ -67,7 +70,10 @@ export function PessoaPreviewPopover({
                 </p>
               </div>
             </div>
-            <Link href={`/fichas/casais/${fichaCasal.id}`} className="text-xs text-primary hover:underline">
+            <Link
+              href={`/fichas/casais/${fichaCasal.id}`}
+              className="text-xs text-primary hover:underline"
+            >
               Ver ficha completa
             </Link>
           </div>

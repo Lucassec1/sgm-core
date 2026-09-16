@@ -37,7 +37,9 @@ export function AppSidebar() {
             height={32}
             className="h-8 w-8 shrink-0 object-contain"
           />
-          <span className="text-sm font-semibold group-data-[collapsible=icon]:hidden">SGM Core</span>
+          <span className="text-sm font-semibold group-data-[collapsible=icon]:hidden">
+            SGM Core
+          </span>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -49,16 +51,17 @@ export function AppSidebar() {
                 const isCasais = item.url === '/fichas/casais';
                 const isActive = isCasais
                   ? pathname.startsWith('/fichas/casais')
-                  : pathname === '/fichas' || (pathname.startsWith('/fichas/') && !pathname.startsWith('/fichas/casais'));
+                  : pathname === '/fichas' ||
+                    (pathname.startsWith('/fichas/') && !pathname.startsWith('/fichas/casais'));
                 return (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                      <Link href={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 );
               })}
             </SidebarMenu>
@@ -70,7 +73,11 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname.startsWith('/montagem')} tooltip="Montagem">
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith('/montagem')}
+                  tooltip="Montagem"
+                >
                   <Link href="/montagem">
                     <LayoutGrid />
                     <span>Montagem</span>

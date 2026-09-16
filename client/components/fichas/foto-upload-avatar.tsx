@@ -53,7 +53,9 @@ export function FotoUploadAvatar({
     <div className="group relative shrink-0">
       <Avatar className="h-20 w-20">
         <AvatarImage src={fotoUrl} alt={nome} />
-        <AvatarFallback className="text-lg">{(iniciais || nome || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
+        <AvatarFallback className="text-lg">
+          {(iniciais || nome || '??').slice(0, 2).toUpperCase()}
+        </AvatarFallback>
       </Avatar>
 
       <input
@@ -73,7 +75,11 @@ export function FotoUploadAvatar({
         aria-label="Trocar foto"
         title="Trocar foto"
       >
-        {isUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
+        {isUploading ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <Camera className="h-3 w-3" />
+        )}
       </button>
 
       {fotoUrl && (

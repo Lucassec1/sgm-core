@@ -28,7 +28,8 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
   const [equipeSelecionadaId, setEquipeSelecionadaId] = useState<string | null>(null);
 
   if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando...</p>;
-  if (isError || !montagem) return <p className="p-6 text-sm text-red-600">Não foi possível carregar a montagem.</p>;
+  if (isError || !montagem)
+    return <p className="p-6 text-sm text-red-600">Não foi possível carregar a montagem.</p>;
 
   const gruposPorEquipe = agruparVagasPorEquipe(montagem.vagas);
   const alocacoesPorVaga = new Map<string, Alocacao[]>();
@@ -40,10 +41,10 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
 
   const grupoCirculos = gruposPorEquipe.find((vagas) => vagas[0].equipe.ehCirculos);
   const circulosFechado = grupoCirculos
-    ? grupoCirculos
+    ? grupoCirculos.flatMap((v) => alocacoesPorVaga.get(v.id) ?? []).length > 0 &&
+      grupoCirculos
         .flatMap((v) => alocacoesPorVaga.get(v.id) ?? [])
-        .length > 0 &&
-      grupoCirculos.flatMap((v) => alocacoesPorVaga.get(v.id) ?? []).every((a) => a.status === 'ACEITO')
+        .every((a) => a.status === 'ACEITO')
     : false;
 
   return (
@@ -55,8 +56,10 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
           <h1 className="text-lg font-semibold">{montagem.numeroEncontro}º Encontro</h1>
           <p className="text-sm text-muted-foreground">
             {new Date(montagem.data).toLocaleDateString('pt-BR')}
-            {montagem.padroeiro && ` · ${montagem.padroeiro}`} · {montagem.numeroJovensVivenciando} jovens vivenciando
-            {montagem.ehImplantacao && ` (implantação${montagem.paroquiaAfilhadaNome ? ` — ${montagem.paroquiaAfilhadaNome}` : ''})`}
+            {montagem.padroeiro && ` · ${montagem.padroeiro}`} · {montagem.numeroJovensVivenciando}{' '}
+            jovens vivenciando
+            {montagem.ehImplantacao &&
+              ` (implantação${montagem.paroquiaAfilhadaNome ? ` — ${montagem.paroquiaAfilhadaNome}` : ''})`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -70,7 +73,9 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
             </Link>
           </Button>
           <LogAtividadeDrawer montagemId={id} />
-          {montagem.status === 'EM_ANDAMENTO' && <EditarTamanhoEncontroDialog montagem={montagem} />}
+          {montagem.status === 'EM_ANDAMENTO' && (
+            <EditarTamanhoEncontroDialog montagem={montagem} />
+          )}
           <FinalizarMontagemButton
             montagemId={id}
             status={montagem.status}
@@ -94,7 +99,8 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
         <TabsContent value="equipes" className="space-y-4">
           {!circulosFechado && (
             <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
-              Aguardando a Eq. dos Círculos fechar (todos aceitos) — as outras equipes já podem ser rascunhadas, mas o convite delas só é liberado depois.
+              Aguardando a Eq. dos Círculos fechar (todos aceitos) — as outras equipes já podem ser
+              rascunhadas, mas o convite delas só é liberado depois.
             </div>
           )}
 

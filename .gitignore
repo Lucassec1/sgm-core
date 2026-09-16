@@ -1,6 +1,9 @@
 # OS
 .DS_Store
 
+# Dependencies (root — husky/lint-staged/prettier; server/ e client/ têm o node_modules próprio)
+/node_modules/
+
 # IDE
 .vscode/
 .idea/

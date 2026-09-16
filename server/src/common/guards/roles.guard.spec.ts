@@ -13,27 +13,39 @@ function contexto(user: UsuarioAutenticado | undefined): ExecutionContext {
 
 describe('RolesGuard', () => {
   it('deixa passar quando a rota não declara @Roles', () => {
-    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(undefined) } as unknown as Reflector;
+    const reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue(undefined),
+    } as unknown as Reflector;
     const guard = new RolesGuard(reflector);
-    expect(guard.canActivate(contexto({ id: 'u1', role: 'PAROQUIA', paroquiaId: 'p1' }))).toBe(true);
-  });
-
-  it('deixa passar quando a role bate', () => {
-    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['CONSELHO']) } as unknown as Reflector;
-    const guard = new RolesGuard(reflector);
-    expect(guard.canActivate(contexto({ id: 'u1', role: 'CONSELHO', paroquiaId: null }))).toBe(true);
-  });
-
-  it('bloqueia quando a role não bate', () => {
-    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['CONSELHO']) } as unknown as Reflector;
-    const guard = new RolesGuard(reflector);
-    expect(() => guard.canActivate(contexto({ id: 'u1', role: 'PAROQUIA', paroquiaId: 'p1' }))).toThrow(
-      ForbiddenException,
+    expect(guard.canActivate(contexto({ id: 'u1', role: 'PAROQUIA', paroquiaId: 'p1' }))).toBe(
+      true,
     );
   });
 
+  it('deixa passar quando a role bate', () => {
+    const reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue(['CONSELHO']),
+    } as unknown as Reflector;
+    const guard = new RolesGuard(reflector);
+    expect(guard.canActivate(contexto({ id: 'u1', role: 'CONSELHO', paroquiaId: null }))).toBe(
+      true,
+    );
+  });
+
+  it('bloqueia quando a role não bate', () => {
+    const reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue(['CONSELHO']),
+    } as unknown as Reflector;
+    const guard = new RolesGuard(reflector);
+    expect(() =>
+      guard.canActivate(contexto({ id: 'u1', role: 'PAROQUIA', paroquiaId: 'p1' })),
+    ).toThrow(ForbiddenException);
+  });
+
   it('bloqueia requisição sem usuário autenticado', () => {
-    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['CONSELHO']) } as unknown as Reflector;
+    const reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue(['CONSELHO']),
+    } as unknown as Reflector;
     const guard = new RolesGuard(reflector);
     expect(() => guard.canActivate(contexto(undefined))).toThrow(ForbiddenException);
   });

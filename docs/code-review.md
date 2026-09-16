@@ -12,12 +12,13 @@ Base sólida pro estágio em que está: as regras de negócio mais arriscadas (R
 rastreabilidade clara e testadas de propósito, não por acaso.
 
 **Rodada de ajustes (07/09/2026):** os 7 riscos numerados foram tratados. Corrigidos: doc do `CLAUDE.md`
-+ comentário do `schema.prisma` (Alta 1), todas as escritas compostas agora em `prisma.$transaction`
-(Alta 2), CORS com allow-list por env (Alta 3), checagem+escrita das regras R1-R4 numa transação
-`Serializable` com retry (Média 4), harness de teste do client (Vitest + Testing Library) com job no CI
-(Média 5), `@Max(100)` nos 3 DTOs de paginação (Média 6). Parcial: `npm audit` (Média 7) — aplicado o
-`npm audit fix` não-breaking (client 3→2 avisos; server segue em 26, todo o resto pede major). O checklist
-de 5 itens de hardening e o isolamento por paróquia seguem como "decidir depois", sem mudança.
+
+- comentário do `schema.prisma` (Alta 1), todas as escritas compostas agora em `prisma.$transaction`
+  (Alta 2), CORS com allow-list por env (Alta 3), checagem+escrita das regras R1-R4 numa transação
+  `Serializable` com retry (Média 4), harness de teste do client (Vitest + Testing Library) com job no CI
+  (Média 5), `@Max(100)` nos 3 DTOs de paginação (Média 6). Parcial: `npm audit` (Média 7) — aplicado o
+  `npm audit fix` não-breaking (client 3→2 avisos; server segue em 26, todo o resto pede major). O checklist
+  de 5 itens de hardening e o isolamento por paróquia seguem como "decidir depois", sem mudança.
 
 ---
 
@@ -51,9 +52,10 @@ de 5 itens de hardening e o isolamento por paróquia seguem como "decidir depois
 ## Riscos — prioridade alta
 
 ### 1. CLAUDE.md descreve um módulo que não existe mais
+
 **Onde:** `CLAUDE.md:39`, `server/prisma/schema.prisma:2`
 
-`CLAUDE.md` diz "*Módulo Montagem: não iniciado — nem schema, nem backend, nem frontend*". Mas o módulo tem
+`CLAUDE.md` diz "_Módulo Montagem: não iniciado — nem schema, nem backend, nem frontend_". Mas o módulo tem
 schema completo (Equipe, Cargo, Montagem, VagaMontagem, Alocacao, ListaSubstituicao, LogAtividade),
 7 migrations, 4 controllers, 5 services implementando R1-R9 e 716 linhas de teste. O mesmo tipo de defasagem
 aparece no topo do `schema.prisma` ("Ainda sem models") — comentário do primeiro commit, nunca atualizado.
@@ -67,6 +69,7 @@ Montagem: quase completo"). Nesta rodada o comentário do topo de `server/prisma
 por uma linha que descreve o schema real e aponta pras Services / `docs/regras-imutaveis.md`.
 
 ### 2. Nenhuma escrita composta usa transação
+
 **Onde:** `grep "$transaction"` → 0 ocorrências no projeto inteiro
 
 Em `MontagensService.create()`: cria a Montagem, depois `vagaMontagem.createMany`, depois o log de
@@ -84,6 +87,7 @@ primeiro já ter comitado, a ação fica sem rastro de auditoria.
 no mock do Prisma; 44 testes do server passando.
 
 ### 3. CORS liberado para qualquer origem
+
 **Onde:** `server/src/main.ts:15`
 
 `app.enableCors()` é chamado sem opções, o que no Nest reflete qualquer `Origin` recebido. Não causa
@@ -100,6 +104,7 @@ que o client for pra um domínio real.
 ## Riscos — prioridade média
 
 ### 4. Corrida entre ler e decidir nas regras R1-R3
+
 **Onde:** `server/src/modules/montagem/alocacoes.service.ts` — `verificarRepeticaoEquipe` / `verificarCoordenacao`
 
 `AlocacoesService.create()` faz `SELECT`s de checagem e só depois o `INSERT` — sem lock de linha nem
@@ -115,6 +120,7 @@ Os métodos privados `verificar*` e `getVagaOuFalha` passaram a receber o client
 (P2034). Não foi adicionada constraint no schema — a transação Serializable cobre o caso.
 
 ### 5. Zero teste automatizado no client
+
 **Onde:** `client/package.json` (sem test runner), `.github/workflows/ci.yml` (job "client" só lint+typecheck+build)
 
 Convive com formulários grandes e validação condicional (`ficha-form.tsx`, `ficha-casal-form.tsx`) e com o
@@ -129,6 +135,7 @@ cobrir os fluxos caros que a revisão citou (formulários, tratamento do `409` d
 está no lugar.
 
 ### 6. Paginação sem limite máximo
+
 **Onde:** `fichas/dto/query-fichas.dto.ts:30`, `fichas-casais/dto/query-fichas-casais.dto.ts:25`,
 `montagem/dto/query-montagens.dto.ts:22`
 
@@ -139,6 +146,7 @@ passa direto pela validação. Fácil de fechar agora (`@Max(100)`) antes que o 
 (`query-fichas.dto.ts`, `query-fichas-casais.dto.ts`, `query-montagens.dto.ts`).
 
 ### 7. Dependências com vulnerabilidades conhecidas
+
 **Onde:** `npm audit` — server: 14 (7 altas) · client: 3 (3 altas)
 
 Server: `multer` (via `@nestjs/platform-express`) com avisos de DoS; `mysql2` instalado transitivamente

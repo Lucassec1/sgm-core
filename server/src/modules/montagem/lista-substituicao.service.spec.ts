@@ -22,7 +22,9 @@ function criarPrismaMock() {
   };
   // Passthrough: roda o callback com o próprio mock no lugar do client transacional.
   mock.$transaction = jest.fn((arg: unknown) =>
-    typeof arg === 'function' ? (arg as (tx: unknown) => unknown)(mock) : Promise.all(arg as unknown[]),
+    typeof arg === 'function'
+      ? (arg as (tx: unknown) => unknown)(mock)
+      : Promise.all(arg as unknown[]),
   );
   return mock as Record<string, any>;
 }
@@ -43,20 +45,34 @@ describe('ListaSubstituicaoService', () => {
 
   describe('create', () => {
     it('confirma que a montagem existe antes de criar', async () => {
-      prisma.listaSubstituicao.create.mockResolvedValue({ id: 'item-1', ficha: { nomeCompleto: 'João' }, fichaCasal: null });
+      prisma.listaSubstituicao.create.mockResolvedValue({
+        id: 'item-1',
+        ficha: { nomeCompleto: 'João' },
+        fichaCasal: null,
+      });
 
       await service.create(MONTAGEM_ID, { tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any);
 
       expect(prisma.montagem.findUnique).toHaveBeenCalledWith({ where: { id: MONTAGEM_ID } });
       expect(prisma.listaSubstituicao.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ montagemId: MONTAGEM_ID, fichaId: 'ficha-1' }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ montagemId: MONTAGEM_ID, fichaId: 'ficha-1' }),
+        }),
       );
     });
 
     it('registra no log de atividade (R9) com o nome da pessoa', async () => {
-      prisma.listaSubstituicao.create.mockResolvedValue({ id: 'item-1', ficha: { nomeCompleto: 'João Silva' }, fichaCasal: null });
+      prisma.listaSubstituicao.create.mockResolvedValue({
+        id: 'item-1',
+        ficha: { nomeCompleto: 'João Silva' },
+        fichaCasal: null,
+      });
 
-      await service.create(MONTAGEM_ID, { tipoPessoa: 'JOVEM', fichaId: 'ficha-1', usuario: 'Ana' } as any);
+      await service.create(MONTAGEM_ID, {
+        tipoPessoa: 'JOVEM',
+        fichaId: 'ficha-1',
+        usuario: 'Ana',
+      } as any);
 
       expect(logAtividade.registrar).toHaveBeenCalledWith(
         MONTAGEM_ID,
@@ -69,12 +85,15 @@ describe('ListaSubstituicaoService', () => {
 
     it('traduz violação de unicidade (pessoa já está na lista) em ConflictException', async () => {
       prisma.listaSubstituicao.create.mockRejectedValue(
-        new Prisma.PrismaClientKnownRequestError('duplicado', { code: 'P2002', clientVersion: '7.9.1' }),
+        new Prisma.PrismaClientKnownRequestError('duplicado', {
+          code: 'P2002',
+          clientVersion: '7.9.1',
+        }),
       );
 
-      await expect(service.create(MONTAGEM_ID, { tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(
+        service.create(MONTAGEM_ID, { tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any),
+      ).rejects.toThrow(ConflictException);
     });
   });
 
@@ -86,7 +105,10 @@ describe('ListaSubstituicaoService', () => {
 
       expect(prisma.montagem.findUnique).toHaveBeenCalledWith({ where: { id: MONTAGEM_ID } });
       expect(prisma.listaSubstituicao.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { montagemId: MONTAGEM_ID }, orderBy: { createdAt: 'asc' } }),
+        expect.objectContaining({
+          where: { montagemId: MONTAGEM_ID },
+          orderBy: { createdAt: 'asc' },
+        }),
       );
       expect(itens).toEqual([{ id: 'item-1' }]);
     });
@@ -114,7 +136,10 @@ describe('ListaSubstituicaoService', () => {
     });
 
     it('rejeita quando o item não existe ou é de outra montagem', async () => {
-      prisma.listaSubstituicao.findUnique.mockResolvedValue({ id: 'item-1', montagemId: 'outra-montagem' });
+      prisma.listaSubstituicao.findUnique.mockResolvedValue({
+        id: 'item-1',
+        montagemId: 'outra-montagem',
+      });
 
       await expect(service.remove(MONTAGEM_ID, 'item-1')).rejects.toThrow(NotFoundException);
       expect(prisma.listaSubstituicao.delete).not.toHaveBeenCalled();

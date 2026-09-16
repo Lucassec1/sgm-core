@@ -8,11 +8,11 @@ services:
       POSTGRES_PASSWORD: sgm
       POSTGRES_DB: sgm_core
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - sgm-core-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sgm -d sgm_core"]
+      test: ['CMD-SHELL', 'pg_isready -U sgm -d sgm_core']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -28,7 +28,7 @@ services:
     environment:
       DATABASE_URL: postgresql://sgm:sgm@postgres:5432/sgm_core?schema=public
     ports:
-      - "3001:3001"
+      - '3001:3001'
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,7 +47,7 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3001
     ports:
-      - "3000:3000"
+      - '3000:3000'
     depends_on:
       - server
     volumes:
