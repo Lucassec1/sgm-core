@@ -16,7 +16,10 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Exclui: /login (senão ninguém consegue nem chegar no form), assets do Next, e o modo
-  // Telão (rota pública de propósito — ver docs/propostas.md, proposta #5).
-  matcher: ['/((?!login|_next/static|_next/image|favicon.ico|montagem/.*/telao).*)'],
+  // Exclui: /login (senão ninguém consegue nem chegar no form), internals do Next, qualquer
+  // arquivo estático de /public (logo, ícones de equipe, sw.js — este último nem pode ser
+  // redirecionado, é regra da própria spec de Service Workers: um path com extensão, tipo
+  // "algo.ext", nunca é uma página), e o modo Telão (rota pública de propósito — ver
+  // docs/propostas.md, proposta #5).
+  matcher: ['/((?!login|_next/static|_next/image|montagem/.*/telao|.*\\..*).*)'],
 };
