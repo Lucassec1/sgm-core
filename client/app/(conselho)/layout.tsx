@@ -1,17 +1,41 @@
+'use client';
+
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { LogoutButton } from '@/components/logout-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Toaster } from '@/components/ui/sonner';
-import { obterSessaoServidor } from '@/lib/sessao-servidor';
+import { useSessao } from '@/lib/auth-context';
 
 // Grupo (conselho) = área exclusiva de conta CONSELHO (R8) — só leitura de Montagem de
 // qualquer paróquia + observações; NÃO reusa a Sidebar do grupo (app) porque essa lista
 // Fichas, que o Conselho não pode acessar.
-export default async function ConselhoLayout({ children }: { children: React.ReactNode }) {
-  const sessao = await obterSessaoServidor();
-  if (!sessao) redirect('/login');
-  if (sessao.role !== 'CONSELHO') redirect('/');
+//
+// Checagem de sessão client-side — ver comentário equivalente em (app)/layout.tsx sobre por
+// que não dá pra fazer isso no servidor quando client e server ficam em domínios diferentes.
+export default function ConselhoLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const { data: sessao, isLoading, isError } = useSessao();
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (isError || !sessao) {
+      router.replace('/login');
+      return;
+    }
+    if (sessao.role !== 'CONSELHO') {
+      router.replace('/');
+    }
+  }, [isLoading, isError, sessao, router]);
+
+  if (isLoading || isError || !sessao || sessao.role !== 'CONSELHO') {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        Carregando...
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
