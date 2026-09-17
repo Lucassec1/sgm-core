@@ -11,7 +11,6 @@ jest.mock('../../common/uploads/foto-storage', () => ({
   salvarFoto: jest.fn(),
   removerFoto: jest.fn(),
   encontrarFoto: jest.fn(),
-  streamFoto: jest.fn(),
 }));
 
 const FICHA_ID = 'ficha-1';
@@ -124,14 +123,12 @@ describe('FichasService — upload de foto', () => {
 
     it('retorna o stream e o mimetype quando a foto existe', async () => {
       (fotoStorage.encontrarFoto as jest.Mock).mockResolvedValue({
-        caminho: '/x/ficha-1.jpg',
+        stream: 'stream-fake',
         mimetype: 'image/jpeg',
       });
-      (fotoStorage.streamFoto as jest.Mock).mockReturnValue('stream-fake');
 
       const resultado = await service.streamFoto(FICHA_ID, PAROQUIA_ID);
 
-      expect(fotoStorage.streamFoto).toHaveBeenCalledWith('/x/ficha-1.jpg');
       expect(resultado).toEqual({ stream: 'stream-fake', mimetype: 'image/jpeg' });
     });
   });

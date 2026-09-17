@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
@@ -8,16 +7,14 @@ import {
   mimetypeAceito,
   removerFoto as removerArquivoFoto,
   salvarFoto,
-  streamFoto as streamArquivoFoto,
 } from '../../common/uploads/foto-storage';
 import { CreateFichaDto } from './dto/create-ficha.dto';
 import { UpdateFichaDto } from './dto/update-ficha.dto';
 import { QueryFichasDto } from './dto/query-fichas.dto';
 import { toCsv } from '../../common/export/csv.util';
 
-// UPLOADS_DIR é o mesmo diretório-raiz usado pelos Quadrantes (server/uploads/ em dev, um
-// volume em produção) — cada tipo de arquivo mora no seu subdiretório.
-const FOTOS_DIR = join(process.env.UPLOADS_DIR || join(process.cwd(), 'uploads'), 'fichas');
+// Prefixo da chave no S3 (ver common/uploads/foto-storage.ts) — cada tipo de ficha no seu.
+const FOTOS_PREFIXO = 'fichas';
 
 @Injectable()
 export class FichasService {
@@ -118,7 +115,7 @@ export class FichasService {
 
   async remove(id: string, paroquiaId: string) {
     await this.findOne(id, paroquiaId);
-    await removerArquivoFoto(FOTOS_DIR, id);
+    await removerArquivoFoto(FOTOS_PREFIXO, id);
     return this.prisma.ficha.delete({ where: { id } });
   }
 
@@ -134,21 +131,21 @@ export class FichasService {
       throw new BadRequestException('Arquivo acima de 5 MB');
     }
 
-    await salvarFoto(FOTOS_DIR, id, arquivo.mimetype, arquivo.buffer);
+    await salvarFoto(FOTOS_PREFIXO, id, arquivo.mimetype, arquivo.buffer);
     return this.prisma.ficha.update({ where: { id }, data: { fotoUrl: `/fichas/${id}/foto` } });
   }
 
   async removerFoto(id: string, paroquiaId: string) {
     await this.findOne(id, paroquiaId);
-    await removerArquivoFoto(FOTOS_DIR, id);
+    await removerArquivoFoto(FOTOS_PREFIXO, id);
     return this.prisma.ficha.update({ where: { id }, data: { fotoUrl: null } });
   }
 
   async streamFoto(id: string, paroquiaId: string) {
     await this.findOne(id, paroquiaId);
-    const foto = await encontrarFoto(FOTOS_DIR, id);
+    const foto = await encontrarFoto(FOTOS_PREFIXO, id);
     if (!foto) throw new NotFoundException('Essa ficha não tem foto');
-    return { stream: streamArquivoFoto(foto.caminho), mimetype: foto.mimetype };
+    return foto;
   }
 
   // Histórico de equipes servidas — dado gerado pelo módulo Montagem (Alocacao), não

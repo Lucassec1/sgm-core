@@ -12,13 +12,12 @@ Base sólida pro estágio em que está: as regras de negócio mais arriscadas (R
 rastreabilidade clara e testadas de propósito, não por acaso.
 
 **Rodada de ajustes (07/09/2026):** os 7 riscos numerados foram tratados. Corrigidos: doc do `CLAUDE.md`
-
-- comentário do `schema.prisma` (Alta 1), todas as escritas compostas agora em `prisma.$transaction`
-  (Alta 2), CORS com allow-list por env (Alta 3), checagem+escrita das regras R1-R4 numa transação
-  `Serializable` com retry (Média 4), harness de teste do client (Vitest + Testing Library) com job no CI
-  (Média 5), `@Max(100)` nos 3 DTOs de paginação (Média 6). Parcial: `npm audit` (Média 7) — aplicado o
-  `npm audit fix` não-breaking (client 3→2 avisos; server segue em 26, todo o resto pede major). O checklist
-  de 5 itens de hardening e o isolamento por paróquia seguem como "decidir depois", sem mudança.
+e comentário do `schema.prisma` (Alta 1), todas as escritas compostas agora em `prisma.$transaction`
+(Alta 2), CORS com allow-list por env (Alta 3), checagem+escrita das regras R1-R4 numa transação
+`Serializable` com retry (Média 4), harness de teste do client (Vitest + Testing Library) com job no CI
+(Média 5), `@Max(100)` nos 3 DTOs de paginação (Média 6). Parcial: `npm audit` (Média 7) — aplicado o
+`npm audit fix` não-breaking (client 3→2 avisos; server segue em 26, todo o resto pede major). O checklist
+de 5 itens de hardening e o isolamento por paróquia seguem como "decidir depois", sem mudança.
 
 ---
 
