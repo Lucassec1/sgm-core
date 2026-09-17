@@ -1,16 +1,17 @@
-import { createReadStream } from 'fs';
-import { mkdir, unlink, writeFile } from 'fs/promises';
-import { join } from 'path';
 import { randomUUID } from 'crypto';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LogAtividadeService } from './log-atividade.service';
+import { deleteObject, getObject, putObject } from '../../common/uploads/s3-storage';
 
-// Aba Quadrantes (docs/requisitos.md, 2.3): PDFs anexados à montagem. O binário vai pro
-// filesystem (PDFs de 55-70 páginas — MB demais pro banco); o banco guarda só metadados.
-// UPLOADS_DIR é configurável (volume em produção); em dev cai em server/uploads/.
-const UPLOADS_DIR = process.env.UPLOADS_DIR || join(process.cwd(), 'uploads', 'quadrantes');
+// Aba Quadrantes (docs/requisitos.md, 2.3): PDFs anexados à montagem. O binário vai pro S3
+// (PDFs de 55-70 páginas — MB demais pro banco, e disco local não sobrevive a redeploy em
+// hospedagem com filesystem efêmero); o banco guarda só metadados. Chave: `quadrantes/<montagemId>/<armazenadoComo>`.
 const MAX_BYTES = 50 * 1024 * 1024;
+
+function chave(montagemId: string, armazenadoComo: string): string {
+  return `quadrantes/${montagemId}/${armazenadoComo}`;
+}
 
 export interface ArquivoRecebido {
   originalname: string;
@@ -46,10 +47,8 @@ export class QuadrantesService {
       throw new BadRequestException('Só PDF é aceito nos Quadrantes');
     if (arquivo.size > MAX_BYTES) throw new BadRequestException('Arquivo acima de 50 MB');
 
-    const dir = join(UPLOADS_DIR, montagemId);
-    await mkdir(dir, { recursive: true });
     const armazenadoComo = `${randomUUID()}.pdf`;
-    await writeFile(join(dir, armazenadoComo), arquivo.buffer);
+    await putObject(chave(montagemId, armazenadoComo), arquivo.buffer, arquivo.mimetype);
 
     const registro = await this.prisma.quadranteArquivo.create({
       data: {
@@ -76,8 +75,9 @@ export class QuadrantesService {
     if (!registro || registro.montagemId !== montagemId) {
       throw new NotFoundException(`Quadrante ${id} não encontrado na montagem ${montagemId}`);
     }
-    const stream = createReadStream(join(UPLOADS_DIR, montagemId, registro.armazenadoComo));
-    return { registro, stream };
+    const objeto = await getObject(chave(montagemId, registro.armazenadoComo));
+    if (!objeto) throw new NotFoundException(`Arquivo do quadrante ${id} não encontrado`);
+    return { registro, stream: objeto.stream };
   }
 
   async remover(montagemId: string, id: string, usuario?: string) {
@@ -85,7 +85,7 @@ export class QuadrantesService {
     if (!registro || registro.montagemId !== montagemId) {
       throw new NotFoundException(`Quadrante ${id} não encontrado na montagem ${montagemId}`);
     }
-    await unlink(join(UPLOADS_DIR, montagemId, registro.armazenadoComo)).catch(() => undefined);
+    await deleteObject(chave(montagemId, registro.armazenadoComo));
     await this.prisma.quadranteArquivo.delete({ where: { id } });
     await this.logAtividade.registrar(
       montagemId,

@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
@@ -8,14 +7,13 @@ import {
   mimetypeAceito,
   removerFoto as removerArquivoFoto,
   salvarFoto,
-  streamFoto as streamArquivoFoto,
 } from '../../common/uploads/foto-storage';
 import { CreateFichaCasalDto } from './dto/create-ficha-casal.dto';
 import { UpdateFichaCasalDto } from './dto/update-ficha-casal.dto';
 import { QueryFichasCasaisDto } from './dto/query-fichas-casais.dto';
 import { toCsv } from '../../common/export/csv.util';
 
-const FOTOS_DIR = join(process.env.UPLOADS_DIR || join(process.cwd(), 'uploads'), 'fichas-casais');
+const FOTOS_PREFIXO = 'fichas-casais';
 
 // Prisma exige DateTime ISO-8601 completo; datas vindas de <input type="date"> chegam como
 // "YYYY-MM-DD" — `new Date(...)` normaliza antes de gravar.
@@ -109,7 +107,7 @@ export class FichasCasaisService {
 
   async remove(id: string, paroquiaId: string) {
     await this.findOne(id, paroquiaId);
-    await removerArquivoFoto(FOTOS_DIR, id);
+    await removerArquivoFoto(FOTOS_PREFIXO, id);
     return this.prisma.fichaCasal.delete({ where: { id } });
   }
 
@@ -125,7 +123,7 @@ export class FichasCasaisService {
       throw new BadRequestException('Arquivo acima de 5 MB');
     }
 
-    await salvarFoto(FOTOS_DIR, id, arquivo.mimetype, arquivo.buffer);
+    await salvarFoto(FOTOS_PREFIXO, id, arquivo.mimetype, arquivo.buffer);
     return this.prisma.fichaCasal.update({
       where: { id },
       data: { fotoUrl: `/fichas-casais/${id}/foto` },
@@ -134,15 +132,15 @@ export class FichasCasaisService {
 
   async removerFoto(id: string, paroquiaId: string) {
     await this.findOne(id, paroquiaId);
-    await removerArquivoFoto(FOTOS_DIR, id);
+    await removerArquivoFoto(FOTOS_PREFIXO, id);
     return this.prisma.fichaCasal.update({ where: { id }, data: { fotoUrl: null } });
   }
 
   async streamFoto(id: string, paroquiaId: string) {
     await this.findOne(id, paroquiaId);
-    const foto = await encontrarFoto(FOTOS_DIR, id);
+    const foto = await encontrarFoto(FOTOS_PREFIXO, id);
     if (!foto) throw new NotFoundException('Essa ficha de casal não tem foto');
-    return { stream: streamArquivoFoto(foto.caminho), mimetype: foto.mimetype };
+    return foto;
   }
 
   // Histórico de equipes servidas — mesmo critério da Ficha do Jovem (ver
