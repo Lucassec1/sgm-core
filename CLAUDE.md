@@ -36,9 +36,10 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
 - **Módulo Fichas: pronto** — CRUD completo de Ficha do Jovem e Ficha do Casal (server +
   client), Sidebar de navegação, dashboard, página de detalhe com header (foto/nome/situação)
   - histórico de equipes + dados cadastrais em seções empilhadas. Upload real de foto 3x4
-    (JPEG/PNG/WEBP, até 5MB) — binário no filesystem do server (mesmo padrão dos Quadrantes:
-    `UPLOADS_DIR`, fallback `server/uploads/`, gitignored). Upload em lote (pasta inteira +
-    tela de conferência, vinculando pelo nome do arquivo) ainda não existe.
+    (JPEG/PNG/WEBP, até 5MB) — binário no S3 (bucket privado, ver
+    `server/src/common/uploads/s3-storage.ts`), não filesystem (hospedagem com disco efêmero
+    perderia o arquivo a cada restart/deploy). Upload em lote (pasta inteira + tela de
+    conferência, vinculando pelo nome do arquivo) ainda não existe.
 - **Módulo Montagem: quase completo** — schema, backend (montagens, alocações, equipes,
   lista de substituição, log de atividade, quadrantes) com regras R1–R6 e R9 aplicadas e
   testadas (specs em `server/src/modules/montagem/*.spec.ts`); frontend com quadro das 16
@@ -46,9 +47,8 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
   aba Substituições, aba Quadrantes (upload/download de PDF), criar/editar/finalizar
   montagem, ícones das equipes (`EquipeIcon`).
   **Falta:** exportação continua só CSV simples (fichas + montagem, sem o .xlsx completo
-  planejado originalmente — ver `docs/producao.md`, item 4). Quadrantes: binário no
-  filesystem do server (`UPLOADS_DIR`, fallback `server/uploads/`, gitignored) — pra produção
-  apontar num volume.
+  planejado originalmente — ver `docs/producao.md`, item 4). Quadrantes: binário no S3, mesmo
+  padrão das fotos de Ficha.
 - **Auth: pronto** — login JWT (cookie httpOnly) por credencial de paróquia (compartilhada,
   não individual), guard global exigindo sessão em quase tudo, isolamento real entre paróquias
   (R7) e Conselho implementado de verdade (R8) — ver seção "Isolamento por paróquia" abaixo e

@@ -29,38 +29,28 @@ Não são "boas práticas" genéricas. São as quatro coisas que, se ninguém me
 que ninguém vai saber consertar depois — e duas delas (privacidade e hospedagem) são decisões que só alguém
 com a autoridade/contexto atual do Lucas consegue destravar.
 
-### 1. Não existe backup do banco de dados — nem hospedagem real
+### 1. Backup/hospedagem do banco — EM ANDAMENTO (17/09/2026)
 
-Hoje o sistema roda só via `docker-compose up`, local. Não existe servidor, domínio ou backup automático em
-lugar nenhum do projeto (confirmado no código: nenhum Fly/Railway/Render/Terraform, nenhuma menção a backup
-do Postgres) — e confirmado com o Lucas que é assim mesmo. Isso significa: se o disco de quem estiver
-rodando o container corromper, ou o notebook for formatado, ou o HD morrer, **o cadastro de centenas de
-pessoas — nome, contato, histórico de anos de encontros — some sem chance de recuperação.** Esse é,
-disparado, o maior risco de tudo: é o único item irreversível se acontecer.
+Banco migrado pro **Neon** (Postgres 16 gerenciado, backup automático incluído, free tier) — schema aplicado,
+zero dado fake, credencial real da paróquia (Basílica Santuário Nossa Senhora das Dores) e conta de Conselho
+já criadas lá. Upload de foto/Quadrante migrado pra **AWS S3** (bucket privado) pelo mesmo motivo: a
+hospedagem escolhida pra rodar a aplicação (ver abaixo) tem disco efêmero.
 
-- **O que fazer:** mover o Postgres pra um provedor gerenciado com backup automático incluído (Neon,
-  Supabase, Railway e Render têm isso de fábrica, com tier gratuito ou bem barato pro volume de uma
-  paróquia). Isso sozinho resolve a maior parte do risco sem exigir que alguém opere backup manualmente.
-- **Quem decide:** o Lucas, agora — é decisão de "onde isso vai morar", não de código. Depois de escolhido,
-  a migração é trabalho técnico normal (poucas horas).
+**Falta:** hospedar a aplicação em si (hoje só o banco está fora do notebook). Decisão já tomada — **Render**
+pro server, **Vercel** pro client — falta executar o deploy de fato. Dois ajustes de código já feitos
+antecipando isso: cookie de sessão vira `SameSite=None` em produção (Render e Vercel são domínios
+diferentes) e storage de arquivo é S3 (não filesystem).
 
-### 2. Consentimento já existe no papel; falta garantir que cobre o uso digital
+### 2. Consentimento já existe no papel; cobre o uso digital — CONFIRMADO (16/09/2026)
 
 Correção do Lucas: o Segue-me já entrega um termo ao jovem na inscrição em papel — ele toma ciência antes
-do cadastro, e pai/responsável assina no lugar dele quando é menor de idade. Isso resolve a parte que mais
-pesava aqui: **o consentimento em si já existe**, como processo institucional, antes mesmo do sistema
-entrar em cena. A Ficha continua coletando dado sensível (religião, sacramentos — LGPD art. 5º, II) de
-gente menor de idade (LGPD art. 14), então o cuidado continua válido — só que agora é sobre fechar duas
-pontas específicas, não sobre criar um processo do zero.
+do cadastro, e pai/responsável assina no lugar dele quando é menor de idade. **O Lucas confirmou que esse
+termo já cobre o uso digital dos dados** — não precisa de revisão de texto pela coordenação. A Ficha continua
+coletando dado sensível (religião, sacramentos — LGPD art. 5º, II) de gente menor de idade (LGPD art. 14),
+mas o consentimento institucional já está resolvido.
 
-- **O que verificar:** se o texto do termo já em uso menciona que os dados serão digitalizados/armazenados
-  num sistema como o SGM Core (quem acessa, por quanto tempo) — um termo pensado só pra "inscrição no
-  encontro" pode não cobrir isso explicitamente. Vale uma linha a mais, revisada por alguém da coordenação,
-  não uma reescrita.
-- **O que adicionar no sistema:** um campo simples na Ficha — algo como `termoAssinado` (sim/não) + data —
-  pra que o registro digital reflita que o termo em papel foi coletado. Importa puramente pra sucessão: sem
-  esse campo, a prova do consentimento vive só no arquivo físico, que um sucessor sem o contexto do Lucas
-  pode nem saber que existe.
+O campo `termoAssinado` (sim/não) + data já existe na Ficha (implementado — ver commit `dd1e7bc`), pra que o
+registro digital reflita que o termo em papel foi coletado.
 
 ### 3. Autenticação — RESOLVIDO (14-15/09/2026)
 
@@ -96,22 +86,25 @@ banco de dados, conseguir um retrato dos dados por conta própria.
 ## Importantes — pra ser levado a sério como produto
 
 Não quebram nada sozinhos, mas separam "projeto de um estudante" de "sistema que uma instituição usa".
-Todos são trabalho técnico — nenhum pede decisão institucional.
 
-- **Checklist de hardening ainda em aberto.** Helmet, rate limiting e logger estruturado continuam
-  ausentes. Sem eles, um erro em produção não deixa rastro pra investigar, e não há barreira contra abuso
-  básico.
-- **16 vulnerabilidades conhecidas em dependências do server (7 altas).** `npm audit` aponta `multer`,
-  `mysql2` (transitivo, nem usado) e `qs`. `npm audit fix` sem `--force` resolve uma parte de graça; o
-  resto pede um upgrade maior do NestJS.
-- **Cobertura de teste ainda concentrada só no módulo Montagem.** `FichasController`, o fluxo completo de
-  `FichasCasais`, upload/remoção de foto e Quadrantes não têm teste automatizado. Vale garantir que o que
-  mais gente vai mexer no dia a dia (cadastro de ficha) tenha rede de segurança tão boa quanto a Montagem.
-- **Formatação de código não é automática.** Sem Prettier, `.editorconfig` ou Husky/lint-staged em nenhum
-  dos dois pacotes — só as regras de estilo do ESLint. Importa mais, não menos, quando mais de uma pessoa
-  (ou uma IA) for tocar o código sem revisão constante.
-- **Nenhum jeito de saber que o sistema caiu, a não ser alguém reclamar.** Sem health check endpoint nem
-  rastreamento de erro (Sentry ou similar).
+**RESOLVIDO (16/09/2026):**
+
+- **Hardening**: Helmet, rate limiting (`@nestjs/throttler`) e logger estruturado (`nestjs-pino`)
+  implementados.
+- **Health check**: `GET /health` checa conectividade real com o Postgres.
+- **Rastreamento de erro**: SDK do Sentry pronto nos dois lados (server e client), inativo até
+  `SENTRY_DSN`/`NEXT_PUBLIC_SENTRY_DSN` existir.
+- **Cobertura de teste**: `FichasService` (66%→100%), `FichasCasaisService` (67%→98%),
+  `QuadrantesService` (0%→100%) — antes concentrada só em Montagem.
+- **Formatação automática**: Prettier + `.editorconfig` + Husky/lint-staged, repositório inteiro
+  reformatado uma vez (commit isolado, sem mudança de lógica).
+
+**Ainda em aberto:**
+
+- **`npm audit`**: 28 vulnerabilidades no server (todas em dependências do `@nestjs/cli`, ferramenta
+  de build — não roda em produção) e 2 no client (PostCSS, usado só em build time pelo Next). Nenhuma
+  explorável através da API/site rodando pra usuário final. Corrigir de verdade exige upgrade maior
+  (`@nestjs/cli` 10→12, Next.js 15→16) — adiado por ser baixo risco real, mas é dívida que só cresce.
 
 ---
 
@@ -129,28 +122,30 @@ Não impedem nada hoje, mas são exatamente sobre sobreviver com o mínimo de co
 - **Arquitetura está mais simples que o documentado, e tudo bem.** `docs/arquitetura.md` descreve
   Controller → Service → Repository; na prática as Services chamam o Prisma direto. Pra um mantenedor só,
   isso é a escolha certa, não dívida técnica — só vale ajustar o doc pra refletir a decisão real.
-- **O modelo "madrinha" entre paróquias ainda não virou regra escrita.** Hoje a equipe dirigente monta o
-  encontro de Crato usando jovens de duas paróquias ao mesmo tempo — e isso funciona, mas por acidente: o
-  isolamento por paróquia (R7) ainda não está ativo em nenhuma linha de código (o client inteiro roda numa
-  única `PAROQUIA_ID_PROVISORIA` fixa, confirmado em `client/lib/constants.ts`), então nada distingue as
-  fichas de uma paróquia das da outra. Quando Crato ganhar equipe dirigente própria, alguém vai perguntar
-  "como um jovem de uma paróquia é convidado pra montagem de outra" — e hoje `regras-imutaveis.md` não
-  responde isso: R7 descreve isolamento total entre paróquias, com o Conselho (R8, futuro) como única
-  exceção, e só pra leitura, não pra participar da montagem. Vale decidir essa regra e escrevê-la agora,
-  enquanto o cenário madrinha está acontecendo de verdade — não depois que fichas de duas paróquias já
-  estiverem misturadas no banco sem trilha de quem pertence a quem.
+- **O modelo "madrinha" entre paróquias ainda não virou regra escrita.** Agora que R7 (isolamento real) e
+  R8 (Conselho) estão implementados de verdade (14-15/09/2026), essa pergunta passou de "por acidente" pra
+  "vai bloquear de propósito": hoje a equipe dirigente monta o encontro de Crato usando jovens de duas
+  paróquias — com o isolamento ativo, uma ficha de uma paróquia não aparece mais nas sugestões de montagem
+  de outra, a menos que alguém decida como isso deveria funcionar. `regras-imutaveis.md` ainda não responde
+  "como um jovem de uma paróquia é convidado pra montagem de outra": R7 descreve isolamento total, com o
+  Conselho como única exceção, e só pra leitura, não pra participar da montagem. Vale decidir essa regra e
+  escrevê-la agora — antes era "documentar um comportamento futuro", agora é "o sistema já aplica isolamento
+  de verdade e essa lacuna vai aparecer na prática assim que alguém tentar montar com jovens de outra
+  paróquia".
 
 ---
 
 ## Na prática: o que só o Lucas resolve agora vs. o que fica pra depois
 
-**Só o Lucas (ou a equipe dirigente atual) decide, e o timing importa** — fazer isso agora, com o contexto
-todo na cabeça, é muito mais barato que reconstruir depois: onde o sistema vai ser hospedado e quem paga por
-isso; confirmar que o termo de consentimento já usado no papel cobre o uso digital dos dados; quem mais vai
-ter acesso técnico ao repositório; e como vai funcionar o convite de jovens entre paróquias quando Crato
-ganhar equipe dirigente própria — o modelo "madrinha" de hoje ainda não é uma regra escrita.
+**Já decidido pelo Lucas:** hospedagem (Neon pro banco, S3 pro arquivo, Render+Vercel pra aplicação — banco
+migrado, app ainda não deployada) e consentimento (termo em papel confirmado que cobre uso digital).
 
-**Trabalho técnico puro, dá pra fazer aos poucos ou delegar depois** — Auth real, exportação simples,
-hardening, dependências, testes que faltam, formatação automática, health check. Nenhum desses precisa do
-Lucas especificamente; precisam de alguém com acesso ao código — ele agora, ou um sucessor técnico depois,
-desde que o item de sucessão já tenha sido resolvido.
+**Ainda só o Lucas decide, e o timing importa** — fazer isso agora, com o contexto todo na cabeça, é muito
+mais barato que reconstruir depois: quem mais vai ter acesso técnico ao repositório; e como vai funcionar o
+convite de jovens entre paróquias agora que R7/R8 estão ativos — o modelo "madrinha" de hoje ainda não é
+uma regra escrita.
+
+**Trabalho técnico puro, dá pra fazer aos poucos ou delegar depois** — deploy de fato (Render/Vercel),
+upgrade de dependências (`@nestjs/cli`, Next.js), testes E2E, documento de sucessão em português simples.
+Nenhum desses precisa do Lucas especificamente; precisam de alguém com acesso ao código — ele agora, ou um
+sucessor técnico depois, desde que o item de sucessão já tenha sido resolvido.

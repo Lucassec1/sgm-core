@@ -115,10 +115,10 @@ de tela de conferência que `ux-e-fluxos.md` já propõe pro importador CSV).
 **Status (11/09/2026): upload individual implementado; upload em lote adiado.** Decisões
 tomadas com o Lucas nesta rodada:
 
-- **Storage: filesystem do server**, não bucket S3-compatible — mesmo padrão dos Quadrantes
-  (`UPLOADS_DIR`, fallback `server/uploads/`, gitignored), em vez de Cloudflare R2/Backblaze.
-  Evita depender de conta externa pro protótipo; a mesma ressalva dos Quadrantes vale aqui —
-  pra produção, apontar `UPLOADS_DIR` pra um volume.
+- **Storage: filesystem do server** no protótipo inicial — evitava depender de conta externa.
+  **Atualizado em 17/09/2026**: migrado pra **AWS S3** (bucket privado, mesmo padrão pros
+  Quadrantes) quando a hospedagem em produção (Render) trouxe disco efêmero — arquivo salvo
+  localmente sumia a cada restart/deploy. Ver `server/src/common/uploads/s3-storage.ts`.
 - **Escopo:** só upload individual nesta leva. Upload em lote (pasta inteira + tela de
   conferência) fica pra uma rodada separada.
 
