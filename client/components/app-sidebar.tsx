@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FileDown, LayoutGrid, UserRound, Users } from 'lucide-react';
+import { LayoutGrid, UserRound, Users } from 'lucide-react';
 
 import {
   Sidebar,
@@ -13,7 +13,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
@@ -29,7 +28,10 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+        <Link
+          href="/"
+          className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-sidebar-accent group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+        >
           <Image
             src="/logo-segue-me.png"
             alt="Segue-me"
@@ -40,7 +42,7 @@ export function AppSidebar() {
           <span className="text-sm font-semibold group-data-[collapsible=icon]:hidden">
             SGM Core
           </span>
-        </div>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -83,13 +85,6 @@ export function AppSidebar() {
                     <span>Montagem</span>
                   </Link>
                 </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton disabled tooltip="Exportação — em breve">
-                  <FileDown />
-                  <span>Exportação</span>
-                </SidebarMenuButton>
-                <SidebarMenuBadge>em breve</SidebarMenuBadge>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>

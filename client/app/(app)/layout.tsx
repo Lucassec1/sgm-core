@@ -7,8 +7,8 @@ import { CommandPalette } from '@/components/command-palette';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Separator } from '@/components/ui/separator';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { Toaster } from '@/components/ui/sonner';
 import { LogoutButton } from '@/components/logout-button';
+import { LoadingScreen } from '@/components/loading-screen';
 import { useSessao } from '@/lib/auth-context';
 
 // Grupo (app) = área de conta PAROQUIA (Fichas + Montagem) — Conselho não acessa Fichas
@@ -34,11 +34,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [isLoading, isError, sessao, router]);
 
   if (isLoading || isError || !sessao || sessao.role !== 'PAROQUIA') {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
-        Carregando...
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -59,7 +55,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
         <div className="flex flex-1 flex-col">{children}</div>
       </SidebarInset>
-      <Toaster />
     </SidebarProvider>
   );
 }
