@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -93,11 +94,17 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
   const updateFichaCasal = useUpdateFichaCasal(ficha?.id ?? '');
 
   const onSubmit = async (values: FichaCasalFormValues) => {
-    if (isEdit) {
-      await updateFichaCasal.mutateAsync(values);
-    } else {
-      const created = await createFichaCasal.mutateAsync({ ...values });
-      router.push(`/fichas/casais/${created.id}`);
+    try {
+      if (isEdit) {
+        await updateFichaCasal.mutateAsync(values);
+        toast.success('Ficha do casal atualizada.');
+      } else {
+        const created = await createFichaCasal.mutateAsync({ ...values });
+        toast.success('Ficha do casal criada.');
+        router.push(`/fichas/casais/${created.id}`);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Não foi possível salvar a ficha.');
     }
   };
 

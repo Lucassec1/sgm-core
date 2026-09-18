@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -110,11 +111,17 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
   const updateFicha = useUpdateFicha(ficha?.id ?? '');
 
   const onSubmit = async (values: FichaFormValues) => {
-    if (isEdit) {
-      await updateFicha.mutateAsync(values);
-    } else {
-      const created = await createFicha.mutateAsync({ ...values });
-      router.push(`/fichas/${created.id}`);
+    try {
+      if (isEdit) {
+        await updateFicha.mutateAsync(values);
+        toast.success('Ficha atualizada.');
+      } else {
+        const created = await createFicha.mutateAsync({ ...values });
+        toast.success('Ficha criada.');
+        router.push(`/fichas/${created.id}`);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Não foi possível salvar a ficha.');
     }
   };
 

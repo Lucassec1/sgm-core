@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useState } from 'react';
+import { toast } from 'sonner';
 import { EquipeIcon } from '@/components/equipes/equipe-icon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -130,7 +131,17 @@ function ObservacoesPanel({ montagemId }: { montagemId: string }) {
           size="sm"
           disabled={!texto.trim() || criarObservacao.isPending}
           onClick={() => {
-            criarObservacao.mutate(texto, { onSuccess: () => setTexto('') });
+            criarObservacao.mutate(texto, {
+              onSuccess: () => {
+                setTexto('');
+                toast.success('Observação registrada.');
+              },
+              onError: (err) => {
+                toast.error(
+                  err instanceof Error ? err.message : 'Não foi possível enviar a observação.',
+                );
+              },
+            });
           }}
         >
           Enviar observação

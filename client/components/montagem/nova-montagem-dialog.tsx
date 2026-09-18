@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -66,10 +67,15 @@ export function NovaMontagemDialog() {
   });
 
   const onSubmit = async (values: MontagemFormValues) => {
-    const montagem = await createMontagem.mutateAsync({ ...values });
-    setOpen(false);
-    reset();
-    router.push(`/montagem/${montagem.id}`);
+    try {
+      const montagem = await createMontagem.mutateAsync({ ...values });
+      toast.success('Montagem criada.');
+      setOpen(false);
+      reset();
+      router.push(`/montagem/${montagem.id}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Não foi possível criar a montagem.');
+    }
   };
 
   const ehImplantacao = watch('ehImplantacao');
