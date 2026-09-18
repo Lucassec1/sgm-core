@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { apiClient, ApiError } from '@/lib/api-client';
+import { useSessao } from '@/lib/auth-context';
 
 // Login único (docs/producao.md, bloqueador #3) — mesmo formulário pra conta de paróquia e de
 // Conselho; o backend decide pelo `role` de quem logou, o client só redireciona pro lugar
@@ -30,6 +31,15 @@ export default function LoginPage() {
   const queryClient = useQueryClient();
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [capsLockAtivo, setCapsLockAtivo] = useState(false);
+
+  // Já logado e caiu em /login por engano (link salvo, aba antiga, etc.) — manda direto pro
+  // lugar certo em vez de mostrar o formulário de novo. Não desloga nada, só redireciona.
+  const { data: sessaoAtual, isLoading: carregandoSessao } = useSessao();
+  useEffect(() => {
+    if (sessaoAtual) {
+      router.replace(sessaoAtual.role === 'CONSELHO' ? '/conselho' : '/');
+    }
+  }, [sessaoAtual, router]);
 
   // Anima via transição real de estado (opacity/transform mudando depois do mount), não via
   // classe `animate-in` já presente na primeira renderização — a página é pré-renderizada como
@@ -50,6 +60,12 @@ export default function LoginPage() {
   const checarCapsLock = (e: React.KeyboardEvent<HTMLInputElement>) => {
     setCapsLockAtivo(e.getModifierState?.('CapsLock') ?? false);
   };
+
+  // Enquanto checa se já tem sessão (ou já achou e está redirecionando), não mostra o
+  // formulário — evita o "flash" do login antes do redirect.
+  if (carregandoSessao || sessaoAtual) {
+    return <div className="dark min-h-screen bg-background" />;
+  }
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
