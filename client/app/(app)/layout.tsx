@@ -7,7 +7,6 @@ import { CommandPalette } from '@/components/command-palette';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Separator } from '@/components/ui/separator';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { Toaster } from '@/components/ui/sonner';
 import { LogoutButton } from '@/components/logout-button';
 import { useSessao } from '@/lib/auth-context';
 
@@ -59,7 +58,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
         <div className="flex flex-1 flex-col">{children}</div>
       </SidebarInset>
-      <Toaster />
     </SidebarProvider>
   );
 }

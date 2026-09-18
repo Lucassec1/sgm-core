@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LogoutButton } from '@/components/logout-button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Toaster } from '@/components/ui/sonner';
 import { useSessao } from '@/lib/auth-context';
 
 // Grupo (conselho) = área exclusiva de conta CONSELHO (R8) — só leitura de Montagem de
@@ -50,7 +49,6 @@ export default function ConselhoLayout({ children }: { children: React.ReactNode
         </div>
       </header>
       <div className="flex-1">{children}</div>
-      <Toaster />
     </div>
   );
 }
