@@ -1,8 +1,9 @@
-import { Body, Controller, Post, Get, Req, Res } from '@nestjs/common';
+import { Body, Controller, Post, Get, Patch, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { AlterarSenhaDto } from './dto/alterar-senha.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { UsuarioAutenticado } from '../../common/types/usuario-autenticado';
 
@@ -44,5 +45,17 @@ export class AuthController {
   @Get('me')
   me(@Req() req: Request & { user: UsuarioAutenticado }) {
     return this.authService.me(req.user.id);
+  }
+
+  // Self-service — qualquer conta autenticada (PAROQUIA ou CONSELHO) troca a própria senha,
+  // sem depender do Conselho pra resetar por fora. Útil pra virada de equipe dirigente todo
+  // início de ano, por exemplo.
+  @Patch('senha')
+  async alterarSenha(
+    @Body() dto: AlterarSenhaDto,
+    @Req() req: Request & { user: UsuarioAutenticado },
+  ) {
+    await this.authService.alterarSenha(req.user.id, dto.senhaAtual, dto.senhaNova);
+    return { ok: true };
   }
 }

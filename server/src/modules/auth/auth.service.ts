@@ -31,6 +31,22 @@ export class AuthService {
     return token;
   }
 
+  // Self-service — a própria equipe dirigente (ou o Conselho) troca a senha sem depender de
+  // um reset externo. Exige a senha atual (evita que quem achar uma sessão aberta esquecida
+  // troque a credencial sem saber a senha de verdade).
+  async alterarSenha(usuarioId: string, senhaAtual: string, senhaNova: string): Promise<void> {
+    const usuario = await this.prisma.usuario.findUnique({ where: { id: usuarioId } });
+    if (!usuario) {
+      throw new UnauthorizedException();
+    }
+    const senhaValida = await bcrypt.compare(senhaAtual, usuario.senhaHash);
+    if (!senhaValida) {
+      throw new UnauthorizedException('Senha atual incorreta');
+    }
+    const senhaHash = await bcrypt.hash(senhaNova, 10);
+    await this.prisma.usuario.update({ where: { id: usuarioId }, data: { senhaHash } });
+  }
+
   async me(usuarioId: string) {
     const usuario = await this.prisma.usuario.findUnique({
       where: { id: usuarioId },
