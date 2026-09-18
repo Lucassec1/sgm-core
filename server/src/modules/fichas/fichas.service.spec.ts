@@ -231,6 +231,27 @@ describe('FichasService — upload de foto', () => {
       expect(csv).toContain('Fulano');
       expect(csv).toContain('Sim');
     });
+
+    it('marca "Não" quando o termo não está assinado', async () => {
+      prisma.ficha.findMany.mockResolvedValue([
+        {
+          nomeCompleto: 'Ciclana',
+          sexo: 'MOCA',
+          dataNascimento: new Date('2001-02-20'),
+          telefone: '88988888888',
+          email: 'ciclana@example.com',
+          cidade: 'Crato',
+          numeroEncontro: 5,
+          corCirculo: 'VERDE',
+          situacao: 'ATIVA',
+          termoAssinado: false,
+        },
+      ]);
+
+      const csv = await service.exportCsv(PAROQUIA_ID);
+
+      expect(csv).toContain('Não');
+    });
   });
 
   describe('findOne', () => {

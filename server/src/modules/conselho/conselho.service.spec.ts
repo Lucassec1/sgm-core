@@ -54,6 +54,29 @@ describe('ConselhoService', () => {
     });
   });
 
+  describe('listarObservacoes', () => {
+    it('lista as observações da montagem, mais recentes primeiro', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({ id: MONTAGEM_ID });
+      prisma.observacaoMontagem.findMany.mockResolvedValue([{ texto: 'Observação' }]);
+
+      const observacoes = await service.listarObservacoes(MONTAGEM_ID);
+
+      expect(prisma.observacaoMontagem.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { montagemId: MONTAGEM_ID },
+          orderBy: { createdAt: 'desc' },
+        }),
+      );
+      expect(observacoes).toEqual([{ texto: 'Observação' }]);
+    });
+
+    it('lança NotFoundException se a montagem não existir', async () => {
+      prisma.montagem.findUnique.mockResolvedValue(null);
+      await expect(service.listarObservacoes(MONTAGEM_ID)).rejects.toThrow(NotFoundException);
+      expect(prisma.observacaoMontagem.findMany).not.toHaveBeenCalled();
+    });
+  });
+
   describe('criarObservacao', () => {
     it('grava usuarioId e texto vinculados à montagem', async () => {
       prisma.montagem.findUnique.mockResolvedValue({ id: MONTAGEM_ID });

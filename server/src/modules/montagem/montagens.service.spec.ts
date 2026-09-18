@@ -22,7 +22,7 @@ function criarPrismaMock() {
       count: jest.fn(),
     },
     cargo: { findMany: jest.fn() },
-    vagaMontagem: { createMany: jest.fn(), update: jest.fn() },
+    vagaMontagem: { createMany: jest.fn(), update: jest.fn(), findMany: jest.fn() },
     ficha: { findMany: jest.fn() },
     fichaCasal: { findMany: jest.fn() },
     equipe: { findUnique: jest.fn() },
@@ -273,6 +273,57 @@ describe('MontagensService', () => {
 
       expect(prisma.vagaMontagem.update).not.toHaveBeenCalled();
     });
+
+    it('normaliza a data quando dto.data é informado', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        status: 'EM_ANDAMENTO',
+        numeroJovensVivenciando: 40,
+        ehImplantacao: false,
+        vagas: [],
+      });
+      prisma.montagem.update.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        vagas: [],
+      });
+
+      await service.update(MONTAGEM_ID, { data: '2026-10-01' } as any, PAROQUIA_ID);
+
+      expect(prisma.montagem.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ data: new Date('2026-10-01') }),
+        }),
+      );
+    });
+
+    it('grava quantidadeJovensSementeira/quantidadeCasaisAfilhada quando ehImplantacao muda pra true', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        status: 'EM_ANDAMENTO',
+        numeroJovensVivenciando: 52,
+        ehImplantacao: false,
+        vagas: [],
+      });
+      prisma.montagem.update.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        vagas: [],
+      });
+
+      await service.update(MONTAGEM_ID, { ehImplantacao: true } as any, PAROQUIA_ID);
+
+      expect(prisma.montagem.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            quantidadeJovensSementeira: 12,
+            quantidadeCasaisAfilhada: 4,
+          }),
+        }),
+      );
+    });
   });
 
   describe('R7 — isolamento por paróquia (garantirPertence)', () => {
@@ -385,6 +436,23 @@ describe('MontagensService', () => {
       );
     });
 
+    it('com vagaMontagemId de vaga só de moças, filtra sexo MOCA', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        numeroEncontro: 7,
+        vagas: [{ id: 'vaga-1', quantidadeRapazes: 0, quantidadeMocas: 3 }],
+      });
+      prisma.alocacao.findMany.mockResolvedValue([]);
+      prisma.ficha.findMany.mockResolvedValue([]);
+
+      await service.candidatosJovens(MONTAGEM_ID, PAROQUIA_ID, 'vaga-1');
+
+      expect(prisma.ficha.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ sexo: { in: ['MOCA'] } }) }),
+      );
+    });
+
     it('rejeita vagaMontagemId que não pertence à montagem', async () => {
       prisma.montagem.findUnique.mockResolvedValue({
         id: MONTAGEM_ID,
@@ -419,6 +487,25 @@ describe('MontagensService', () => {
       for (const call of prisma.fichaCasal.findMany.mock.calls) {
         expect(call[0].where.situacao).toBe('ATIVA');
       }
+    });
+
+    it('não busca fichas do Comando Geral quando essa equipe não existe no cadastro', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        vagas: [],
+      });
+      prisma.equipe.findUnique
+        .mockResolvedValueOnce({ id: 'equipe-1', slug: 'animacao' })
+        .mockResolvedValueOnce(null); // busca por slug 'comando-geral' não encontra
+      prisma.ficha.findMany.mockResolvedValue([]);
+      prisma.fichaCasal.findMany.mockResolvedValue([]);
+
+      const resultado = await service.coordenadoresSugeridos(MONTAGEM_ID, 'equipe-1', PAROQUIA_ID);
+
+      // 2 chamadas de ficha.findMany (grupoA + dirigentes), não 3 (sem comando geral)
+      expect(prisma.ficha.findMany).toHaveBeenCalledTimes(2);
+      expect(resultado.grupoB.fichas).toEqual([]);
     });
   });
 
@@ -509,6 +596,41 @@ describe('MontagensService', () => {
       expect(resumo.equipeMaisMovimentada).toBeNull();
     });
 
+    it('ignora logs sem equipe extraível do detalhes (detalhes nulo)', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        numeroEncontro: 5,
+        status: 'EM_ANDAMENTO',
+        createdAt: new Date(),
+        vagas: [],
+      });
+      prisma.logAtividade.findMany.mockResolvedValue([
+        { detalhes: null },
+        { detalhes: 'Eq. da Cozinha / Componentes' },
+      ]);
+
+      const resumo = await service.resumo(MONTAGEM_ID, PAROQUIA_ID);
+
+      expect(resumo.equipeMaisMovimentada).toEqual({ nome: 'Eq. da Cozinha', movimentacoes: 1 });
+    });
+
+    it('duracaoMs é null quando a montagem está FINALIZADA mas não há log de MUDOU_STATUS', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        numeroEncontro: 5,
+        status: 'FINALIZADA',
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+        vagas: [],
+      });
+      prisma.logAtividade.findFirst.mockResolvedValue(null);
+
+      const resumo = await service.resumo(MONTAGEM_ID, PAROQUIA_ID);
+
+      expect(resumo.duracaoMs).toBeNull();
+    });
+
     it('totalRecusasDesistencias e totalSubstituicoes vêm da contagem de Alocacao por status', async () => {
       prisma.montagem.findUnique.mockResolvedValue({
         id: MONTAGEM_ID,
@@ -592,6 +714,173 @@ describe('MontagensService', () => {
       const log = await service.listarLog(MONTAGEM_ID, PAROQUIA_ID);
       expect(logAtividade.listar).toHaveBeenCalledWith(MONTAGEM_ID);
       expect(log).toEqual([{ acao: 'CRIOU_MONTAGEM' }]);
+    });
+
+    it('R7 — lança NotFoundException (garantirPertence) quando a montagem é de outra paróquia', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: OUTRA_PAROQUIA_ID,
+      });
+
+      await expect(service.listarLog(MONTAGEM_ID, PAROQUIA_ID)).rejects.toThrow(NotFoundException);
+      expect(logAtividade.listar).not.toHaveBeenCalled();
+    });
+
+    it('R7 — lança NotFoundException (garantirPertence) quando a montagem não existe', async () => {
+      prisma.montagem.findUnique.mockResolvedValue(null);
+
+      await expect(service.listarLog(MONTAGEM_ID, PAROQUIA_ID)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findAll', () => {
+    it('pagina com page/pageSize padrão e filtra por paroquiaId', async () => {
+      prisma.montagem.findMany.mockResolvedValue([{ id: MONTAGEM_ID }]);
+      prisma.montagem.count.mockResolvedValue(1);
+
+      const resultado = await service.findAll({} as any, PAROQUIA_ID);
+
+      expect(prisma.montagem.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { paroquiaId: PAROQUIA_ID }, skip: 0, take: 20 }),
+      );
+      expect(resultado).toEqual({
+        items: [{ id: MONTAGEM_ID }],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+      });
+    });
+
+    it('aplica filtro de status e paginação customizada', async () => {
+      prisma.montagem.findMany.mockResolvedValue([]);
+      prisma.montagem.count.mockResolvedValue(0);
+
+      await service.findAll({ status: 'FINALIZADA', page: 2, pageSize: 5 } as any, PAROQUIA_ID);
+
+      expect(prisma.montagem.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { paroquiaId: PAROQUIA_ID, status: 'FINALIZADA' },
+          skip: 5,
+          take: 5,
+        }),
+      );
+    });
+  });
+
+  describe('exportCsv', () => {
+    it('monta o CSV com equipe, cargo, pessoa (ficha ou casal) e status do convite', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({ id: MONTAGEM_ID, paroquiaId: PAROQUIA_ID });
+      prisma.vagaMontagem.findMany.mockResolvedValue([
+        {
+          equipe: { nome: 'Eq. da Cozinha' },
+          cargo: { nome: 'Coordenador' },
+          alocacoes: [
+            { ficha: { nomeCompleto: 'Ana Silva' }, fichaCasal: null, status: 'ACEITO' },
+            {
+              ficha: null,
+              fichaCasal: { nomeEle: 'João', nomeEla: 'Maria' },
+              status: 'PENDENTE',
+            },
+          ],
+        },
+      ]);
+
+      const csv = await service.exportCsv(MONTAGEM_ID, PAROQUIA_ID);
+
+      expect(csv).toContain('Ana Silva;ACEITO');
+      expect(csv).toContain('João e Maria;PENDENTE');
+    });
+
+    it('R7 — lança NotFoundException quando a montagem não pertence à paróquia', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: OUTRA_PAROQUIA_ID,
+      });
+
+      await expect(service.exportCsv(MONTAGEM_ID, PAROQUIA_ID)).rejects.toThrow(NotFoundException);
+      expect(prisma.vagaMontagem.findMany).not.toHaveBeenCalled();
+    });
+
+    it('deixa a coluna Pessoa vazia quando a alocação não tem ficha nem casal', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({ id: MONTAGEM_ID, paroquiaId: PAROQUIA_ID });
+      prisma.vagaMontagem.findMany.mockResolvedValue([
+        {
+          equipe: { nome: 'Eq. da Cozinha' },
+          cargo: { nome: 'Coordenador' },
+          alocacoes: [{ ficha: null, fichaCasal: null, status: 'RASCUNHO' }],
+        },
+      ]);
+
+      const csv = await service.exportCsv(MONTAGEM_ID, PAROQUIA_ID);
+
+      expect(csv).toContain(';RASCUNHO');
+    });
+  });
+
+  describe('update — log de MUDOU_STATUS quando o status muda', () => {
+    it('registra MUDOU_STATUS com "<anterior> -> <novo>" quando o status é alterado', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        status: 'EM_ANDAMENTO',
+        numeroJovensVivenciando: 40,
+        ehImplantacao: false,
+        vagas: [],
+      });
+      prisma.montagem.update.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        vagas: [],
+      });
+
+      await service.update(
+        MONTAGEM_ID,
+        { status: 'FINALIZADA', usuario: 'Ana' } as any,
+        PAROQUIA_ID,
+      );
+
+      expect(logAtividade.registrar).toHaveBeenCalledWith(
+        MONTAGEM_ID,
+        'Ana',
+        'MUDOU_STATUS',
+        'EM_ANDAMENTO -> FINALIZADA',
+        prisma,
+      );
+    });
+  });
+
+  describe('coordenadoresSugeridos', () => {
+    it('lança NotFoundException quando a equipe não existe', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        vagas: [],
+      });
+      prisma.equipe.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.coordenadoresSugeridos(MONTAGEM_ID, 'equipe-inexistente', PAROQUIA_ID),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('deduplica fichas que aparecem tanto no grupo B (dirigente) quanto no Comando Geral', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        vagas: [],
+      });
+      prisma.equipe.findUnique
+        .mockResolvedValueOnce({ id: 'equipe-1', slug: 'animacao' })
+        .mockResolvedValueOnce({ id: 'equipe-comando-geral', slug: 'comando-geral' });
+      prisma.ficha.findMany
+        .mockResolvedValueOnce([]) // grupoAFichas
+        .mockResolvedValueOnce([{ id: 'ficha-repetida' }]) // dirigentesFichas
+        .mockResolvedValueOnce([{ id: 'ficha-repetida' }]); // comandoGeralFichas
+      prisma.fichaCasal.findMany.mockResolvedValue([]);
+
+      const resultado = await service.coordenadoresSugeridos(MONTAGEM_ID, 'equipe-1', PAROQUIA_ID);
+
+      expect(resultado.grupoB.fichas).toEqual([{ id: 'ficha-repetida' }]);
     });
   });
 });

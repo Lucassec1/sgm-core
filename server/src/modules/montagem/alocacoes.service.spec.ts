@@ -1,5 +1,5 @@
 import { ConflictException, ForbiddenException } from '@nestjs/common';
-import { Equipe, StatusConvite } from '@prisma/client';
+import { Equipe, Prisma, StatusConvite } from '@prisma/client';
 import { AlocacoesService } from './alocacoes.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LogAtividadeService } from './log-atividade.service';
@@ -282,6 +282,26 @@ describe('AlocacoesService', () => {
         } as any),
       ).rejects.toThrow(ForbiddenException);
     });
+
+    it('Grupo B (casal): permite casal que já foi Equipe Dirigente mesmo sem histórico na equipe', async () => {
+      mockVaga(
+        equipeFake({ slug: 'visitacao', coordenacaoCasalExigeHistorico: true }),
+        cargoCoordenacao,
+      );
+      prisma.alocacao.count.mockResolvedValue(0);
+      prisma.fichaCasal.findUnique.mockResolvedValue({
+        id: 'casal-1',
+        jaFoiEquipeDirigente: true,
+      });
+      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
+
+      await service.create(MONTAGEM_ID, {
+        vagaMontagemId: VAGA_ID,
+        tipoPessoa: 'CASAL',
+        fichaCasalId: 'casal-1',
+      } as any);
+      expect(prisma.alocacao.create).toHaveBeenCalled();
+    });
   });
 
   describe('create/update — R4 (Círculos primeiro)', () => {
@@ -339,6 +359,20 @@ describe('AlocacoesService', () => {
       expect(prisma.alocacao.create).toHaveBeenCalled();
     });
 
+    it('libera CONVIDADO quando a equipe Círculos nem existe (bloqueio não se aplica)', async () => {
+      mockVaga(equipeFake({ bloqueiaConvitePosCirculos: true }), cargoFake());
+      prisma.equipe.findUnique.mockResolvedValue(null);
+      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
+
+      await service.create(MONTAGEM_ID, {
+        vagaMontagemId: VAGA_ID,
+        tipoPessoa: 'JOVEM',
+        fichaId: 'ficha-1',
+        status: StatusConvite.CONVIDADO,
+      } as any);
+      expect(prisma.alocacao.create).toHaveBeenCalled();
+    });
+
     it('update: bloqueia transição pra CONVIDADO se os Círculos ainda não fecharam', async () => {
       prisma.alocacao.findUnique.mockResolvedValue({
         id: 'aloc-1',
@@ -381,6 +415,21 @@ describe('AlocacoesService', () => {
         expect.any(String),
         expect.anything(),
       );
+    });
+
+    it('converte dataConvite em Date ao criar, quando informada', async () => {
+      mockVaga(equipeFake(), cargoFake());
+      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
+
+      await service.create(MONTAGEM_ID, {
+        vagaMontagemId: VAGA_ID,
+        tipoPessoa: 'JOVEM',
+        fichaId: 'ficha-1',
+        dataConvite: '2026-01-01T00:00:00.000Z',
+      } as any);
+
+      const dataArg = prisma.alocacao.create.mock.calls[0][0].data;
+      expect(dataArg.dataConvite).toBeInstanceOf(Date);
     });
 
     it('tira a pessoa da lista de substituição desse encontro ao alocá-la', async () => {
@@ -428,6 +477,224 @@ describe('AlocacoesService', () => {
 
       const resultado = await service.findOne(MONTAGEM_ID, 'aloc-1');
       expect(resultado.substituidaPorId).toBe('aloc-2');
+    });
+  });
+
+  describe('create — retry em conflito de serialização (Postgres P2034)', () => {
+    it('repete a transação até 3x quando o Postgres aborta por serialização (P2034)', async () => {
+      mockVaga(equipeFake(), cargoFake());
+      const erroSerializacao = new Prisma.PrismaClientKnownRequestError('conflito', {
+        code: 'P2034',
+        clientVersion: '7.9.1',
+      });
+      let tentativa = 0;
+      prisma.$transaction.mockImplementation(async (arg: unknown) => {
+        tentativa++;
+        if (tentativa < 3) throw erroSerializacao;
+        return (arg as (tx: unknown) => unknown)(prisma);
+      });
+      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
+
+      await service.create(MONTAGEM_ID, {
+        vagaMontagemId: VAGA_ID,
+        tipoPessoa: 'JOVEM',
+        fichaId: 'ficha-1',
+      } as any);
+
+      expect(tentativa).toBe(3);
+      expect(prisma.alocacao.create).toHaveBeenCalled();
+    });
+
+    it('desiste após esgotar as tentativas e repropaga o erro de serialização', async () => {
+      mockVaga(equipeFake(), cargoFake());
+      const erroSerializacao = new Prisma.PrismaClientKnownRequestError('conflito', {
+        code: 'P2034',
+        clientVersion: '7.9.1',
+      });
+      prisma.$transaction.mockRejectedValue(erroSerializacao);
+
+      await expect(
+        service.create(MONTAGEM_ID, {
+          vagaMontagemId: VAGA_ID,
+          tipoPessoa: 'JOVEM',
+          fichaId: 'ficha-1',
+        } as any),
+      ).rejects.toThrow(erroSerializacao);
+      expect(prisma.$transaction).toHaveBeenCalledTimes(3);
+    });
+
+    it('não repete quando o erro não é de serialização (P2034)', async () => {
+      mockVaga(equipeFake(), cargoFake());
+      prisma.$transaction.mockRejectedValue(new Error('erro qualquer'));
+
+      await expect(
+        service.create(MONTAGEM_ID, {
+          vagaMontagemId: VAGA_ID,
+          tipoPessoa: 'JOVEM',
+          fichaId: 'ficha-1',
+        } as any),
+      ).rejects.toThrow('erro qualquer');
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('create — vaga inválida', () => {
+    it('rejeita quando a vaga não existe', async () => {
+      prisma.vagaMontagem.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.create(MONTAGEM_ID, {
+          vagaMontagemId: VAGA_ID,
+          tipoPessoa: 'JOVEM',
+          fichaId: 'ficha-1',
+        } as any),
+      ).rejects.toThrow('não pertence à montagem');
+    });
+
+    it('rejeita quando a vaga pertence a outra montagem', async () => {
+      prisma.vagaMontagem.findUnique.mockResolvedValue({
+        id: VAGA_ID,
+        montagemId: 'outra-montagem',
+        equipe: equipeFake(),
+        cargo: cargoFake(),
+      });
+
+      await expect(
+        service.create(MONTAGEM_ID, {
+          vagaMontagemId: VAGA_ID,
+          tipoPessoa: 'JOVEM',
+          fichaId: 'ficha-1',
+        } as any),
+      ).rejects.toThrow('não pertence à montagem');
+    });
+  });
+
+  describe('findAll', () => {
+    it('lista as alocações da montagem, ocultando substituição de montagem finalizada', async () => {
+      prisma.alocacao.findMany.mockResolvedValue([
+        {
+          id: 'aloc-1',
+          substituidaPorId: 'aloc-2',
+          vagaMontagem: { montagem: { status: 'FINALIZADA' } },
+        },
+        {
+          id: 'aloc-2',
+          substituidaPorId: 'aloc-3',
+          vagaMontagem: { montagem: { status: 'EM_ANDAMENTO' } },
+        },
+      ]);
+
+      const resultado = await service.findAll(MONTAGEM_ID);
+
+      expect(prisma.alocacao.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { vagaMontagem: { montagemId: MONTAGEM_ID } } }),
+      );
+      expect(resultado[0].substituidaPorId).toBeNull();
+      expect(resultado[1].substituidaPorId).toBe('aloc-3');
+    });
+  });
+
+  describe('findOne — não encontrada', () => {
+    it('lança NotFoundException quando a alocação não existe', async () => {
+      prisma.alocacao.findUnique.mockResolvedValue(null);
+      await expect(service.findOne(MONTAGEM_ID, 'inexistente')).rejects.toThrow(
+        'não encontrada na montagem',
+      );
+    });
+
+    it('lança NotFoundException quando a alocação é de outra montagem', async () => {
+      prisma.alocacao.findUnique.mockResolvedValue({
+        id: 'aloc-1',
+        vagaMontagem: { montagemId: 'outra-montagem' },
+      });
+      await expect(service.findOne(MONTAGEM_ID, 'aloc-1')).rejects.toThrow(
+        'não encontrada na montagem',
+      );
+    });
+  });
+
+  describe('update — caminho feliz', () => {
+    it('atualiza a alocação (sem mexer em status) e registra o log', async () => {
+      prisma.alocacao.findUnique.mockResolvedValue({
+        id: 'aloc-1',
+        status: StatusConvite.CONVIDADO,
+        substituidaPorId: null,
+        vagaMontagem: {
+          montagemId: MONTAGEM_ID,
+          equipe: equipeFake(),
+          cargo: cargoFake(),
+          montagem: { status: 'EM_ANDAMENTO' },
+        },
+      });
+      prisma.alocacao.update.mockResolvedValue({ id: 'aloc-1', status: StatusConvite.ACEITO });
+
+      const resultado = await service.update(MONTAGEM_ID, 'aloc-1', {
+        status: StatusConvite.ACEITO,
+        usuario: 'Ana',
+      } as any);
+
+      expect(prisma.alocacao.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'aloc-1' } }),
+      );
+      expect(logAtividade.registrar).toHaveBeenCalledWith(
+        MONTAGEM_ID,
+        'Ana',
+        'ATUALIZOU_ALOCACAO',
+        `status -> ${StatusConvite.ACEITO}`,
+        expect.anything(),
+      );
+      expect(resultado).toEqual({ id: 'aloc-1', status: StatusConvite.ACEITO });
+    });
+
+    it('converte dataConvite/dataResposta em Date quando informadas', async () => {
+      prisma.alocacao.findUnique.mockResolvedValue({
+        id: 'aloc-1',
+        status: StatusConvite.RASCUNHO,
+        substituidaPorId: null,
+        vagaMontagem: {
+          montagemId: MONTAGEM_ID,
+          equipe: equipeFake(),
+          cargo: cargoFake(),
+          montagem: { status: 'EM_ANDAMENTO' },
+        },
+      });
+      prisma.alocacao.update.mockResolvedValue({ id: 'aloc-1' });
+
+      await service.update(MONTAGEM_ID, 'aloc-1', {
+        dataConvite: '2026-01-01T00:00:00.000Z',
+        dataResposta: '2026-01-02T00:00:00.000Z',
+      } as any);
+
+      const dataArg = prisma.alocacao.update.mock.calls[0][0].data;
+      expect(dataArg.dataConvite).toBeInstanceOf(Date);
+      expect(dataArg.dataResposta).toBeInstanceOf(Date);
+    });
+  });
+
+  describe('remove', () => {
+    it('remove a alocação e registra o log', async () => {
+      prisma.alocacao.findUnique.mockResolvedValue({
+        id: 'aloc-1',
+        substituidaPorId: null,
+        vagaMontagem: {
+          montagemId: MONTAGEM_ID,
+          equipe: equipeFake({ nome: 'Eq. da Animação' }),
+          cargo: cargoFake({ nome: 'Componentes' }),
+          montagem: { status: 'EM_ANDAMENTO' },
+        },
+      });
+
+      const resultado = await service.remove(MONTAGEM_ID, 'aloc-1');
+
+      expect(prisma.alocacao.delete).toHaveBeenCalledWith({ where: { id: 'aloc-1' } });
+      expect(logAtividade.registrar).toHaveBeenCalledWith(
+        MONTAGEM_ID,
+        undefined,
+        'REMOVEU_ALOCACAO',
+        'Eq. da Animação / Componentes',
+        expect.anything(),
+      );
+      expect(resultado.id).toBe('aloc-1');
     });
   });
 });
