@@ -78,6 +78,23 @@
   }
 }
 
+/* Tela de carregamento (components/loading-screen.tsx) — "respiração" suave (escala + opacidade)
+   em vez do animate-pulse padrão do Tailwind, que só pisca a opacidade de forma mais abrupta. */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+.animate-breathe {
+  animation: breathe 2.2s ease-in-out infinite;
+}
+
 /* Modo telão / impressão do Quadro de Equipes (docs/propostas.md, proposta #5) — margem
    enxuta e fundo sempre branco na página impressa, independente do tema escuro na tela. */
 @media print {

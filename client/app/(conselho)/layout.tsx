@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LogoutButton } from '@/components/logout-button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LoadingScreen } from '@/components/loading-screen';
 import { useSessao } from '@/lib/auth-context';
 
 // Grupo (conselho) = área exclusiva de conta CONSELHO (R8) — só leitura de Montagem de
@@ -29,11 +30,7 @@ export default function ConselhoLayout({ children }: { children: React.ReactNode
   }, [isLoading, isError, sessao, router]);
 
   if (isLoading || isError || !sessao || sessao.role !== 'CONSELHO') {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
-        Carregando...
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
