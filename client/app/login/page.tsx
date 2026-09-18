@@ -66,22 +66,33 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    // `dark` forçado — a tela de login é sempre escura, independente do tema (claro/escuro/
+    // sistema) escolhido no resto do app. Sem isso, o painel de identidade (fixo em zinc-950)
+    // e o formulário (que segue os tokens de tema normais) ficavam com metade clara/metade
+    // escura quando o usuário estivesse no tema claro.
+    <div className="dark flex min-h-screen bg-background text-foreground">
       {/* Painel de identidade — escondido em telas pequenas (o formulário sozinho já basta lá,
           com um logo pequeno no topo). Tom neutro escuro (zinc), não uma cor "de marca" — o
           design system do projeto evita cor institucional de propósito (é um sistema
           operacional, ver docs/design-system.md). */}
-      <div className="hidden w-1/2 flex-col items-center justify-center bg-zinc-950 p-12 lg:flex">
+      <div className="relative hidden w-1/2 flex-col items-center justify-center overflow-hidden bg-zinc-950 p-12 lg:flex">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(circle at 50% 40%, rgba(255,255,255,0.08), transparent 60%)',
+          }}
+        />
         <Image
           src="/logo-segue-me.png"
           alt="Segue-me"
           width={160}
           height={160}
           priority
-          className="h-40 w-40 object-contain"
+          className="relative h-40 w-40 object-contain"
         />
-        <h1 className="mt-6 text-xl font-semibold text-white">SGM Core</h1>
-        <p className="mt-1 text-sm text-zinc-400">Segue-me — Diocese de Crato</p>
+        <h1 className="relative mt-6 text-xl font-semibold text-white">SGM Core</h1>
+        <p className="relative mt-1 text-sm text-zinc-400">Segue-me — Diocese de Crato</p>
       </div>
 
       <div className="flex flex-1 items-center justify-center p-6">
@@ -148,6 +159,9 @@ export default function LoginPage() {
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               Entrar
             </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Esqueceu a senha? Fale com o Conselho.
+            </p>
           </form>
         </div>
       </div>
