@@ -9,6 +9,7 @@ function criarPrismaMock() {
   return {
     usuario: {
       findUnique: jest.fn(),
+      update: jest.fn(),
     },
   };
 }
@@ -75,6 +76,37 @@ describe('AuthService', () => {
         role: 'PAROQUIA',
         paroquiaId: 'p1',
       });
+    });
+  });
+
+  describe('alterarSenha', () => {
+    it('lança UnauthorizedException se o usuário não existir', async () => {
+      prisma.usuario.findUnique.mockResolvedValue(null);
+      await expect(service.alterarSenha(USUARIO_ID, 'atual', 'nova-senha')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('rejeita se a senha atual estiver errada', async () => {
+      const senhaHash = await bcrypt.hash('senha-certa', 10);
+      prisma.usuario.findUnique.mockResolvedValue({ id: USUARIO_ID, senhaHash });
+      await expect(
+        service.alterarSenha(USUARIO_ID, 'senha-errada', 'nova-senha-forte'),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(prisma.usuario.update).not.toHaveBeenCalled();
+    });
+
+    it('atualiza o hash quando a senha atual está correta', async () => {
+      const senhaHash = await bcrypt.hash('senha-certa', 10);
+      prisma.usuario.findUnique.mockResolvedValue({ id: USUARIO_ID, senhaHash });
+
+      await service.alterarSenha(USUARIO_ID, 'senha-certa', 'nova-senha-forte');
+
+      expect(prisma.usuario.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: USUARIO_ID } }),
+      );
+      const novoHash = (prisma.usuario.update as jest.Mock).mock.calls[0][0].data.senhaHash;
+      await expect(bcrypt.compare('nova-senha-forte', novoHash)).resolves.toBe(true);
     });
   });
 

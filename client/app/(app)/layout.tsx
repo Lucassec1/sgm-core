@@ -8,6 +8,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Separator } from '@/components/ui/separator';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { LogoutButton } from '@/components/logout-button';
+import { TrocarSenhaDialog } from '@/components/trocar-senha-dialog';
 import { LoadingScreen } from '@/components/loading-screen';
 import { useSessao } from '@/lib/auth-context';
 
@@ -50,6 +51,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="ml-auto flex items-center gap-1">
             <CommandPalette />
             <ThemeToggle />
+            <TrocarSenhaDialog />
             <LogoutButton />
           </div>
         </header>

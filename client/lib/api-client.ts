@@ -119,6 +119,13 @@ export const apiClient = {
     return request<{ ok: true }>('/auth/logout', { method: 'POST' });
   },
 
+  alterarSenha(senhaAtual: string, senhaNova: string) {
+    return request<{ ok: true }>('/auth/senha', {
+      method: 'PATCH',
+      body: JSON.stringify({ senhaAtual, senhaNova }),
+    });
+  },
+
   me() {
     return request<SessaoAtual>('/auth/me');
   },
