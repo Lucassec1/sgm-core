@@ -23,7 +23,7 @@ import { apiClient, ApiError } from '@/lib/api-client';
 
 // Self-service — a própria conta (paróquia ou Conselho) troca a senha sem depender de um
 // reset externo. Útil pra virada de equipe dirigente todo início de ano, por exemplo.
-const trocarSenhaSchema = z
+export const trocarSenhaSchema = z
   .object({
     senhaAtual: z.string().min(1, 'Informe a senha atual'),
     senhaNova: z.string().min(8, 'A nova senha precisa ter pelo menos 8 caracteres'),
