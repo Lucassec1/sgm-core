@@ -18,7 +18,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
       JWT_SECRET: ci-secret-fake
-      JWT_EXPIRES_IN: 8h
+      JWT_EXPIRES_IN: 12h
     steps:
       - uses: actions/checkout@v4
 
