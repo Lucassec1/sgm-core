@@ -32,6 +32,27 @@ describe('ParoquiasService', () => {
     service = new ParoquiasService(prisma as unknown as PrismaService);
   });
 
+  describe('findAll', () => {
+    it('lista paróquias ordenadas por nome, com os usuários PAROQUIA de cada uma', async () => {
+      prisma.paroquia.findMany.mockResolvedValue([{ id: 'p1', nome: 'Paróquia X' }]);
+
+      const resultado = await service.findAll();
+
+      expect(prisma.paroquia.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { nome: 'asc' },
+          include: {
+            usuarios: {
+              where: { role: 'PAROQUIA' },
+              select: { id: true, login: true, ativo: true },
+            },
+          },
+        }),
+      );
+      expect(resultado).toEqual([{ id: 'p1', nome: 'Paróquia X' }]);
+    });
+  });
+
   describe('create', () => {
     it('rejeita login já em uso', async () => {
       prisma.usuario.findUnique.mockResolvedValue({ id: 'u1' });

@@ -118,6 +118,17 @@ describe('FichasCasaisService — upload de foto', () => {
       (fotoStorage.encontrarFoto as jest.Mock).mockResolvedValue(null);
       await expect(service.streamFoto(CASAL_ID, PAROQUIA_ID)).rejects.toThrow(NotFoundException);
     });
+
+    it('retorna o stream e o mimetype quando a foto existe', async () => {
+      (fotoStorage.encontrarFoto as jest.Mock).mockResolvedValue({
+        stream: 'stream-fake',
+        mimetype: 'image/jpeg',
+      });
+
+      const resultado = await service.streamFoto(CASAL_ID, PAROQUIA_ID);
+
+      expect(resultado).toEqual({ stream: 'stream-fake', mimetype: 'image/jpeg' });
+    });
   });
 
   describe('remove', () => {

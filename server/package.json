@@ -12,11 +12,11 @@
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:seed:e2e": "ts-node prisma/seed-e2e.ts",
     "prisma:seed:bootstrap-conselho": "ts-node prisma/seed-bootstrap-conselho.ts"
   },
   "dependencies": {

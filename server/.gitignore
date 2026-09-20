@@ -5,6 +5,9 @@ node_modules/
 dist/
 *.tsbuildinfo
 
+# Test coverage
+coverage/
+
 # Uploads (Quadrantes, fotos de Ficha/FichaCasal) — binários ficam no filesystem, fora do git.
 # Âncora na raiz do projeto (/uploads/), senão bate também em src/common/uploads/ (código-fonte).
 /uploads/

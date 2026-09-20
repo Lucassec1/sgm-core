@@ -44,6 +44,15 @@ describe('ListaSubstituicaoService', () => {
   });
 
   describe('create', () => {
+    it('rejeita com 404 quando a montagem não existe', async () => {
+      prisma.montagem.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.create(MONTAGEM_ID, { tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.listaSubstituicao.create).not.toHaveBeenCalled();
+    });
+
     it('confirma que a montagem existe antes de criar', async () => {
       prisma.listaSubstituicao.create.mockResolvedValue({
         id: 'item-1',
@@ -95,6 +104,35 @@ describe('ListaSubstituicaoService', () => {
         service.create(MONTAGEM_ID, { tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any),
       ).rejects.toThrow(ConflictException);
     });
+
+    it('registra no log com o nome do casal quando é uma ficha de casal (não jovem)', async () => {
+      prisma.listaSubstituicao.create.mockResolvedValue({
+        id: 'item-1',
+        ficha: null,
+        fichaCasal: { nomeEle: 'João', nomeEla: 'Maria' },
+      });
+
+      await service.create(MONTAGEM_ID, {
+        tipoPessoa: 'CASAL',
+        fichaCasalId: 'casal-1',
+      } as any);
+
+      expect(logAtividade.registrar).toHaveBeenCalledWith(
+        MONTAGEM_ID,
+        undefined,
+        'ADICIONOU_LISTA_SUBSTITUICAO',
+        'João e Maria',
+        expect.anything(),
+      );
+    });
+
+    it('repropaga qualquer outro erro sem traduzir', async () => {
+      prisma.listaSubstituicao.create.mockRejectedValue(new Error('erro inesperado'));
+
+      await expect(
+        service.create(MONTAGEM_ID, { tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any),
+      ).rejects.toThrow('erro inesperado');
+    });
   });
 
   describe('findAll', () => {
@@ -131,6 +169,25 @@ describe('ListaSubstituicaoService', () => {
         undefined,
         'REMOVEU_LISTA_SUBSTITUICAO',
         'João',
+        expect.anything(),
+      );
+    });
+
+    it('remove e registra o nome do casal quando o item é uma ficha de casal', async () => {
+      prisma.listaSubstituicao.findUnique.mockResolvedValue({
+        id: 'item-1',
+        montagemId: MONTAGEM_ID,
+        ficha: null,
+        fichaCasal: { nomeEle: 'João', nomeEla: 'Maria' },
+      });
+
+      await service.remove(MONTAGEM_ID, 'item-1');
+
+      expect(logAtividade.registrar).toHaveBeenCalledWith(
+        MONTAGEM_ID,
+        undefined,
+        'REMOVEU_LISTA_SUBSTITUICAO',
+        'João e Maria',
         expect.anything(),
       );
     });

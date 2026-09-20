@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -15,16 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { apiClient, ApiError } from '@/lib/api-client';
 import { useSessao } from '@/lib/auth-context';
-
-// Login único (docs/producao.md, bloqueador #3) — mesmo formulário pra conta de paróquia e de
-// Conselho; o backend decide pelo `role` de quem logou, o client só redireciona pro lugar
-// certo depois (ver docs/regras-imutaveis.md, R7/R8).
-const loginSchema = z.object({
-  login: z.string().min(1, 'Informe o usuário'),
-  senha: z.string().min(1, 'Informe a senha'),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+import { loginSchema, type LoginFormValues } from './login-schema';
 
 export default function LoginPage() {
   const router = useRouter();
