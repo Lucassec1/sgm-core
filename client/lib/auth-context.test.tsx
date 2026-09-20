@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { render, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import type { ReactNode } from 'react';
@@ -11,7 +11,7 @@ vi.mock('./api-client', () => ({
 }));
 
 import { apiClient } from './api-client';
-import { useSessao, useLogout } from './auth-context';
+import { useSessao, useLogout, SessaoExpiradaListener } from './auth-context';
 
 function wrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -80,5 +80,65 @@ describe('useLogout', () => {
     expect(apiClient.logout).toHaveBeenCalled();
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['auth', 'me'] });
     expect(window.location.href).toBe('/login');
+  });
+});
+
+describe('SessaoExpiradaListener', () => {
+  const originalLocation = window.location;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: originalLocation,
+    });
+  });
+
+  it('invalida a sessão e redireciona pro /login quando não está nele', async () => {
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...originalLocation, pathname: '/fichas', href: '' },
+    });
+    const { Wrapper, queryClient } = wrapper();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    render(<SessaoExpiradaListener />, { wrapper: Wrapper });
+    window.dispatchEvent(new Event('sgm:sessao-expirada'));
+
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['auth', 'me'] }));
+    expect(window.location.href).toBe('/login');
+  });
+
+  it('não redireciona de novo quando já está no /login', async () => {
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...originalLocation, pathname: '/login', href: '' },
+    });
+    const { Wrapper, queryClient } = wrapper();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    render(<SessaoExpiradaListener />, { wrapper: Wrapper });
+    window.dispatchEvent(new Event('sgm:sessao-expirada'));
+
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalled());
+    expect(window.location.href).toBe('');
+  });
+
+  it('remove o listener ao desmontar', async () => {
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...originalLocation, pathname: '/fichas', href: '' },
+    });
+    const { Wrapper, queryClient } = wrapper();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    const { unmount } = render(<SessaoExpiradaListener />, { wrapper: Wrapper });
+    unmount();
+    window.dispatchEvent(new Event('sgm:sessao-expirada'));
+
+    expect(invalidateSpy).not.toHaveBeenCalled();
   });
 });
