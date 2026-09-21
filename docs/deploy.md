@@ -102,9 +102,10 @@ Rápido, de fora, sem criar dados:
 - [ ] Abrir uma ficha e o quadro de uma montagem, e conferir que carregam dados.
 - [ ] Enviar uma foto de teste numa ficha de teste e conferir que aparece (exercita o S3 — a única parte
       que os testes automáticos não cobrem de verdade). Depois remover a foto.
-- [ ] O Swagger fica em `<url-do-render>/docs`. **Atenção:** ele é público (sem login) também em produção — expõe
-      o mapa de rotas da API, mas nenhum dado de pessoas. O comentário em `server/src/main.ts` ainda diz "sem
-      Auth real" e está desatualizado. Decisão pendente: proteger, ou só ligar fora de produção.
+- [ ] `GET <url-do-render>/docs` e `/docs-json` → **404**. O Swagger só existe fora de produção (expõe o mapa
+      completo de rotas). **Se responder 200, o `NODE_ENV=production` não está definido no Render** — o mesmo
+      erro que faz o cookie de sessão ser rejeitado entre Render e Vercel (seção 3). Vale como teste rápido
+      de que a variável está certa. Para consultar a API, use o Swagger local (`docker-compose up` → `/docs`).
 
 ## 6. Primeira conta de Conselho em produção
 

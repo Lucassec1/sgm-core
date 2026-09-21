@@ -47,7 +47,7 @@ npm run prisma:seed
 
 O seed cria uma credencial de paróquia de teste (`paroquia-dev` / `paroquia-dev-123`, ver
 `server/prisma/seed.ts`). Fichas, Montagem e Conselho exigem login (`POST /auth/login`) — o
-guard global bloqueia todo o resto. A documentação da API (Swagger) fica em `/docs` no server.
+guard global bloqueia todo o resto. A documentação da API (Swagger) fica em `/docs` no server, **só fora de produção** (lá responde 404).
 
 > **Nunca rode `prisma:seed` no banco de produção** — ele cria fichas e casais falsos. Em
 > produção só o bootstrap do Conselho (abaixo) é seguro.

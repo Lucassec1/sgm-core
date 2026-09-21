@@ -90,4 +90,4 @@ Implementado como **guard central** (`ParoquiaScopeGuard` e `MontagemScopeGuard`
 - **Banco:** Postgres gerenciado no Neon (backup automático incluído pelo provedor), schema aplicado via `prisma migrate`.
 - **Arquivos:** fotos 3x4 e PDFs de Quadrante vão pro **S3** (bucket privado, `server/src/common/uploads/s3-storage.ts`), não pro filesystem — hospedagem com disco efêmero perderia o arquivo a cada restart/deploy.
 - **Aplicação:** server no Render, client na Vercel. Como são domínios diferentes, o cookie de sessão sai `SameSite=None` em produção e o `CORS_ORIGINS` precisa listar a URL do client.
-- **Hardening e observabilidade:** Helmet, rate limiting (`@nestjs/throttler`), logger estruturado (`nestjs-pino`), `GET /health`, Sentry nos dois lados (inativo até existir DSN).
+- **Hardening e observabilidade:** Helmet, rate limiting (`@nestjs/throttler`), logger estruturado (`nestjs-pino`), `GET /health`, Sentry nos dois lados (inativo até existir DSN). O Swagger (`/docs`) só liga fora de produção.
