@@ -17,6 +17,7 @@ export function ThemeToggle() {
 
   // next-themes só sabe o tema real depois de montar no cliente — até lá, um placeholder
   // do mesmo tamanho evita mismatch de hidratação e pulo de layout.
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- padrão de montagem pós-hidratação
   useEffect(() => setMontado(true), []);
   if (!montado) return <Button variant="ghost" size="icon" disabled aria-hidden />;
 

@@ -38,6 +38,7 @@ export function CommandPalette() {
   }, [query]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- limpa a busca ao fechar o palette
     if (!open) setQuery('');
   }, [open]);
 

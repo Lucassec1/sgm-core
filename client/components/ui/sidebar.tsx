@@ -463,7 +463,7 @@ const SidebarMenuSkeleton = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<'div'> & { showIcon?: boolean }
 >(({ className, showIcon = false, ...props }, ref) => {
-  const width = React.useMemo(() => `${Math.floor(Math.random() * 40) + 50}%`, []);
+  const width = React.useState(() => `${Math.floor(Math.random() * 40) + 50}%`)[0];
   return (
     <div
       ref={ref}
