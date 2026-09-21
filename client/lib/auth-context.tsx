@@ -21,6 +21,7 @@ export function useLogout() {
     mutationFn: () => apiClient.logout(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- recarga completa proposital: descarta todo estado em memória da sessão anterior
       window.location.href = '/login';
     },
   });
@@ -36,6 +37,7 @@ export function SessaoExpiradaListener() {
     function aoExpirar() {
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
       if (window.location.pathname !== '/login') {
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- recarga completa proposital: descarta todo estado em memória da sessão anterior
         window.location.href = '/login';
       }
     }
