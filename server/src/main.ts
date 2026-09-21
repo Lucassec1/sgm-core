@@ -38,23 +38,25 @@ async function bootstrap() {
   });
 
   // Contrato de API (docs/historico/code-review.md, checklist de hardening) — documentação gerada a
-  // partir dos DTOs (class-validator, via plugin do nest-cli.json) e dos controllers. Sem
-  // proteção de acesso por enquanto: mesmo estágio do resto do sistema (uso interno, sem
-  // Auth real ainda — ver "Isolamento por paróquia" no CLAUDE.md).
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('SGM Core API')
-    .setDescription('API do Segue-me (Fichas + Montagem), diocese de Crato.')
-    .setVersion('1.0')
-    .addTag('fichas', 'Ficha do Jovem')
-    .addTag('fichas-casais', 'Ficha do Casal')
-    .addTag('montagens')
-    .addTag('equipes')
-    .addTag('alocacoes', 'Alocação de pessoas nas vagas da Montagem (R1-R9)')
-    .addTag('lista-substituicao')
-    .addTag('quadrantes')
-    .build();
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('docs', app, swaggerDocument);
+  // partir dos DTOs (class-validator, via plugin do nest-cli.json) e dos controllers. Só liga fora
+  // de produção: expõe o mapa completo de rotas e não tem proteção de acesso, e o sistema guarda
+  // dado sensível (inclusive de menores). Em produção /docs e /docs-json respondem 404.
+  if (process.env.NODE_ENV !== 'production') {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('SGM Core API')
+      .setDescription('API do Segue-me (Fichas + Montagem), diocese de Crato.')
+      .setVersion('1.0')
+      .addTag('fichas', 'Ficha do Jovem')
+      .addTag('fichas-casais', 'Ficha do Casal')
+      .addTag('montagens')
+      .addTag('equipes')
+      .addTag('alocacoes', 'Alocação de pessoas nas vagas da Montagem (R1-R9)')
+      .addTag('lista-substituicao')
+      .addTag('quadrantes')
+      .build();
+    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('docs', app, swaggerDocument);
+  }
 
   const port = process.env.PORT ?? 3001;
   await app.listen(port);
