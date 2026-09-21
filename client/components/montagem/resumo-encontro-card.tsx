@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useResumoMontagem } from '@/lib/hooks/use-montagens';
 
 // "Como foi esse encontro" — painel de resumo mostrado na Montagem finalizada
-// (docs/propostas.md, proposta #2). Lê o LogAtividade (R9) e as Alocacoes já existentes,
+// (docs/historico/propostas.md, proposta #2). Lê o LogAtividade (R9) e as Alocacoes já existentes,
 // sem schema novo — ver a nota no topo de `MontagensService.resumo()` sobre as duas métricas
 // do escopo original que não são calculáveis com o que o log guarda hoje.
 function formatarDuracao(ms: number | null): string {

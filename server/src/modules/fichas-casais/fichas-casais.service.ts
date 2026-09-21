@@ -111,7 +111,7 @@ export class FichasCasaisService {
     return this.prisma.fichaCasal.delete({ where: { id } });
   }
 
-  // Upload de foto do casal (docs/propostas.md, proposta #4) — mesmo padrão da Ficha do
+  // Upload de foto do casal (docs/historico/propostas.md, proposta #4) — mesmo padrão da Ficha do
   // Jovem (ver FichasService), um arquivo por registro.
   async uploadFoto(id: string, arquivo: ArquivoRecebido | undefined, paroquiaId: string) {
     await this.findOne(id, paroquiaId);

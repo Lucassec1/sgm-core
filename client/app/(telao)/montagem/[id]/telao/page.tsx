@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { EquipeIcon } from '@/components/equipes/equipe-icon';
 import { useTelaoMontagem } from '@/lib/hooks/use-telao';
 
-// Modo telão / impressão do Quadro de Equipes (docs/propostas.md, proposta #5) — visão
+// Modo telão / impressão do Quadro de Equipes (docs/historico/propostas.md, proposta #5) — visão
 // somente-leitura, grande, SEM dado sensível: só nome + equipe + função. Nada de telefone,
 // endereço, avaliação ou ações de edição. Vive fora do grupo (app) de propósito (sem
 // Sidebar/header) — é pensada pra projetar num telão ou imprimir e colar no mural. Público

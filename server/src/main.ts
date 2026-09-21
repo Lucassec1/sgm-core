@@ -37,7 +37,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Contrato de API (docs/code-review.md, checklist de hardening) — documentação gerada a
+  // Contrato de API (docs/historico/code-review.md, checklist de hardening) — documentação gerada a
   // partir dos DTOs (class-validator, via plugin do nest-cli.json) e dos controllers. Sem
   // proteção de acesso por enquanto: mesmo estágio do resto do sistema (uso interno, sem
   // Auth real ainda — ver "Isolamento por paróquia" no CLAUDE.md).

@@ -367,7 +367,7 @@ export class MontagensService {
     return this.logAtividade.listar(montagemId);
   }
 
-  // Painel "como foi esse encontro" (docs/propostas.md, proposta #2) — lê o LogAtividade (R9)
+  // Painel "como foi esse encontro" (docs/historico/propostas.md, proposta #2) — lê o LogAtividade (R9)
   // e a Alocacao já existentes, sem schema novo. Duas métricas do escopo original da proposta
   // não são calculáveis com o que o log guarda hoje e foram substituídas por uma versão
   // honesta do mesmo espírito:

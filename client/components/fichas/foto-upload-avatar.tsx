@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 const TIPOS_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
 const TAMANHO_MAXIMO_BYTES = 5 * 1024 * 1024;
 
-// Upload de foto 3x4 — substitui o campo `fotoUrl` manual (docs/propostas.md, proposta #4).
+// Upload de foto 3x4 — substitui o campo `fotoUrl` manual (docs/historico/propostas.md, proposta #4).
 // Componente genérico: Ficha do Jovem e Ficha do Casal têm endpoints e hooks próprios (um
 // arquivo por registro), mas o widget de UI é o mesmo pros dois.
 export function FotoUploadAvatar({

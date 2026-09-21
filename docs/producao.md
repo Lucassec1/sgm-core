@@ -8,6 +8,10 @@ Versão navegável: https://claude.ai/code/artifact/8a60c06d-25cd-4fed-91ca-4527
 
 Data: 14/09/2026
 
+> **Atualizado em 21/09/2026.** O texto abaixo é a avaliação original; o status de cada item está no
+> título ou logo no começo dele. Resumo: bloqueadores 1 (deploy), 2 e 3 feitos; 4 parcial (CSV pronto, `.xlsx`
+> pendente); upgrades de dependência e E2E feitos. Falta validar a produção e preencher `docs/sucessao.md`.
+
 ## Veredito
 
 A pergunta certa não é "o código está bom o suficiente" — já está, pro que se propõe. A pergunta é "o que
@@ -29,17 +33,19 @@ Não são "boas práticas" genéricas. São as quatro coisas que, se ninguém me
 que ninguém vai saber consertar depois — e duas delas (privacidade e hospedagem) são decisões que só alguém
 com a autoridade/contexto atual do Lucas consegue destravar.
 
-### 1. Backup/hospedagem do banco — EM ANDAMENTO (17/09/2026)
+### 1. Backup/hospedagem do banco — FEITO (deploy em 21/09/2026)
 
 Banco migrado pro **Neon** (Postgres 16 gerenciado, backup automático incluído, free tier) — schema aplicado,
 zero dado fake, credencial real da paróquia (Basílica Santuário Nossa Senhora das Dores) e conta de Conselho
 já criadas lá. Upload de foto/Quadrante migrado pra **AWS S3** (bucket privado) pelo mesmo motivo: a
 hospedagem escolhida pra rodar a aplicação (ver abaixo) tem disco efêmero.
 
-**Falta:** hospedar a aplicação em si (hoje só o banco está fora do notebook). Decisão já tomada — **Render**
-pro server, **Vercel** pro client — falta executar o deploy de fato. Dois ajustes de código já feitos
-antecipando isso: cookie de sessão vira `SameSite=None` em produção (Render e Vercel são domínios
-diferentes) e storage de arquivo é S3 (não filesystem).
+**Deploy feito (21/09/2026, confirmado pelo Lucas):** aplicação hospedada no **Render** (server) e na
+**Vercel** (client). Dois ajustes de código já estavam prontos pra isso: cookie de sessão `SameSite=None`
+em produção (Render e Vercel são domínios diferentes) e storage de arquivo em S3 (não filesystem).
+
+**Falta validar em produção** (health, login entre domínios, CORS, upload real), confirmar a hibernação do
+Render free, os DSNs do Sentry e o período de retenção de backup do plano Neon — ver `docs/deploy.md`.
 
 ### 2. Consentimento já existe no papel; cobre o uso digital — CONFIRMADO (16/09/2026)
 
@@ -71,11 +77,12 @@ de acesso (ninguém de fora entra mais sem credencial), não resolve rastreabili
 dentro de uma mesma paróquia. Se isso vier a importar, a mudança é login individual por pessoa
 — hoje deliberadamente fora de escopo.
 
-### 4. Ninguém não-técnico consegue tirar os dados do sistema sozinho
+### 4. Ninguém não-técnico consegue tirar os dados do sistema sozinho — PARCIAL (CSV pronto, `.xlsx` pendente)
 
-A exportação `.xlsx` segue "em breve" (confirmado no dashboard e no `CLAUDE.md`). Combinado com o item 1
-(sem backup automático), hoje não existe nenhum jeito de alguém da equipe dirigente, sem saber mexer em
-banco de dados, conseguir um retrato dos dados por conta própria.
+**Situação atual:** existe exportação **CSV** simples (card "Exportação" do dashboard: fichas, casais e
+montagem, um botão só), o que cobre o essencial descrito abaixo. O `.xlsx` completo, com layout, segue
+pendente. O parágrafo original (14/09) dizia: sem exportação e sem backup, ninguém da equipe dirigente
+conseguia um retrato dos dados sem mexer em banco de dados.
 
 - **O que fazer:** não precisa ser a exportação completa planejada originalmente — uma exportação simples
   (fichas + montagem atual em CSV/Excel, um botão só) já cobre o essencial.
@@ -99,12 +106,13 @@ Não quebram nada sozinhos, mas separam "projeto de um estudante" de "sistema qu
 - **Formatação automática**: Prettier + `.editorconfig` + Husky/lint-staged, repositório inteiro
   reformatado uma vez (commit isolado, sem mudança de lógica).
 
-**Ainda em aberto:**
+**Resolvido depois (21/09/2026):**
 
-- **`npm audit`**: 28 vulnerabilidades no server (todas em dependências do `@nestjs/cli`, ferramenta
-  de build — não roda em produção) e 2 no client (PostCSS, usado só em build time pelo Next). Nenhuma
-  explorável através da API/site rodando pra usuário final. Corrigir de verdade exige upgrade maior
-  (`@nestjs/cli` 10→12, Next.js 15→16) — adiado por ser baixo risco real, mas é dívida que só cresce.
+- **`npm audit`** — upgrades feitos: `@nestjs/cli` 12, NestJS 11 (com `multer` 2.4.0 forçado via `overrides`) e
+  Next.js 16 + ESLint 9. Client: **0** vulnerabilidades. Server: restam 5 em produção (`ajv` e a cadeia
+  `mysql2`/`deepmerge-ts` do tooling do Prisma); o "fix" que o npm sugere é rebaixar o Prisma, então não foi
+  aplicado. Correção do diagnóstico original: as vulnerabilidades do server **não** eram só de build — incluíam
+  `@nestjs/core` e `multer` (upload de foto), que rodam em produção.
 
 ---
 
@@ -114,12 +122,13 @@ Não impedem nada hoje, mas são exatamente sobre sobreviver com o mínimo de co
 
 - **Bus factor 1 — só o Lucas tem acesso técnico.** É o risco por trás de todos os outros. Vale dar acesso
   de colaborador a pelo menos mais uma pessoa antes de sair de vez.
-- **Falta um "e se o site cair" pra quem não é técnico.** Toda a documentação existente é excelente, mas é
+- **Falta um "e se o site cair" pra quem não é técnico** _(esqueleto criado em `docs/sucessao.md` — falta
+  preencher contatos e donos das contas)_. Toda a documentação existente é excelente, mas é
   escrita pra quem programa. Vale um documento curto, separado, em português simples: pra quem ligar, o que
   NÃO tentar mexer sozinho, onde os dados ficam.
-- **Testes E2E dos fluxos críticos ainda não existem**, apesar de já planejados em `docs/arquitetura.md`
-  (seção 5) — Fluxo de Cadastro e Fluxo de Montagem ponta a ponta.
-- **Arquitetura está mais simples que o documentado, e tudo bem.** `docs/arquitetura.md` descreve
+- **Testes E2E dos fluxos críticos — FEITO:** Playwright cobre Cadastro de Ficha e Montagem ponta a ponta
+  (`e2e/`, `npm run test:e2e`). Ainda não roda no CI.
+- **Arquitetura está mais simples que o documentado, e tudo bem — RESOLVIDO (21/09/2026, `docs/arquitetura.md` corrigido).** `docs/arquitetura.md` descreve
   Controller → Service → Repository; na prática as Services chamam o Prisma direto. Pra um mantenedor só,
   isso é a escolha certa, não dívida técnica — só vale ajustar o doc pra refletir a decisão real.
 - **O modelo "madrinha" entre paróquias ainda não virou regra escrita.** Agora que R7 (isolamento real) e
@@ -138,14 +147,15 @@ Não impedem nada hoje, mas são exatamente sobre sobreviver com o mínimo de co
 ## Na prática: o que só o Lucas resolve agora vs. o que fica pra depois
 
 **Já decidido pelo Lucas:** hospedagem (Neon pro banco, S3 pro arquivo, Render+Vercel pra aplicação — banco
-migrado, app ainda não deployada) e consentimento (termo em papel confirmado que cobre uso digital).
+migrado e app deployada em 21/09/2026) e consentimento (termo em papel confirmado que cobre uso digital).
 
 **Ainda só o Lucas decide, e o timing importa** — fazer isso agora, com o contexto todo na cabeça, é muito
 mais barato que reconstruir depois: quem mais vai ter acesso técnico ao repositório; e como vai funcionar o
 convite de jovens entre paróquias agora que R7/R8 estão ativos — o modelo "madrinha" de hoje ainda não é
 uma regra escrita.
 
-**Trabalho técnico puro, dá pra fazer aos poucos ou delegar depois** — deploy de fato (Render/Vercel),
-upgrade de dependências (`@nestjs/cli`, Next.js), testes E2E, documento de sucessão em português simples.
+**Trabalho técnico puro, dá pra fazer aos poucos ou delegar depois** — já feitos: deploy (Render/Vercel),
+upgrade de dependências e testes E2E. Falta: validar a produção e preencher o documento de sucessão em
+português simples (`docs/sucessao.md`).
 Nenhum desses precisa do Lucas especificamente; precisam de alguém com acesso ao código — ele agora, ou um
 sucessor técnico depois, desde que o item de sucessão já tenha sido resolvido.

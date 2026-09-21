@@ -3,7 +3,7 @@ import { FichasService } from './fichas.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as fotoStorage from '../../common/uploads/foto-storage';
 
-// Testes do upload de foto (docs/propostas.md, proposta #4) — o resto do CRUD é simples o
+// Testes do upload de foto (docs/historico/propostas.md, proposta #4) — o resto do CRUD é simples o
 // bastante (sem regra de negócio) pra não pedir spec própria. PrismaService e o módulo de
 // storage (fs real) são mockados.
 jest.mock('../../common/uploads/foto-storage', () => ({

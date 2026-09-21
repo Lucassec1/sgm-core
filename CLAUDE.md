@@ -20,6 +20,10 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
 - `docs/ux-e-fluxos.md` — fluxos de usuário e decisões de UX. Ler antes de criar ou alterar qualquer tela.
 - `docs/design-system.md` — tokens visuais e mapa de componentes shadcn. Ler antes de estilizar algo novo.
 - `docs/arquitetura.md` — decisões técnicas (backend, frontend, multi-tenancy, testes, CI/CD). **Ler sempre** antes de criar estrutura de pastas, escolher biblioteca nova ou decidir padrão de código.
+- `docs/deploy.md` — como a produção está montada (Neon, S3, Render, Vercel), variáveis, migrations e checklist pós-deploy. Ler antes de mexer em deploy, env vars ou schema em produção.
+- `docs/sucessao.md` — guia em português simples pra quem não é técnico (e se o site cair, contas e donos, o que não mexer).
+- `docs/producao.md` — avaliação do que falta pra ser um produto de verdade, com status por item.
+- `docs/historico/` — documentos datados que ficam só de registro (code review de 04/09, propostas de evolução); não são fonte de verdade.
 
 ## Estrutura do projeto
 
@@ -54,7 +58,10 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
   (R7) e Conselho implementado de verdade (R8) — ver seção "Isolamento por paróquia" abaixo e
   `server/CLAUDE.md` pro padrão de guard/rota. `paroquiaId` não é mais aceito de nenhum
   endpoint vindo do client — sempre vem do token.
-- **CI**: GitHub Actions rodando lint + typecheck + build (server e client) em push/PR pra `main`.
+- **Produção**: Neon (Postgres), S3 (fotos/quadrantes), Render (server) e Vercel (client) — deploy feito em
+  21/09/2026; validação em produção e documentos de operação em `docs/deploy.md` e `docs/sucessao.md`.
+- **CI**: GitHub Actions rodando lint + typecheck + testes + build (server e client) em push/PR pra `main`.
+  E2E (Playwright, `npm run test:e2e`) roda só local.
 
 ## Isolamento por paróquia
 

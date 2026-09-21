@@ -1,4 +1,4 @@
-// Aviso "sem conexão — mostrando última versão sincronizada" (docs/propostas.md, proposta
+// Aviso "sem conexão — mostrando última versão sincronizada" (docs/historico/propostas.md, proposta
 // #6). O Service Worker (public/sw.js) sinaliza respostas servidas do cache via um header
 // (X-From-Cache); api-client.ts chama markServedFromCache()/markServedFresh() conforme esse
 // header aparece ou não em cada resposta. Pub-sub simples (sem lib nova) porque o estado

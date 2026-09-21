@@ -1,7 +1,7 @@
 import type { Readable } from 'stream';
 import { deleteObject, getObject, putObject } from './s3-storage';
 
-// Upload de foto 3x4 (Ficha do Jovem / Ficha do Casal) — docs/propostas.md, proposta #4.
+// Upload de foto 3x4 (Ficha do Jovem / Ficha do Casal) — docs/historico/propostas.md, proposta #4.
 // Reaproveitado por FichasService e FichasCasaisService, cada um com seu próprio prefixo de
 // chave no S3 (`fichas` / `fichas-casais`). Chave fixa (`${prefixo}/${id}`, sem extensão) —
 // o Content-Type vai como metadado do objeto no S3, então trocar de foto é só sobrescrever a

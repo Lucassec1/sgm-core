@@ -1,5 +1,8 @@
 # Code review — SGM Core
 
+> **Documento histórico (04/09/2026).** Registro de uma revisão de código feita nessa data; várias recomendações
+> já foram atendidas. Não é fonte de verdade — para o estado atual, ver `CLAUDE.md` e `docs/producao.md`.
+
 Revisão gerada por Claude a partir do repositório público [`Lucassec1/sgm-core`](https://github.com/Lucassec1/sgm-core) (branch `main`).
 Versão navegável (com destaque de severidade e blocos de código): https://claude.ai/code/artifact/a307b0be-e6a0-4ccd-98ac-91f01fd5396e
 

@@ -133,7 +133,7 @@ export function useLog(montagemId: string | undefined) {
   });
 }
 
-// Painel "como foi esse encontro" (docs/propostas.md, proposta #2) — só busca quando a
+// Painel "como foi esse encontro" (docs/historico/propostas.md, proposta #2) — só busca quando a
 // montagem está finalizada (`enabled`), que é quando o painel é mostrado.
 export function useResumoMontagem(montagemId: string | undefined, options?: { enabled?: boolean }) {
   return useQuery({

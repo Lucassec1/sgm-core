@@ -54,10 +54,10 @@
 
 - O sistema atende múltiplas paróquias da diocese de Crato (estimativa: **13 paróquias**).
 - Cada paróquia tem sua **própria equipe dirigente** (login próprio) — ou seja, existem 13 equipes dirigentes ao todo, uma por paróquia, sob supervisão do conselho diocesano.
-- Dados de fichas e montagem de uma paróquia **não são visíveis** para outra paróquia — exceto para o Conselho, que tem visão geral (funcionalidade futura).
+- Dados de fichas e montagem de uma paróquia **não são visíveis** para outra paróquia — exceto para o Conselho, que tem visão geral (implementado — ver R8).
 - A lógica de negócio (todas as regras deste documento) é **idêntica** para todas as paróquias.
 
-## R8 — Conselho (funcionalidade futura, não é escopo da v1)
+## R8 — Conselho (implementado em set/2026)
 
 - **12 contas no total**: 8 jovens do conselho (1 conta cada) + 4 casais do conselho (1 conta por casal).
 - Acesso **somente leitura**: visualizar a montagem em andamento em tempo real e as montagens finalizadas de qualquer paróquia.
