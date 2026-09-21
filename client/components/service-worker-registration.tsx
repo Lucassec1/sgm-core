@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 
-// Registra o Service Worker de cache de leitura da Montagem (public/sw.js — docs/propostas.md,
+// Registra o Service Worker de cache de leitura da Montagem (public/sw.js — docs/historico/propostas.md,
 // proposta #6). Registro é leve e idempotente; o filtro de quais requisições cachear vive
 // inteiramente dentro do sw.js, não aqui — esse componente só garante que ele está ativo.
 export function ServiceWorkerRegistration() {

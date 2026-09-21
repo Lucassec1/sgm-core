@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { StatusConvite } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
-// Endpoint público (sem login) pro modo telão/impressão (docs/propostas.md, proposta #5) —
+// Endpoint público (sem login) pro modo telão/impressão (docs/historico/propostas.md, proposta #5) —
 // projetado numa TV ou impresso no mural, sem sessão nenhuma. Por ser público, devolve só o
 // mínimo necessário (nome + equipe + cargo dos ACEITOS): nada de telefone, endereço, avaliação
 // ou dado de quem ainda não aceitou — mesmo cuidado que já existia na tela, agora também

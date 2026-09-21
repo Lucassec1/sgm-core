@@ -11,7 +11,7 @@ Versão 1.0 — Abril/2026 (documento original do Segue-me)
 
 O SGM Core (nome provisório) é uma plataforma web voltada para uso interno da equipe dirigente do Segue-me na diocese de Crato. O objetivo é digitalizar e centralizar dois processos hoje feitos em papel/planilhas: o cadastro de fichas dos jovens/casais e a montagem das equipes do encontro. O sistema segue rigorosamente as regras já estabelecidas pelo Segue-me, sem alterar nenhuma delas.
 
-Nasce pensado para uma única paróquia, mas deve ser construído de forma escalável para atender todas as paróquias da diocese (estimativa: 13 paróquias).
+Nasceu pensado para uma única paróquia, mas foi construído para atender todas as paróquias da diocese (estimativa: 13 paróquias) — o isolamento entre paróquias (R7) e o Conselho (R8) já estão implementados.
 
 ## 2. Módulos do Sistema
 
@@ -62,7 +62,7 @@ Substitui o processo atual em planilha Excel + material impresso.
 
 ### 2.3 Exportação e Histórico
 
-- Exportar montagem em .xlsx (só dados da montagem, sem fichas)
+- Exportar montagem em .xlsx (só dados da montagem, sem fichas) — _hoje existe só exportação CSV simples (fichas, casais e montagem); o .xlsx com layout segue pendente_
 - Visualizar montagens de encontros anteriores (somente leitura)
 - Aba Quadrantes: upload/download de PDFs da Equipe da Gráfica (só anexo, sem campos cadastráveis)
 
@@ -99,8 +99,8 @@ Ver `regras-imutaveis.md` para a versão completa e corrigida (R1 a R9).
 
 ## 5. Acesso e Perfis de Usuário
 
-- **Equipe Dirigente (Administrador):** acesso completo (fichas, montagem, exportação, quadrantes), login individual por paróquia, pode criar/editar/desativar fichas e montagens. Uma equipe dirigente por paróquia (13 no total).
-- **Conselho (Super Usuário — futuro):** 12 contas (8 jovens + 4 casais), acesso somente leitura à montagem em tempo real e histórico de qualquer paróquia, pode deixar observações identificadas com o nome do usuário, sem acesso às fichas.
+- **Equipe Dirigente (Administrador):** acesso completo (fichas, montagem, exportação, quadrantes), login por paróquia (credencial compartilhada da equipe dirigente, não uma conta por pessoa — decisão consciente, ver `producao.md`), pode criar/editar/desativar fichas e montagens. Uma equipe dirigente por paróquia (13 no total).
+- **Conselho (Super Usuário — implementado):** 12 contas (8 jovens + 4 casais), acesso somente leitura à montagem em tempo real e histórico de qualquer paróquia, pode deixar observações identificadas com o nome do usuário, sem acesso às fichas.
 
 Fluxo esperado: equipe dirigente finaliza a montagem → avisa o conselho no grupo → conselho acessa e deixa observações → sinaliza conclusão no grupo.
 

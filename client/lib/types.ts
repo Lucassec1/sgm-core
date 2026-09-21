@@ -187,7 +187,7 @@ export interface HistoricoEquipeItem {
   };
 }
 
-// Painel "como foi esse encontro" (docs/propostas.md, proposta #2) — agregado a partir do
+// Painel "como foi esse encontro" (docs/historico/propostas.md, proposta #2) — agregado a partir do
 // LogAtividade e das Alocacoes, sem schema novo.
 export interface ResumoMontagem {
   montagemId: string;

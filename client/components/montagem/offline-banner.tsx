@@ -3,7 +3,7 @@
 import { WifiOff } from 'lucide-react';
 import { useOfflineStatus } from '@/lib/hooks/use-offline-status';
 
-// "Sem conexão — mostrando a última versão sincronizada" (docs/propostas.md, proposta #6).
+// "Sem conexão — mostrando a última versão sincronizada" (docs/historico/propostas.md, proposta #6).
 // Só aparece quando a última leitura do Quadro de Equipes / Distribuição veio do cache do
 // Service Worker — some sozinho assim que qualquer leitura voltar a vir da rede.
 export function OfflineBanner() {

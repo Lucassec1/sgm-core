@@ -119,7 +119,7 @@ export class FichasService {
     return this.prisma.ficha.delete({ where: { id } });
   }
 
-  // Upload de foto 3x4 (docs/propostas.md, proposta #4) — substitui o campo `fotoUrl` manual.
+  // Upload de foto 3x4 (docs/historico/propostas.md, proposta #4) — substitui o campo `fotoUrl` manual.
   // Só faz sentido depois que a Ficha já existe (o arquivo em disco usa o id dela como nome).
   async uploadFoto(id: string, arquivo: ArquivoRecebido | undefined, paroquiaId: string) {
     await this.findOne(id, paroquiaId);

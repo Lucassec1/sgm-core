@@ -24,7 +24,7 @@ const DEBOUNCE_MS = 200;
 // Paleta de comando global (⌘K / Ctrl+K, abre de qualquer tela) — busca fichas, casais e
 // montagens por nome/número, e lista ações rápidas. Mesma peça (`Command`) já usada no
 // combobox de busca de pessoa pra vaga (docs/design-system.md), só exposta globalmente —
-// ver docs/propostas.md, proposta #1. `shouldFilter={false}`: quem filtra os resultados de
+// ver docs/historico/propostas.md, proposta #1. `shouldFilter={false}`: quem filtra os resultados de
 // ficha/casal é a API (busca por nome no servidor), não o matching fuzzy do cmdk.
 export function CommandPalette() {
   const router = useRouter();

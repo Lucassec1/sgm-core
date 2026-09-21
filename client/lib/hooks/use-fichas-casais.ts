@@ -45,7 +45,7 @@ export function useHistoricoEquipesCasal(fichaCasalId: string | undefined) {
   });
 }
 
-// Upload de foto (docs/propostas.md, proposta #4).
+// Upload de foto (docs/historico/propostas.md, proposta #4).
 export function useUploadFotoFichaCasal(id: string) {
   const queryClient = useQueryClient();
   return useMutation({

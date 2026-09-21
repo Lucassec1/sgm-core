@@ -1,5 +1,9 @@
 # Propostas de evolução — SGM Core
 
+> **Documento histórico.** Propostas de evolução feitas sobre o protótipo — 6 das 7 já implementadas (#1, #2, #4, #5,
+> #6 e #7). Não feita: a #3 (indicador de presença). A #4 (foto) existe na versão simples; o upload em lote não. Os comentários do código citam estas
+> propostas por número. Para o estado atual, ver `CLAUDE.md`.
+
 Ideias de design e funcionalidade pra evoluir o protótipo, lidas depois de revisar
 `docs/requisitos.md`, `docs/ux-e-fluxos.md` e `docs/design-system.md` — que já são bem completos.
 Por isso, o critério aqui foi: **só sugerir o que ainda não está decidido** nesses documentos.

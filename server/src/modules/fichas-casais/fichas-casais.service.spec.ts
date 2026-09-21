@@ -3,7 +3,7 @@ import { FichasCasaisService } from './fichas-casais.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as fotoStorage from '../../common/uploads/foto-storage';
 
-// Mesmo teste do upload de foto da FichasService (docs/propostas.md, proposta #4) — os dois
+// Mesmo teste do upload de foto da FichasService (docs/historico/propostas.md, proposta #4) — os dois
 // módulos usam o mesmo helper de storage, um arquivo por registro.
 jest.mock('../../common/uploads/foto-storage', () => ({
   ...jest.requireActual('../../common/uploads/foto-storage'),

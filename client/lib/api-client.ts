@@ -383,7 +383,7 @@ export const apiClient = {
     return `${API_URL}/montagens/${montagemId}/export`;
   },
 
-  // Telão (docs/propostas.md, proposta #5) — endpoint público e reduzido, sem login (o guard
+  // Telão (docs/historico/propostas.md, proposta #5) — endpoint público e reduzido, sem login (o guard
   // global exige JWT em tudo, exceto rotas @Public() como esta). Não usar pra nada além do
   // modo telão/impressão: o shape já vem filtrado (só ACEITOS, sem dado sensível).
   getTelaoMontagem(id: string) {
