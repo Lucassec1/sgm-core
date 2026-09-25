@@ -15,7 +15,9 @@ inspeção, adaptação), Product Goal, Sprint Goal, Definition of Done. Use Scr
 ## Contexto do projeto — ler antes de agir
 
 - `CLAUDE.md` (raiz) — estado atual de cada módulo.
-- `docs/producao.md` — o que falta pra ser produto, com status por item. **Fonte principal do backlog.**
+- GitHub Project "SGM Core" — **fonte de verdade do status e do backlog**.
+- `docs/producao.md` — avaliação e raciocínio por trás das pendências; cada uma aponta pra sua issue.
+  Status muda no Project, não nesse documento.
 - `docs/requisitos.md` — requisitos funcionais e não funcionais.
 - `docs/regras-imutaveis.md` — regras R1–R9. Critério de aceitação nunca pode contradizer essas regras.
 - Histórico entregue: `git log --merges --first-parent main` (PRs mergeados) e `gh pr list --state merged`.
@@ -23,7 +25,12 @@ inspeção, adaptação), Product Goal, Sprint Goal, Definition of Done. Use Scr
 ## GitHub (issues e Project)
 
 - Repositório: `Lucassec1/sgm-core`. Project: "SGM Core" (Projects v2 do usuário `Lucassec1`,
-  vinculado ao repositório), colunas Backlog → Ready → In Progress → Done.
+  vinculado ao repositório, https://github.com/users/Lucassec1/projects/2), com view Kanban agrupada
+  pelo campo Status: Backlog → Ready → In Progress → In Review → Blocked → Done.
+  - In Review = PR aberto (CI + revisão do agente `qa`). Blocked = parado por dependência ou decisão
+    externa; diga no corpo da issue o que desbloqueia.
+  - **Nunca recrie as opções do campo Status** (`updateProjectV2Field` com `singleSelectOptions`):
+    isso apaga o status de todos os itens. Se precisar, salve o status de cada item antes e restaure depois.
 - Use o `gh` CLI (`gh issue`, `gh label`, `gh project`). Se faltar o escopo `project`, peça pro
   usuário rodar `gh auth refresh -s project`.
 - Labels de tipo: `feature`, `fix`, `chore`, `docs`, `decisão`. Labels de área: `fichas`,
@@ -34,6 +41,12 @@ inspeção, adaptação), Product Goal, Sprint Goal, Definition of Done. Use Scr
 - Trabalho já entregue vira issue **fechada**, agrupada por entrega (épico), não uma por branch:
   resumo curto + lista dos PRs + o que foi entregue. Não invente critério de aceitação retroativo.
 - Item de decisão (só o Lucas decide) leva label `decisão` e descreve as opções e o impacto de cada uma.
+- Campo **Priority**: P0 (sem isso a produção não é confiável), P1 (pronto antes da saída da ED),
+  P2 (desejável). Sugira a prioridade; quem decide é o Lucas.
+- Milestone **"Saída da ED"** (15/12/2026): o que precisa estar pronto antes do Lucas sair da equipe
+  dirigente. Ao planejar, compare o que falta nela com o tempo até a data.
+- Templates em `.github/ISSUE_TEMPLATE/` (História de usuário, Bug, Decisão) e
+  `.github/pull_request_template.md` — use o mesmo formato. Todo PR leva `Closes #N`.
 
 ## Template de issue (backlog)
 

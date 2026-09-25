@@ -11,6 +11,10 @@ Data: 14/09/2026
 > **Atualizado em 21/09/2026.** O texto abaixo é a avaliação original; o status de cada item está no
 > título ou logo no começo dele. Resumo: bloqueadores 1 (deploy), 2 e 3 feitos; 4 parcial (CSV pronto, `.xlsx`
 > pendente); upgrades de dependência e E2E feitos. Falta validar a produção e preencher `docs/sucessao.md`.
+>
+> **Desde 24/09/2026 o status vive no GitHub Project** (https://github.com/users/Lucassec1/projects/2),
+> milestone "Saída da ED" (15/12/2026). Este documento guarda a avaliação e o raciocínio; cada pendência
+> aponta pra sua issue — atualize o status lá, não aqui.
 
 ## Veredito
 
@@ -44,7 +48,7 @@ hospedagem escolhida pra rodar a aplicação (ver abaixo) tem disco efêmero.
 **Vercel** (client). Dois ajustes de código já estavam prontos pra isso: cookie de sessão `SameSite=None`
 em produção (Render e Vercel são domínios diferentes) e storage de arquivo em S3 (não filesystem).
 
-**Falta validar em produção** (health, login entre domínios, CORS, upload real), confirmar a hibernação do
+**Falta validar em produção** (#57 — health, login entre domínios, CORS, upload real), confirmar a hibernação do
 Render free, os DSNs do Sentry e o período de retenção de backup do plano Neon — ver `docs/deploy.md`.
 
 ### 2. Consentimento já existe no papel; cobre o uso digital — CONFIRMADO (16/09/2026)
@@ -77,7 +81,7 @@ de acesso (ninguém de fora entra mais sem credencial), não resolve rastreabili
 dentro de uma mesma paróquia. Se isso vier a importar, a mudança é login individual por pessoa
 — hoje deliberadamente fora de escopo.
 
-### 4. Ninguém não-técnico consegue tirar os dados do sistema sozinho — PARCIAL (CSV pronto, `.xlsx` pendente)
+### 4. Ninguém não-técnico consegue tirar os dados do sistema sozinho — PARCIAL (CSV pronto, `.xlsx` pendente: #58)
 
 **Situação atual:** existe exportação **CSV** simples (card "Exportação" do dashboard: fichas, casais e
 montagem, um botão só), o que cobre o essencial descrito abaixo. O `.xlsx` completo, com layout, segue
@@ -109,7 +113,7 @@ Não quebram nada sozinhos, mas separam "projeto de um estudante" de "sistema qu
 **Resolvido depois (21/09/2026):**
 
 - **`npm audit`** — upgrades feitos: `@nestjs/cli` 12, NestJS 11 (com `multer` 2.4.0 forçado via `overrides`) e
-  Next.js 16 + ESLint 9. Client: **0** vulnerabilidades. Server: restam 5 em produção (`ajv` e a cadeia
+  Next.js 16 + ESLint 9. Client: **0** vulnerabilidades. Server: restam 5 em produção (#64) (`ajv` e a cadeia
   `mysql2`/`deepmerge-ts` do tooling do Prisma); o "fix" que o npm sugere é rebaixar o Prisma, então não foi
   aplicado. Correção do diagnóstico original: as vulnerabilidades do server **não** eram só de build — incluíam
   `@nestjs/core` e `multer` (upload de foto), que rodam em produção.
@@ -120,18 +124,18 @@ Não quebram nada sozinhos, mas separam "projeto de um estudante" de "sistema qu
 
 Não impedem nada hoje, mas são exatamente sobre sobreviver com o mínimo de contato técnico contínuo.
 
-- **Bus factor 1 — só o Lucas tem acesso técnico.** É o risco por trás de todos os outros. Vale dar acesso
+- **Bus factor 1 — só o Lucas tem acesso técnico (#62).** É o risco por trás de todos os outros. Vale dar acesso
   de colaborador a pelo menos mais uma pessoa antes de sair de vez.
 - **Falta um "e se o site cair" pra quem não é técnico** _(esqueleto criado em `docs/sucessao.md` — falta
-  preencher contatos e donos das contas)_. Toda a documentação existente é excelente, mas é
+  preencher contatos e donos das contas: #61)_. Toda a documentação existente é excelente, mas é
   escrita pra quem programa. Vale um documento curto, separado, em português simples: pra quem ligar, o que
   NÃO tentar mexer sozinho, onde os dados ficam.
 - **Testes E2E dos fluxos críticos — FEITO:** Playwright cobre Cadastro de Ficha e Montagem ponta a ponta
-  (`e2e/`, `npm run test:e2e`). Ainda não roda no CI.
+  (`e2e/`, `npm run test:e2e`). Ainda não roda no CI (#60).
 - **Arquitetura está mais simples que o documentado, e tudo bem — RESOLVIDO (21/09/2026, `docs/arquitetura.md` corrigido).** `docs/arquitetura.md` descreve
   Controller → Service → Repository; na prática as Services chamam o Prisma direto. Pra um mantenedor só,
   isso é a escolha certa, não dívida técnica — só vale ajustar o doc pra refletir a decisão real.
-- **O modelo "madrinha" entre paróquias ainda não virou regra escrita.** Agora que R7 (isolamento real) e
+- **O modelo "madrinha" entre paróquias ainda não virou regra escrita (#63).** Agora que R7 (isolamento real) e
   R8 (Conselho) estão implementados de verdade (14-15/09/2026), essa pergunta passou de "por acidente" pra
   "vai bloquear de propósito": hoje a equipe dirigente monta o encontro de Crato usando jovens de duas
   paróquias — com o isolamento ativo, uma ficha de uma paróquia não aparece mais nas sugestões de montagem
