@@ -22,7 +22,9 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
 - `docs/arquitetura.md` — decisões técnicas (backend, frontend, multi-tenancy, testes, CI/CD). **Ler sempre** antes de criar estrutura de pastas, escolher biblioteca nova ou decidir padrão de código.
 - `docs/deploy.md` — como a produção está montada (Neon, S3, Render, Vercel), variáveis, migrations e checklist pós-deploy. Ler antes de mexer em deploy, env vars ou schema em produção.
 - `docs/sucessao.md` — guia em português simples pra quem não é técnico (e se o site cair, contas e donos, o que não mexer).
-- `docs/producao.md` — avaliação do que falta pra ser um produto de verdade, com status por item.
+- `docs/producao.md` — avaliação do que falta pra ser um produto de verdade; cada pendência aponta pra
+  sua issue. **Status e backlog vivem no GitHub Project** (https://github.com/users/Lucassec1/projects/2,
+  milestone "Saída da ED" em 15/12/2026) — templates de issue/PR em `.github/`.
 - `.claude/agents/` — subagentes do Claude Code: `scrum` (backlog, issues e GitHub Project) e `qa`
   (revisão de diff orientada a risco e testes de regressão).
 - `docs/historico/` — documentos datados que ficam só de registro (code review de 04/09, propostas de evolução); não são fonte de verdade.
