@@ -23,7 +23,12 @@ inspeção, adaptação), Product Goal, Sprint Goal, Definition of Done. Use Scr
 ## GitHub (issues e Project)
 
 - Repositório: `Lucassec1/sgm-core`. Project: "SGM Core" (Projects v2 do usuário `Lucassec1`,
-  vinculado ao repositório), colunas Backlog → Ready → In Progress → Done.
+  vinculado ao repositório, https://github.com/users/Lucassec1/projects/2), com view Kanban agrupada
+  pelo campo Status: Backlog → Ready → In Progress → In Review → Blocked → Done.
+  - In Review = PR aberto (CI + revisão do agente `qa`). Blocked = parado por dependência ou decisão
+    externa; diga no corpo da issue o que desbloqueia.
+  - **Nunca recrie as opções do campo Status** (`updateProjectV2Field` com `singleSelectOptions`):
+    isso apaga o status de todos os itens. Se precisar, salve o status de cada item antes e restaure depois.
 - Use o `gh` CLI (`gh issue`, `gh label`, `gh project`). Se faltar o escopo `project`, peça pro
   usuário rodar `gh auth refresh -s project`.
 - Labels de tipo: `feature`, `fix`, `chore`, `docs`, `decisão`. Labels de área: `fichas`,
