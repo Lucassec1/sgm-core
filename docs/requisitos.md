@@ -102,7 +102,7 @@ Ver `regras-imutaveis.md` para a versão completa e corrigida (R1 a R9).
 - **Equipe Dirigente (Administrador):** acesso completo (fichas, montagem, exportação, quadrantes), login por paróquia (credencial compartilhada da equipe dirigente, não uma conta por pessoa — decisão consciente, ver `producao.md`), pode criar/editar/desativar fichas e montagens. Uma equipe dirigente por paróquia (13 no total).
 - **Conselho (Super Usuário — implementado):** 12 contas (8 jovens + 4 casais), acesso somente leitura à montagem em tempo real e histórico de qualquer paróquia, pode deixar observações identificadas com o nome do usuário, sem acesso às fichas.
 
-Fluxo esperado: equipe dirigente finaliza a montagem → avisa o conselho no grupo → conselho acessa e deixa observações → sinaliza conclusão no grupo.
+Fluxo esperado: equipe dirigente finaliza a montagem → avisa o conselho no grupo → conselho acessa e deixa observações → sinaliza conclusão no grupo. As observações também aparecem para a paróquia, só leitura, num card "Observações do Conselho" na página da Montagem (desde 13/10/2026, #69) — o aviso no grupo continua útil, mas o registro não depende mais dele.
 
 ## 6. Escalabilidade
 

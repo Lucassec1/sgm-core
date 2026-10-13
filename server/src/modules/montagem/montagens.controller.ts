@@ -61,6 +61,11 @@ export class MontagensController {
     return this.montagensService.listarLog(id, paroquiaId);
   }
 
+  @Get(':id/observacoes')
+  listarObservacoes(@Param('id') id: string, @ParoquiaAtual() paroquiaId: string) {
+    return this.montagensService.listarObservacoes(id, paroquiaId);
+  }
+
   @Get(':id/resumo')
   resumo(@Param('id') id: string, @ParoquiaAtual() paroquiaId: string) {
     return this.montagensService.resumo(id, paroquiaId);

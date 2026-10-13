@@ -133,6 +133,15 @@ export function useLog(montagemId: string | undefined) {
   });
 }
 
+// R8 — observações que o Conselho deixou na montagem, lidas pelo lado da paróquia (só leitura).
+export function useObservacoesConselho(montagemId: string | undefined) {
+  return useQuery({
+    queryKey: ['montagens', montagemId, 'observacoes'],
+    queryFn: () => apiClient.listObservacoes(montagemId as string),
+    enabled: !!montagemId,
+  });
+}
+
 // Painel "como foi esse encontro" (docs/historico/propostas.md, proposta #2) — só busca quando a
 // montagem está finalizada (`enabled`), que é quando o painel é mostrado.
 export function useResumoMontagem(montagemId: string | undefined, options?: { enabled?: boolean }) {

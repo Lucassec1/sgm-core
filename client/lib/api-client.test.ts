@@ -275,6 +275,11 @@ describe('apiClient', () => {
       ],
       ['listLog', () => apiClient.listLog('m1'), { method: 'GET', path: '/montagens/m1/log' }],
       [
+        'listObservacoes',
+        () => apiClient.listObservacoes('m1'),
+        { method: 'GET', path: '/montagens/m1/observacoes' },
+      ],
+      [
         'resumoMontagem',
         () => apiClient.resumoMontagem('m1'),
         { method: 'GET', path: '/montagens/m1/resumo' },
