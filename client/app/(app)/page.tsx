@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { LayoutGrid, UserRound, Users } from 'lucide-react';
 
+import { EncontroAtualCard } from '@/components/dashboard/encontro-atual-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFichas } from '@/lib/hooks/use-fichas';
 import { useFichasCasais } from '@/lib/hooks/use-fichas-casais';
@@ -13,6 +14,12 @@ export default function DashboardPage() {
   const { data: casais } = useFichasCasais({ pageSize: 1 });
   const { data: montagens } = useMontagens({ status: 'EM_ANDAMENTO', pageSize: 1 });
   const montagemAtual = montagens?.items[0];
+  // Lista vem ordenada por numeroEncontro desc — o primeiro é o último finalizado. Só busca se não
+  // houver encontro em andamento (aí o card de atalhos mostra o atual, não o anterior).
+  const { data: finalizadas } = useMontagens(
+    { status: 'FINALIZADA', pageSize: 1 },
+    { enabled: !!montagens && !montagemAtual },
+  );
 
   return (
     <div className="p-6 space-y-6">
@@ -65,6 +72,8 @@ export default function DashboardPage() {
           </Card>
         </Link>
       </div>
+
+      <EncontroAtualCard emAndamento={montagemAtual} ultimaFinalizada={finalizadas?.items[0]} />
     </div>
   );
 }
