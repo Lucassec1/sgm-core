@@ -129,7 +129,11 @@ export default function LoginPage() {
             <div>
               <Label htmlFor="login">Usuário</Label>
               <Input id="login" autoComplete="username" {...register('login')} />
-              {errors.login && <p className="mt-1 text-xs text-red-600">{errors.login.message}</p>}
+              {errors.login && (
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                  {errors.login.message}
+                </p>
+              )}
             </div>
             <div>
               <Label htmlFor="senha">Senha</Label>
@@ -159,7 +163,11 @@ export default function LoginPage() {
                   Caps Lock ativado
                 </p>
               )}
-              {errors.senha && <p className="mt-1 text-xs text-red-600">{errors.senha.message}</p>}
+              {errors.senha && (
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                  {errors.senha.message}
+                </p>
+              )}
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
