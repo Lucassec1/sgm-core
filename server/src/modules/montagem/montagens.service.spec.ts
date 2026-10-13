@@ -28,6 +28,7 @@ function criarPrismaMock() {
     equipe: { findUnique: jest.fn() },
     alocacao: { findMany: jest.fn(), count: jest.fn() },
     logAtividade: { findMany: jest.fn(), findFirst: jest.fn() },
+    observacaoMontagem: { findMany: jest.fn() },
   };
   // Passthrough: roda o callback com o próprio mock no lugar do client transacional.
   mock.$transaction = jest.fn((arg: unknown) =>
@@ -730,6 +731,50 @@ describe('MontagensService', () => {
       prisma.montagem.findUnique.mockResolvedValue(null);
 
       await expect(service.listarLog(MONTAGEM_ID, PAROQUIA_ID)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('listarObservacoes (R8 — leitura pela paróquia)', () => {
+    it('lista as observações da montagem da própria paróquia, mais recentes primeiro', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({ id: MONTAGEM_ID, paroquiaId: PAROQUIA_ID });
+      const observacoes = [
+        {
+          id: 'obs-1',
+          texto: 'Rever Eq. Cozinha',
+          createdAt: new Date(),
+          usuario: { nome: 'Ana' },
+        },
+      ];
+      prisma.observacaoMontagem.findMany.mockResolvedValue(observacoes);
+
+      const resultado = await service.listarObservacoes(MONTAGEM_ID, PAROQUIA_ID);
+
+      expect(prisma.observacaoMontagem.findMany).toHaveBeenCalledWith({
+        where: { montagemId: MONTAGEM_ID },
+        select: { id: true, texto: true, createdAt: true, usuario: { select: { nome: true } } },
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(resultado).toEqual(observacoes);
+    });
+
+    it('R7 — lança NotFoundException quando a montagem é de outra paróquia', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: OUTRA_PAROQUIA_ID,
+      });
+
+      await expect(service.listarObservacoes(MONTAGEM_ID, PAROQUIA_ID)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(prisma.observacaoMontagem.findMany).not.toHaveBeenCalled();
+    });
+
+    it('R7 — lança NotFoundException quando a montagem não existe', async () => {
+      prisma.montagem.findUnique.mockResolvedValue(null);
+
+      await expect(service.listarObservacoes(MONTAGEM_ID, PAROQUIA_ID)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

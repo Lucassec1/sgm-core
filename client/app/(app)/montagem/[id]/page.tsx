@@ -16,6 +16,7 @@ import { FinalizarMontagemButton } from '@/components/montagem/finalizar-montage
 import { ListaCompletaEquipes } from '@/components/montagem/lista-completa-equipes';
 import { ListaSubstituicaoSection } from '@/components/montagem/lista-substituicao-section';
 import { LogAtividadeDrawer } from '@/components/montagem/log-atividade-drawer';
+import { ObservacoesConselhoCard } from '@/components/montagem/observacoes-conselho-card';
 import { OfflineBanner } from '@/components/montagem/offline-banner';
 import { QuadrantesSection } from '@/components/montagem/quadrantes-section';
 import { ResumoEncontroCard } from '@/components/montagem/resumo-encontro-card';
@@ -86,6 +87,8 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
       </div>
 
       {montagem.status === 'FINALIZADA' && <ResumoEncontroCard montagemId={id} />}
+
+      <ObservacoesConselhoCard montagemId={id} />
 
       <Tabs defaultValue="equipes">
         <TabsList>

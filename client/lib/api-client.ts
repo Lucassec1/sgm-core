@@ -9,6 +9,7 @@ import type {
   HistoricoEquipeItem,
   ListaSubstituicaoItem,
   LogAtividadeItem,
+  ObservacaoConselho,
   Montagem,
   MontagemListResponse,
   QuadranteArquivo,
@@ -330,6 +331,10 @@ export const apiClient = {
 
   listLog(montagemId: string) {
     return request<LogAtividadeItem[]>(`/montagens/${montagemId}/log`);
+  },
+
+  listObservacoes(montagemId: string) {
+    return request<ObservacaoConselho[]>(`/montagens/${montagemId}/observacoes`);
   },
 
   resumoMontagem(montagemId: string) {

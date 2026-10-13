@@ -367,6 +367,19 @@ export class MontagensService {
     return this.logAtividade.listar(montagemId);
   }
 
+  // Leitura, pelo lado da paróquia, das observações que o Conselho deixou na montagem (R8) —
+  // antes só o Conselho lia, e o retorno pra paróquia dependia de aviso fora do sistema. Escrita
+  // continua exclusiva do Conselho (ConselhoMontagensController). Só o nome de quem escreveu sai,
+  // nunca o id/usuário da conta.
+  async listarObservacoes(montagemId: string, paroquiaId: string) {
+    await this.garantirPertence(montagemId, paroquiaId);
+    return this.prisma.observacaoMontagem.findMany({
+      where: { montagemId },
+      select: { id: true, texto: true, createdAt: true, usuario: { select: { nome: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   // Painel "como foi esse encontro" (docs/historico/propostas.md, proposta #2) — lê o LogAtividade (R9)
   // e a Alocacao já existentes, sem schema novo. Duas métricas do escopo original da proposta
   // não são calculáveis com o que o log guarda hoje e foram substituídas por uma versão

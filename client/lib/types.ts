@@ -220,6 +220,14 @@ export interface ListaSubstituicaoItem {
   createdAt: string;
 }
 
+// R8 — observação do Conselho numa montagem; o nome vem sempre da conta de quem escreveu.
+export interface ObservacaoConselho {
+  id: string;
+  texto: string;
+  createdAt: string;
+  usuario: { nome: string | null };
+}
+
 export interface LogAtividadeItem {
   id: string;
   montagemId: string;
