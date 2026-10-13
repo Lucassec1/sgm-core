@@ -13,6 +13,15 @@ const PAROQUIA_ID = 'e2e00000-0000-0000-0000-000000000001';
 const PAROQUIA_NOME = 'Paróquia E2E';
 const PAROQUIA_LOGIN_DEV = 'paroquia-dev';
 const PAROQUIA_SENHA_DEV = 'paroquia-dev-123';
+// Segunda paróquia + uma conta de Conselho: usadas pelo fluxo Conselho -> paróquia
+// (e2e/conselho.spec.ts), numa paróquia própria pra não depender da ordem dos specs (só existe
+// uma montagem em andamento por paróquia, e o montagem.spec.ts cria a da primeira).
+const PAROQUIA_2_ID = 'e2e00000-0000-0000-0000-000000000002';
+const PAROQUIA_2_LOGIN = 'paroquia-e2e-2';
+const PAROQUIA_2_SENHA = 'paroquia-e2e-2-123';
+const CONSELHO_LOGIN = 'conselho-e2e';
+const CONSELHO_SENHA = 'conselho-e2e-123';
+const CONSELHO_NOME = 'Conselheira E2E';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -46,6 +55,24 @@ async function main() {
       senhaHash,
       role: RoleUsuario.PAROQUIA,
       paroquiaId: PAROQUIA_ID,
+    },
+  });
+
+  await prisma.paroquia.create({ data: { id: PAROQUIA_2_ID, nome: 'Paróquia E2E 2' } });
+  await prisma.usuario.create({
+    data: {
+      login: PAROQUIA_2_LOGIN,
+      senhaHash: await bcrypt.hash(PAROQUIA_2_SENHA, 10),
+      role: RoleUsuario.PAROQUIA,
+      paroquiaId: PAROQUIA_2_ID,
+    },
+  });
+  await prisma.usuario.create({
+    data: {
+      login: CONSELHO_LOGIN,
+      senhaHash: await bcrypt.hash(CONSELHO_SENHA, 10),
+      role: RoleUsuario.CONSELHO,
+      nome: CONSELHO_NOME,
     },
   });
 

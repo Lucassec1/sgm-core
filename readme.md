@@ -115,10 +115,10 @@ As migrations precisam ser aplicadas no banco de produção a cada mudança de s
 | Formatação                | `npm run format`                    | raiz     |
 
 - O **E2E** sobe server e client de verdade, num banco isolado (`sgm_core_test`) e em portas
-  próprias (`:3011` e `:3010`), sem tocar nos dados de dev. Cobre o cadastro de ficha e a
-  montagem ponta a ponta.
+  próprias (`:3011` e `:3010`), sem tocar nos dados de dev. Cobre o cadastro de ficha, a
+  montagem e o ciclo Conselho → paróquia (observações) ponta a ponta.
 - O **CI** (GitHub Actions) roda lint, typecheck, testes e build de server e client em todo
-  push/PR pra `main`.
+  push/PR pra `main` e, se passarem, o E2E (Postgres como service container).
 - Um hook do Husky (`lint-staged` + Prettier) formata os arquivos a cada commit.
 
 ## Armadilhas conhecidas
