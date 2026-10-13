@@ -151,7 +151,7 @@ Novo recurso: uma lista **geral** de pessoas cotadas como boas opções de subst
 
 ### Aba "Quadrantes"
 
-- Só anexo de PDF da Equipe da Gráfica, sem campos cadastráveis (requisitos 2.3). Lista (nome, tamanho, data) + enviar (só PDF, até 50 MB) + baixar + remover. O binário fica no filesystem do server (PDFs de 55–70 páginas), o banco guarda só metadados.
+- Só anexo de PDF da Equipe da Gráfica, sem campos cadastráveis (requisitos 2.3). Lista (nome, tamanho, data) + enviar (só PDF, até 50 MB) + baixar + remover. O binário fica no S3 (bucket privado, PDFs de 55–70 páginas), o banco guarda só metadados.
 
 ### Alertas visuais
 
@@ -179,22 +179,23 @@ Novo recurso: uma lista **geral** de pessoas cotadas como boas opções de subst
 
 ## 4. Design System — mapa de uso (shadcn)
 
-| Necessidade do sistema                                      | Componente shadcn                                                 |
-| ----------------------------------------------------------- | ----------------------------------------------------------------- |
-| Navegação geral (Fichas / Montagem / Exportação)            | Sidebar                                                           |
-| Seções da Ficha do Jovem/Casal                              | Separator (empilhadas, sem Tabs)                                  |
-| Grid das 16 equipes                                         | Card + Progress + Badge                                           |
-| Detalhe de uma equipe ao clicar no card                     | Drawer                                                            |
-| Confirmações obrigatórias (repetição de equipe, recusa)     | Alert Dialog                                                      |
-| Criação de nova montagem/ficha                              | Dialog                                                            |
-| Busca de pessoa para vaga                                   | Command (combobox com busca)                                      |
-| Lista de substituição (banco geral de backups da montagem)  | DataTable ou List + Command para adicionar pessoas                |
-| Lista de Fichas, Histórico de equipes, Controle de Convites | DataTable                                                         |
-| Status (Ativa/Inativa, Aceito/Recusado, cor do círculo)     | Badge                                                             |
-| Foto da pessoa                                              | Avatar                                                            |
-| Auto-save, confirmações de ação                             | Toast                                                             |
-| % de preenchimento da montagem                              | Progress                                                          |
-| Upload de PDF (Quadrantes)                                  | (sem componente shadcn nativo — construir com input file + lista) |
+| Necessidade do sistema                                                | Componente shadcn                                                 |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Navegação geral (Fichas / Montagem)                                   | Sidebar                                                           |
+| Seções da Ficha do Jovem/Casal                                        | Separator (empilhadas, sem Tabs)                                  |
+| Abas da Montagem (Quadro, Lista, Convites, Substituições, Quadrantes) | Tabs                                                              |
+| Grid das 16 equipes                                                   | Card + Progress + Badge                                           |
+| Detalhe de uma equipe ao clicar no card                               | Drawer                                                            |
+| Confirmações obrigatórias (repetição de equipe, recusa)               | Alert Dialog                                                      |
+| Criação de nova montagem/ficha                                        | Dialog                                                            |
+| Busca de pessoa para vaga                                             | Command (combobox com busca)                                      |
+| Lista de substituição (banco geral de backups da montagem)            | DataTable ou List + Command para adicionar pessoas                |
+| Lista de Fichas, Histórico de equipes, Controle de Convites           | DataTable                                                         |
+| Status (Ativa/Inativa, Aceito/Recusado, cor do círculo)               | Badge                                                             |
+| Foto da pessoa                                                        | Avatar                                                            |
+| Auto-save, confirmações de ação                                       | Toast                                                             |
+| % de preenchimento da montagem                                        | Progress                                                          |
+| Upload de PDF (Quadrantes)                                            | (sem componente shadcn nativo — construir com input file + lista) |
 
 ---
 

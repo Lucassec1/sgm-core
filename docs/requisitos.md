@@ -62,7 +62,7 @@ Substitui o processo atual em planilha Excel + material impresso.
 
 ### 2.3 Exportação e Histórico
 
-- Exportar montagem em .xlsx (só dados da montagem, sem fichas) — _hoje existe só exportação CSV simples (fichas, casais e montagem); o .xlsx com layout segue pendente_
+- Exportar montagem em .xlsx (só dados da montagem, sem fichas) — _hoje existe só exportação CSV simples (fichas, casais e montagem) no backend, sem botão na interface desde 17/09; o .xlsx com layout segue pendente (#58)_
 - Visualizar montagens de encontros anteriores (somente leitura)
 - Aba Quadrantes: upload/download de PDFs da Equipe da Gráfica (só anexo, sem campos cadastráveis)
 

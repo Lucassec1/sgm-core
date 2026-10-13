@@ -54,8 +54,9 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
   equipes, drawer por equipe, lista completa, aba Convites (status + saídas/motivos + log),
   aba Substituições, aba Quadrantes (upload/download de PDF), criar/editar/finalizar
   montagem, ícones das equipes (`EquipeIcon`).
-  **Falta:** exportação continua só CSV simples (fichas + montagem, sem o .xlsx completo
-  planejado originalmente — ver `docs/producao.md`, item 4). Quadrantes: binário no S3, mesmo
+  **Falta:** exportação na interface — os endpoints CSV (fichas, casais, montagem) existem no
+  backend, mas o card de Exportação foi removido do dashboard em 17/09 e nenhuma tela leva a eles;
+  o .xlsx completo também segue pendente (issue #58, `docs/producao.md` item 4). Quadrantes: binário no S3, mesmo
   padrão das fotos de Ficha.
 - **Auth: pronto** — login JWT (cookie httpOnly) por credencial de paróquia (compartilhada,
   não individual), guard global exigindo sessão em quase tudo, isolamento real entre paróquias

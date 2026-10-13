@@ -65,15 +65,16 @@ Fora do ar não significa perdido.
 
 ## 5. Tirar uma cópia dos dados (sem depender de ninguém técnico)
 
-No painel inicial (dashboard) existe o cartão **Exportação**, com botões para baixar em planilha (CSV):
-
-- as fichas de jovens,
-- as fichas de casais,
-- a montagem de um encontro.
+**Hoje (outubro/2026) ainda não existe um botão para isso na tela.** O sistema já sabe gerar a planilha
+(CSV) das fichas de jovens, das fichas de casais e da montagem de um encontro, mas o botão foi tirado do
+painel e ainda não voltou (acompanhado no GitHub, issue #58). Enquanto isso, peça a cópia para a pessoa
+técnica.
 
 **Recomendação:** baixe uma cópia **depois de cada encontro finalizado** e antes de qualquer mudança
 grande, e guarde em um lugar seguro que não seja só o seu computador (com acesso restrito, por causa dos
-dados pessoais). A exportação em Excel completo (.xlsx) ainda não existe.
+dados pessoais). A exportação em Excel completo (.xlsx) também ainda não existe.
+
+_Quando o botão voltar, atualize esta seção dizendo onde ele fica._
 
 ## 6. Senhas e acessos
 
