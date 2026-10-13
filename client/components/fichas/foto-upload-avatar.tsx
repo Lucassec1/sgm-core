@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
-import { Camera, Loader2, X } from 'lucide-react';
+import { ImagePlus, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -78,7 +78,7 @@ export function FotoUploadAvatar({
         {isUploading ? (
           <Loader2 className="h-3 w-3 animate-spin" />
         ) : (
-          <Camera className="h-3 w-3" />
+          <ImagePlus className="h-3 w-3" />
         )}
       </button>
 

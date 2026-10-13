@@ -51,6 +51,7 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 | Seções da Ficha do Jovem/Casal                 | Separator (empilhadas, sem Tabs)                                                   | Ficha do Jovem, Ficha do Casal                                                    |
 | Campos de formulário                           | Input, Select, Textarea, Checkbox                                                  | Fichas, Criação da Montagem                                                       |
 | Grid das 16 equipes                            | Card + Progress + Badge                                                            | Quadro das 16 Equipes                                                             |
+| Visões dentro de uma Montagem                  | Tabs                                                                               | Quadro de Equipes, Lista completa, Convites, Substituições, Quadrantes            |
 | Detalhe de uma equipe                          | Drawer                                                                             | Ao clicar no card de uma equipe                                                   |
 | Pré-visualização rápida de pessoa              | Popover                                                                            | Busca de pessoa na Distribuição                                                   |
 | Confirmações obrigatórias (R1, R2, R3)         | Alert Dialog                                                                       | Distribuição de vaga, Controle de Convites                                        |
@@ -74,7 +75,7 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 - **Badge de cor do círculo** é sempre a mesma badge, reaproveitada em Lista de Fichas, Distribuição e Popover — consistência visual é o que faz a cor funcionar como atalho de reconhecimento.
 - **Ícone da equipe** (`EquipeIcon`): os PNGs oficiais das 16 equipes do Segue-me, usados pequenos (16–24px) e **sempre ao lado do nome da equipe**, nunca sozinhos — mesma regra do badge de círculo. Mantêm a cor original (num tamanho pequeno não competem com as cores funcionais); a UI ao redor continua neutra. Chave de lookup é o `slug` da `Equipe` (mesmo slug do seed), então o arquivo é `public/equipes/<slug>.png`.
 - **DataTable** é o padrão único pra qualquer listagem — Histórico de Fichas, Histórico de Montagens e Controle de Convites usam a mesma configuração de componente (colunas variam, comportamento não).
-- **Sidebar fixa**, sem navegação por breadcrumb — o sistema tem poucos níveis de profundidade (Fichas / Montagem / Exportação, cada um raso), não precisa de trilha de navegação.
+- **Sidebar fixa**, sem navegação por breadcrumb — o sistema tem poucos níveis de profundidade (Fichas / Montagem, cada um raso), não precisa de trilha de navegação.
 
 ---
 

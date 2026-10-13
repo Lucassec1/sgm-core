@@ -9,8 +9,8 @@ Versão navegável: https://claude.ai/code/artifact/8a60c06d-25cd-4fed-91ca-4527
 Data: 14/09/2026
 
 > **Atualizado em 21/09/2026.** O texto abaixo é a avaliação original; o status de cada item está no
-> título ou logo no começo dele. Resumo: bloqueadores 1 (deploy), 2 e 3 feitos; 4 parcial (CSV pronto, `.xlsx`
-> pendente); upgrades de dependência e E2E feitos. Falta validar a produção e preencher `docs/sucessao.md`.
+> título ou logo no começo dele. Resumo: bloqueadores 1 (deploy), 2 e 3 feitos; 4 em aberto de novo (CSV só no backend, sem botão na
+> interface desde 17/09; `.xlsx` pendente); upgrades de dependência e E2E feitos. Falta validar a produção e preencher `docs/sucessao.md`.
 >
 > **Desde 24/09/2026 o status vive no GitHub Project** (https://github.com/users/Lucassec1/projects/2),
 > milestone "Saída da ED" (15/12/2026). Este documento guarda a avaliação e o raciocínio; cada pendência
@@ -81,11 +81,12 @@ de acesso (ninguém de fora entra mais sem credencial), não resolve rastreabili
 dentro de uma mesma paróquia. Se isso vier a importar, a mudança é login individual por pessoa
 — hoje deliberadamente fora de escopo.
 
-### 4. Ninguém não-técnico consegue tirar os dados do sistema sozinho — PARCIAL (CSV pronto, `.xlsx` pendente: #58)
+### 4. Ninguém não-técnico consegue tirar os dados do sistema sozinho — EM ABERTO (CSV só no backend, sem botão; `.xlsx` pendente: #58)
 
-**Situação atual:** existe exportação **CSV** simples (card "Exportação" do dashboard: fichas, casais e
-montagem, um botão só), o que cobre o essencial descrito abaixo. O `.xlsx` completo, com layout, segue
-pendente. O parágrafo original (14/09) dizia: sem exportação e sem backup, ninguém da equipe dirigente
+**Situação atual (13/10/2026):** a exportação **CSV** simples (fichas, casais e montagem) existe no
+backend, mas o card "Exportação" foi removido do dashboard em 17/09 (commit `38724c1`) e nenhuma tela leva
+aos endpoints — então, na prática, quem não é técnico continua sem conseguir tirar os dados. O `.xlsx`
+completo, com layout, segue pendente. Os dois pontos ficam na #58. O parágrafo original (14/09) dizia: sem exportação e sem backup, ninguém da equipe dirigente
 conseguia um retrato dos dados sem mexer em banco de dados.
 
 - **O que fazer:** não precisa ser a exportação completa planejada originalmente — uma exportação simples
