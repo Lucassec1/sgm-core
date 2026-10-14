@@ -46,8 +46,10 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
   histórico de equipes e dados cadastrais em seções empilhadas. Upload real de foto 3x4
   (JPEG/PNG/WEBP, até 5MB) — binário no S3 (bucket privado, ver
   `server/src/common/uploads/s3-storage.ts`), não filesystem (hospedagem com disco efêmero
-  perderia o arquivo a cada restart/deploy). Upload em lote (pasta inteira + tela de
-  conferência, vinculando pelo nome do arquivo) ainda não existe.
+  perderia o arquivo a cada restart/deploy). Upload em lote: botão "Fotos em lote"
+  nas listas de Jovens e Casais — escolhe arquivos ou uma pasta, sugere a ficha pelo nome do arquivo
+  (`client/lib/fotos-lote.ts`) e mostra uma tela de conferência antes de enviar; envia um por vez
+  pelo endpoint individual, esperando quando bate no rate limit (429).
 - **Módulo Montagem: quase completo** — schema, backend (montagens, alocações, equipes,
   lista de substituição, log de atividade, quadrantes) com regras R1–R6 e R9 aplicadas e
   testadas (specs em `server/src/modules/montagem/*.spec.ts`); frontend com quadro das 16

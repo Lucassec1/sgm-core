@@ -19,6 +19,7 @@ import {
   type FiltrosFichasCasais,
 } from '@/components/fichas/fichas-casais-filtros';
 import { FichasTabsNav } from '@/components/fichas/fichas-tabs-nav';
+import { UploadFotosLoteDialog } from '@/components/fichas/upload-fotos-lote-dialog';
 import { fotoSrc } from '@/lib/utils';
 
 export default function FichasCasaisListPage() {
@@ -30,9 +31,12 @@ export default function FichasCasaisListPage() {
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">Fichas</h1>
-        <Button asChild>
-          <Link href="/fichas/casais/novo">Novo Casal</Link>
-        </Button>
+        <div className="flex gap-2">
+          <UploadFotosLoteDialog tipo="casal" />
+          <Button asChild>
+            <Link href="/fichas/casais/novo">Novo Casal</Link>
+          </Button>
+        </div>
       </div>
 
       <FichasTabsNav />
