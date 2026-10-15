@@ -63,7 +63,7 @@ Montagem 100% preenchida
 Exportar (.xlsx) + Visualizar no Histórico
 ```
 
-**Ponto de atenção:** a Eq. dos Círculos bloqueando as demais é a única dependência sequencial dentro da montagem, mas o bloqueio é só sobre **enviar o convite** — a equipe dirigente já rascunha/distribui as outras 14 equipes em paralelo, na prática é assim que costuma acontecer. A ação de "Convidar" de cada equipe fica desabilitada com um tooltip explicando o motivo, em vez do card inteiro travado.
+**Ponto de atenção:** a Eq. dos Círculos antes das demais é a única dependência sequencial dentro da montagem, e ela é só sobre **enviar o convite** — a equipe dirigente já rascunha/distribui as outras 14 equipes em paralelo, na prática é assim que costuma acontecer. Desde 14/10/2026 o "Convidar" das outras equipes antes dos Círculos fecharem não fica desabilitado: mostra tooltip e pede confirmação (R4 avisa, não bloqueia).
 
 ---
 
@@ -164,12 +164,12 @@ Novo recurso: uma lista **geral** de pessoas cotadas como boas opções de subst
 | Está na lista geral de substituição  | Pequeno ícone de "estrela" no card/linha da pessoa em qualquer lugar do sistema                |
 | Equipe dos Círculos ainda não fechou | Aviso discreto no topo do Quadro de Equipes (não bloqueia as outras equipes — ver nota abaixo) |
 
-**Sobre o bloqueio dos Círculos (R4):** a regra em si não mudou — convite formal pras outras 14 equipes só sai depois dos Círculos fecharem. Mas isso não deve travar a **tela**: a equipe dirigente pode ir montando/rascunhando a distribuição das outras equipes em paralelo (é assim que funciona na prática), só não consegue **enviar convite** delas antes dos Círculos fecharem. Ou seja: card de equipe nunca fica "cadeado" — o que muda é só a ação de convidar, que fica desabilitada com uma explicação (tooltip: "Aguardando Eq. dos Círculos") até lá.
+**Sobre os Círculos primeiro (R4):** o costume continua — convite formal pras outras 14 equipes depois dos Círculos fecharem. Isso nunca travou a **tela**: a equipe dirigente monta/rascunha as outras equipes em paralelo. Desde 14/10/2026 nem o envio do convite trava: "Convidar" antes da hora mostra tooltip ("A Eq. dos Círculos ainda não fechou") e pede confirmação num Alert Dialog.
 
 ### Busca de pessoa para preencher vaga
 
 - Combobox com busca por nome, já filtrando automaticamente por: fichas Ativas, sexo compatível com a vaga, e priorizando (não escondendo) quem é do encontro anterior.
-- **Decidido:** aviso em tempo real, mas **não-bloqueante** — nada de Alert Dialog pedindo confirmação aqui (isso eu reservaria só pras regras R1-R3, que são de fato imutáveis). Proposta:
+- **Decidido:** aviso em tempo real, mas **não-bloqueante** — nada de Alert Dialog pedindo confirmação aqui (o Alert Dialog fica reservado aos avisos de R1–R4). Proposta:
   - Na busca, a pessoa já alocada aparece com uma badge discreta ao lado do nome: "Já em: Eq. Cozinha" — informação visível, mas não impede selecionar/mover.
   - Ao confirmar a nova alocação, o sistema move automaticamente (tira da equipe antiga, coloca na nova) e mostra um Toast: "João movido de Eq. Cozinha para Eq. Sala — Desfazer". Sem modal, sem clique de confirmação — só a opção de reverter caso tenha sido engano.
   - Como só existe uma montagem ativa por vez, esse remanejamento é sempre dentro do encontro atual — não há cenário de mover entre encontros diferentes.
@@ -202,4 +202,4 @@ Novo recurso: uma lista **geral** de pessoas cotadas como boas opções de subst
 ## Observações fechadas
 
 - Só existe uma montagem ativa por vez (um encontro de cada vez) — por isso o remanejamento com Toast + Desfazer da seção de Montagem só precisa considerar o encontro atual, sem cenário de mover entre encontros diferentes.
-- Reforçando a regra R3 (coordenação), que já estava no documento de requisitos: uma pessoa só pode ser sugerida como **coordenadora** de uma equipe se (a) já serviu como equipista **naquela equipe específica**, ou (b) já foi Equipe Dirigente/Comando Geral (pode coordenar qualquer equipe nesse caso). Quem nunca serviu na equipe e nunca foi Equipe Dirigente/Comando Geral **não aparece** como opção de coordenador — não é só um aviso, é bloqueio mesmo, igual o resto das regras R1-R3.
+- Reforçando a regra R3 (coordenação), que já estava no documento de requisitos: uma pessoa só pode ser sugerida como **coordenadora** de uma equipe se (a) já serviu como equipista **naquela equipe específica**, ou (b) já foi Equipe Dirigente/Comando Geral (pode coordenar qualquer equipe nesse caso). Desde 14/10/2026, quem não se encaixa **aparece** no fim da lista, marcado "nunca serviu nesta equipe", e escolher essa pessoa pede confirmação — aviso, não bloqueio (ver R3 em `regras-imutaveis.md`).

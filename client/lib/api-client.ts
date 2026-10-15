@@ -1,5 +1,7 @@
 import type {
   Alocacao,
+  AvisoRegra,
+  CandidatoJovem,
   CoordenadoresSugeridos,
   Equipe,
   Ficha,
@@ -32,6 +34,18 @@ export class ApiError extends Error {
     super(message);
     this.name = 'ApiError';
   }
+}
+
+// Avisos de R1–R4 de um 409 AVISOS_REGRAS (null se o erro for outro). O formato antigo, só R2
+// (REPETICAO_EQUIPE), ainda é entendido pra não quebrar durante o deploy do server.
+export function avisosDoErro(err: unknown): AvisoRegra[] | null {
+  if (!(err instanceof ApiError) || err.status !== 409) return null;
+  const body = err.body as { code?: string; avisos?: AvisoRegra[]; message?: string } | null;
+  if (body?.code === 'AVISOS_REGRAS' && body.avisos?.length) return body.avisos;
+  if (body?.code === 'REPETICAO_EQUIPE') {
+    return [{ regra: 'R2', nivel: 'atencao', mensagem: body.message ?? err.message }];
+  }
+  return null;
 }
 
 // Dispara em qualquer 401 (sessão expirada/ausente) pra quem estiver ouvindo (ver
@@ -260,7 +274,7 @@ export const apiClient = {
       fichaId?: string;
       fichaCasalId?: string;
       status?: 'RASCUNHO' | 'CONVIDADO' | 'ACEITO';
-      confirmarRepeticao?: boolean;
+      confirmarAvisos?: boolean;
       usuario?: string;
     },
   ) {
@@ -282,6 +296,7 @@ export const apiClient = {
       motivoRecusa?: string;
       podeCoordenar?: boolean;
       podePalestrar?: boolean;
+      confirmarAvisos?: boolean;
       usuario?: string;
     },
   ) {
@@ -292,7 +307,7 @@ export const apiClient = {
   },
 
   listCandidatosJovens(montagemId: string, vagaMontagemId?: string) {
-    return request<Ficha[]>(
+    return request<CandidatoJovem[]>(
       `/montagens/${montagemId}/candidatos-jovens?${buildQuery({ vagaMontagemId })}`,
     );
   },

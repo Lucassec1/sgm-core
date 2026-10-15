@@ -468,3 +468,25 @@ describe('apiClient', () => {
     });
   });
 });
+
+describe('avisosDoErro', () => {
+  it('extrai os avisos de um 409 AVISOS_REGRAS', async () => {
+    const { ApiError, avisosDoErro } = await import('./api-client');
+    const avisos = [{ regra: 'R2', nivel: 'grave', mensagem: 'x' }];
+    expect(avisosDoErro(new ApiError('x', 409, { code: 'AVISOS_REGRAS', avisos }))).toEqual(avisos);
+  });
+
+  it('entende o formato antigo (só R2) durante o deploy', async () => {
+    const { ApiError, avisosDoErro } = await import('./api-client');
+    expect(
+      avisosDoErro(new ApiError('x', 409, { code: 'REPETICAO_EQUIPE', message: 'Já serviu 1x' })),
+    ).toEqual([{ regra: 'R2', nivel: 'atencao', mensagem: 'Já serviu 1x' }]);
+  });
+
+  it('devolve null pra outros erros', async () => {
+    const { ApiError, avisosDoErro } = await import('./api-client');
+    expect(avisosDoErro(new ApiError('x', 404, null))).toBeNull();
+    expect(avisosDoErro(new ApiError('x', 409, { code: 'OUTRO' }))).toBeNull();
+    expect(avisosDoErro(new Error('x'))).toBeNull();
+  });
+});

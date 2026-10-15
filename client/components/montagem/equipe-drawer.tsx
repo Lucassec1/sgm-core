@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { EquipeIcon } from '@/components/equipes/equipe-icon';
 import { ApiError } from '@/lib/api-client';
 import { useUpdateAlocacao } from '@/lib/hooks/use-montagens';
+import { AvisosRegrasDialog } from './avisos-regras-dialog';
 import { VagaAlocacoes } from './vaga-alocacoes';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
 
@@ -57,13 +59,21 @@ export function EquipeDrawer({
   const emRascunho = vagas
     .flatMap((v) => alocacoesPorVaga.get(v.id) ?? [])
     .filter((a) => a.status === 'RASCUNHO');
-  const convitesBloqueados = !!equipe?.bloqueiaConvitePosCirculos && !circulosFechado;
+  // R4 avisa, não bloqueia (desde 14/10/2026): convidar antes de a Eq. dos Círculos fechar pede
+  // confirmação aqui — e a confirmação segue pro server, que não pergunta de novo pessoa a pessoa.
+  const circulosEmAberto = !!equipe?.bloqueiaConvitePosCirculos && !circulosFechado;
+  const [confirmandoR4, setConfirmandoR4] = useState(false);
 
-  async function convidarEquipe() {
+  async function convidarEquipe(confirmarAvisos = false) {
+    setConfirmandoR4(false);
     let sucessos = 0;
     for (const alocacao of emRascunho) {
       try {
-        await updateAlocacao.mutateAsync({ id: alocacao.id, status: 'CONVIDADO' });
+        await updateAlocacao.mutateAsync({
+          id: alocacao.id,
+          status: 'CONVIDADO',
+          ...(confirmarAvisos && { confirmarAvisos }),
+        });
         sucessos++;
       } catch (err) {
         toast.error(
@@ -88,13 +98,19 @@ export function EquipeDrawer({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span>
-                      <Button size="sm" disabled={convitesBloqueados} onClick={convidarEquipe}>
+                      <Button
+                        size="sm"
+                        variant={circulosEmAberto ? 'outline' : 'default'}
+                        onClick={() =>
+                          circulosEmAberto ? setConfirmandoR4(true) : convidarEquipe()
+                        }
+                      >
                         Convidar ({emRascunho.length})
                       </Button>
                     </span>
                   </TooltipTrigger>
-                  {convitesBloqueados && (
-                    <TooltipContent>Aguardando Eq. dos Círculos fechar (R4)</TooltipContent>
+                  {circulosEmAberto && (
+                    <TooltipContent>A Eq. dos Círculos ainda não fechou (R4)</TooltipContent>
                   )}
                 </Tooltip>
               </TooltipProvider>
@@ -120,6 +136,23 @@ export function EquipeDrawer({
           ))}
         </div>
       </SheetContent>
+      <AvisosRegrasDialog
+        avisos={
+          confirmandoR4
+            ? [
+                {
+                  regra: 'R4',
+                  nivel: 'atencao',
+                  mensagem:
+                    'A Eq. dos Círculos ainda não fechou (nem todos aceitaram) — o costume é convidar os Círculos primeiro.',
+                },
+              ]
+            : null
+        }
+        acao={`Convidar ${emRascunho.length} mesmo assim`}
+        onCancelar={() => setConfirmandoR4(false)}
+        onConfirmar={() => convidarEquipe(true)}
+      />
     </Sheet>
   );
 }

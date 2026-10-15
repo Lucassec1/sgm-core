@@ -1,37 +1,41 @@
 # SGM Core — Regras Imutáveis
 
 > Este documento existe pra ser lido **junto com qualquer prompt de IA** que for gerar código, telas ou lógica de negócio. As regras aqui não são negociáveis nem interpretáveis — o sistema pode **avisar**, mas nunca pode **permitir** uma ação que viole uma delas, a menos que a própria regra abra exceção explícita.
+>
+> **Exceção explícita — R1 a R4 (decisão da equipe dirigente, 14/10/2026):** essas quatro são regras do Segue-me que o sistema **informa e pede confirmação**, mas **não bloqueia** — quem decide é a equipe dirigente, que conhece o contexto (ex.: falta de gente, encontro já realizado sendo registrado). O aviso é obrigatório: o sistema nunca deixa passar uma dessas situações em silêncio. **Não reintroduzir bloqueio** nessas quatro sem nova decisão registrada aqui. As demais regras (R5 em diante) continuam valendo como antes.
 
 ---
 
 ## R1 — Recusa ou desistência do convite
 
-- Quem recusa o convite ou desiste durante a montagem **não pode servir nesse encontro**.
-- Só pode ser convidada de novo **no encontro seguinte**.
-- O sistema **bloqueia** a inserção dessa pessoa em qualquer equipe do encontro atual após o registro da recusa/desistência (bloqueio real, não só aviso).
+- Quem recusa o convite ou desiste durante a montagem, em princípio, **não serve nesse encontro** — o costume é convidar de novo só no encontro seguinte.
+- O sistema **avisa** ("recusou o convite deste encontro", com o motivo) e pede confirmação ao colocar essa pessoa de novo em qualquer equipe do encontro atual. **Não bloqueia** (exceção explícita, ver topo).
+- Na busca de pessoa pra vaga, quem recusou aparece no fim da lista, marcado.
 
 ## R2 — Repetição de equipe
 
 - Uma pessoa pode servir na mesma equipe mais de uma vez, mas o ideal é não repetir.
-- O sistema exibe um **aviso explícito** (não bloqueia) ao tentar inserir alguém que já serviu naquela equipe — exige confirmação consciente do usuário pra prosseguir.
-- **Limite: ninguém pode servir na mesma equipe mais de 3 vezes.** O sistema bloqueia a inserção ao atingir esse limite.
-- **Exceção — Eq. da Visitação:** essa equipe é de alta demanda (poucos casais disponíveis para o volume de vagas), e na prática o limite de 3x nem sempre é seguido à risca ali. Pra essa equipe especificamente, o aviso continua aparecendo, mas **não bloqueia** — fica a critério da equipe dirigente decidir. Para as outras 15 equipes, o bloqueio de 3x é real.
+- O sistema exibe um **aviso explícito** ao tentar inserir alguém que já serviu naquela equipe — exige confirmação consciente do usuário pra prosseguir.
+- **Limite de referência: 3 vezes na mesma equipe.** Da 4ª vez em diante o aviso é **grave** (destacado em vermelho, "esta seria a 4ª vez") — mas **não bloqueia** (exceção explícita, ver topo). Vale igual pras 16 equipes, inclusive a Visitação.
+- Serviço feito em outra paróquia (ex.: na paróquia madrinha, durante a implantação) também conta.
 
 ## R3 — Coordenação de equipe
 
-- **Coordenação por jovem:** só pode coordenar uma equipe quem **já serviu como equipista naquela equipe específica**.
+- **Coordenação por jovem:** o esperado é que coordene uma equipe quem **já serviu como equipista naquela equipe específica**.
   - **Exceção:** quem já foi Equipe Dirigente ou Comando Geral pode coordenar **qualquer** equipe.
-  - Na sugestão de coordenadores, o sistema separa dois grupos:
-    - **Grupo A** (destaque, origem preferencial): já serviu como equipista naquela equipe.
+  - Na sugestão de coordenadores, o sistema separa três grupos:
+    - **Grupo A** (destaque, origem preferencial): já serviu como equipista naquela equipe — dentro dele, primeiro quem foi **avaliado como "pode coordenar"** naquela equipe.
     - **Grupo B** (alternativa): foi Equipe Dirigente/Comando Geral.
-  - Quem não se encaixa em nenhum dos dois grupos **não aparece como opção de coordenador** — é bloqueio, não aviso.
+    - **Outras pessoas:** aparecem no fim, marcadas "nunca serviu nesta equipe". Escolher alguém daqui gera aviso **grave** e pede confirmação — mas **não bloqueia** (exceção explícita, ver topo).
+  - Serviço feito em outra paróquia (ex.: na paróquia madrinha) também conta pro Grupo A.
 - **Coordenação por casal:** a regra acima (Grupo A/B) **não se aplica** — qualquer casal ativo pode coordenar qualquer equipe, sem precisar de histórico ali.
   - **Exceção — Eq. da Visitação:** por ter muitos casais (proporção alta pra sustentar a demanda de vagas, ver R6), os coordenadores de lá tradicionalmente sempre vêm de quem já serviu na própria equipe. Por isso, só pra essa equipe, a coordenação por casal segue a mesma regra de Grupo A/B da coordenação por jovem (histórico na equipe OU Equipe Dirigente/Comando Geral).
 
 ## R4 — Prioridade da Eq. dos Círculos
 
 - A Eq. dos Círculos é sempre a **primeira** a ser convidada, antes de qualquer outra equipe.
-- As demais 14 equipes (fora Comando Geral) só podem ser convidadas depois que **todos** os membros dos Círculos tiverem aceitado o convite.
+- O costume é convidar as demais 14 equipes (fora Comando Geral) só depois que **todos** os membros dos Círculos tiverem aceitado o convite.
+- Convidar antes disso gera **aviso** e pede confirmação — **não bloqueia** (exceção explícita, ver topo). A montagem/rascunho das outras equipes nunca foi travada; o aviso é só sobre **enviar o convite**.
 
 ## R5 — Prioridade de convite entre jovens
 

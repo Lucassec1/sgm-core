@@ -382,23 +382,25 @@ describe('MontagensService', () => {
       ]);
     });
 
-    it('exclui fichas já RECUSADO/DESISTIU nesta montagem', async () => {
+    it('R1 avisa, não bloqueia: quem recusou/desistiu vem no fim, marcado', async () => {
       prisma.montagem.findUnique.mockResolvedValue({
         id: MONTAGEM_ID,
         paroquiaId: PAROQUIA_ID,
         numeroEncontro: 7,
         vagas: [],
       });
-      prisma.alocacao.findMany.mockResolvedValue([{ fichaId: 'f-excluida' }]);
-      prisma.ficha.findMany.mockResolvedValue([{ id: 'f-ok', numeroEncontro: 6 }]);
+      prisma.alocacao.findMany.mockResolvedValue([{ fichaId: 'f-recusou' }]);
+      prisma.ficha.findMany.mockResolvedValue([
+        { id: 'f-recusou', numeroEncontro: 6 },
+        { id: 'f-ok', numeroEncontro: 5 },
+      ]);
 
-      await service.candidatosJovens(MONTAGEM_ID, PAROQUIA_ID);
+      const candidatos = await service.candidatosJovens(MONTAGEM_ID, PAROQUIA_ID);
 
-      expect(prisma.ficha.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ id: { notIn: ['f-excluida'] }, situacao: 'ATIVA' }),
-        }),
-      );
+      expect(candidatos.map((f) => [f.id, f.recusouNesteEncontro])).toEqual([
+        ['f-ok', false],
+        ['f-recusou', true],
+      ]);
     });
 
     it('sem vagaMontagemId, não filtra por sexo', async () => {
@@ -908,24 +910,81 @@ describe('MontagensService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('deduplica fichas que aparecem tanto no grupo B (dirigente) quanto no Comando Geral', async () => {
+    // Banco fake: fichas da paróquia, cada uma com as equipes em que serviu (aceito) e onde foi
+    // avaliada como "pode coordenar". O findMany responde conforme o `where` da Service.
+    function mockFichas(
+      fichas: {
+        id: string;
+        jaFoiEquipeDirigente?: boolean;
+        serviuEm?: string[];
+        avaliadaEm?: string[];
+      }[],
+    ) {
+      prisma.ficha.findMany.mockImplementation(async (args: any) => {
+        const equipeDoFiltro = args.where.alocacoes?.some?.vagaMontagem?.equipeId;
+        const lista = equipeDoFiltro
+          ? fichas.filter((f) => f.serviuEm?.includes(equipeDoFiltro))
+          : fichas;
+        return lista.map((f) =>
+          args.select
+            ? { id: f.id }
+            : {
+                id: f.id,
+                nomeCompleto: f.id,
+                jaFoiEquipeDirigente: !!f.jaFoiEquipeDirigente,
+                alocacoes: (f.avaliadaEm ?? []).includes('equipe-1') ? [{ id: 'aval' }] : [],
+              },
+        );
+      });
+      prisma.fichaCasal.findMany.mockResolvedValue([]);
+    }
+
+    beforeEach(() => {
       prisma.montagem.findUnique.mockResolvedValue({
         id: MONTAGEM_ID,
         paroquiaId: PAROQUIA_ID,
         vagas: [],
       });
-      prisma.equipe.findUnique
-        .mockResolvedValueOnce({ id: 'equipe-1', slug: 'animacao' })
-        .mockResolvedValueOnce({ id: 'equipe-comando-geral', slug: 'comando-geral' });
-      prisma.ficha.findMany
-        .mockResolvedValueOnce([]) // grupoAFichas
-        .mockResolvedValueOnce([{ id: 'ficha-repetida' }]) // dirigentesFichas
-        .mockResolvedValueOnce([{ id: 'ficha-repetida' }]); // comandoGeralFichas
-      prisma.fichaCasal.findMany.mockResolvedValue([]);
+      prisma.equipe.findUnique.mockImplementation(async (args: any) =>
+        args.where.slug === 'comando-geral'
+          ? { id: 'equipe-comando-geral', slug: 'comando-geral' }
+          : { id: 'equipe-1', slug: 'animacao' },
+      );
+    });
 
-      const resultado = await service.coordenadoresSugeridos(MONTAGEM_ID, 'equipe-1', PAROQUIA_ID);
+    it('R7 — toda busca de ficha/casal filtra pela paróquia da montagem', async () => {
+      mockFichas([]);
 
-      expect(resultado.grupoB.fichas).toEqual([{ id: 'ficha-repetida' }]);
+      await service.coordenadoresSugeridos(MONTAGEM_ID, 'equipe-1', PAROQUIA_ID);
+
+      expect(prisma.ficha.findMany).toHaveBeenCalled();
+      for (const [args] of [
+        ...prisma.ficha.findMany.mock.calls,
+        ...prisma.fichaCasal.findMany.mock.calls,
+      ]) {
+        expect(args.where.paroquiaId).toBe(PAROQUIA_ID);
+      }
+    });
+
+    it('separa Grupo A, Grupo B e outros — e avaliados "pode coordenar" vêm primeiro no A', async () => {
+      mockFichas([
+        { id: 'serviu', serviuEm: ['equipe-1'] },
+        { id: 'serviu-e-avaliada', serviuEm: ['equipe-1'], avaliadaEm: ['equipe-1'] },
+        { id: 'dirigente', jaFoiEquipeDirigente: true },
+        { id: 'comando-geral', serviuEm: ['equipe-comando-geral'] },
+        { id: 'dirigente-e-serviu', jaFoiEquipeDirigente: true, serviuEm: ['equipe-1'] },
+        { id: 'nunca-serviu' },
+      ]);
+
+      const r = await service.coordenadoresSugeridos(MONTAGEM_ID, 'equipe-1', PAROQUIA_ID);
+
+      expect(r.grupoA.fichas.map((f) => [f.id, f.avaliadoPodeCoordenar])).toEqual([
+        ['serviu-e-avaliada', true],
+        ['serviu', false],
+        ['dirigente-e-serviu', false],
+      ]);
+      expect(r.grupoB.fichas.map((f) => f.id)).toEqual(['dirigente', 'comando-geral']);
+      expect(r.outros.fichas.map((f) => f.id)).toEqual(['nunca-serviu']);
     });
   });
 });

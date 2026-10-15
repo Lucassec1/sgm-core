@@ -17,6 +17,7 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
 
 - `docs/requisitos.md` — o que o sistema faz (requisitos funcionais e não funcionais)
 - `docs/regras-imutaveis.md` — regras de negócio do Segue-me (R1 a R9). **Ler sempre** antes de mexer em qualquer lógica do módulo Montagem — nenhuma dessas regras pode ser violada, mesmo sem pedido explícito.
+- `docs/implantacao.md` — norma oficial do Segue-me sobre implantação (madrinha, afilhada, sementeira, montagem dos 3 primeiros encontros). Base do modelo de sementeira/pessoa de fora (#63).
 - `docs/ux-e-fluxos.md` — fluxos de usuário e decisões de UX. Ler antes de criar ou alterar qualquer tela.
 - `docs/design-system.md` — tokens visuais e mapa de componentes shadcn. Ler antes de estilizar algo novo.
 - `docs/arquitetura.md` — decisões técnicas (backend, frontend, multi-tenancy, testes, CI/CD). **Ler sempre** antes de criar estrutura de pastas, escolher biblioteca nova ou decidir padrão de código.
@@ -49,7 +50,7 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
   perderia o arquivo a cada restart/deploy). Upload em lote (pasta inteira + tela de
   conferência, vinculando pelo nome do arquivo) ainda não existe.
 - **Módulo Montagem: quase completo** — schema, backend (montagens, alocações, equipes,
-  lista de substituição, log de atividade, quadrantes) com regras R1–R6 e R9 aplicadas e
+  lista de substituição, log de atividade, quadrantes) com regras R1–R6 e R9 aplicadas (R1–R4 como aviso com confirmação, não bloqueio, desde 14/10/2026) e
   testadas (specs em `server/src/modules/montagem/*.spec.ts`); frontend com quadro das 16
   equipes, drawer por equipe, lista completa, aba Convites (status + saídas/motivos + log),
   aba Substituições, aba Quadrantes (upload/download de PDF), criar/editar/finalizar
