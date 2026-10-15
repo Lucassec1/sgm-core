@@ -54,7 +54,8 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 | Visões dentro de uma Montagem                  | Tabs                                                                               | Quadro de Equipes, Lista completa, Convites, Substituições, Quadrantes            |
 | Detalhe de uma equipe                          | Drawer                                                                             | Ao clicar no card de uma equipe                                                   |
 | Pré-visualização rápida de pessoa              | Popover                                                                            | Busca de pessoa na Distribuição                                                   |
-| Confirmações obrigatórias (R1, R2, R3)         | Alert Dialog                                                                       | Distribuição de vaga, Controle de Convites                                        |
+| Avisos de regra (R1, R2, R3)                   | Badge (`AvisoBadges`/`BadgeAviso`) — vermelho grave, âmbar atenção, verde positivo | Busca de pessoa, vaga (Drawer/Lista completa), aba Convites                       |
+| Confirmação de convite antes dos Círculos (R4) | Alert Dialog (`AvisosRegrasDialog`)                                                | Drawer da equipe (Convidar), alocar substituto                                    |
 | Criação de nova montagem/ficha                 | Dialog                                                                             | Nova Montagem, Nova Ficha                                                         |
 | Busca de pessoa para vaga                      | Command (combobox com busca)                                                       | Distribuição de vaga                                                              |
 | Lista de substituição (banco geral de backups) | DataTable/List + Command                                                           | Aba "Substituições" dentro da Montagem                                            |
@@ -71,7 +72,7 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 
 ## 3. Padrões de uso
 
-- **Alert Dialog é reservado pras regras R1-R3** (recusa, limite de 3x, coordenação) — não usar pra confirmações genéricas de UI. Ações reversíveis (como o remanejamento de equipe) usam Toast com Desfazer, não Alert Dialog.
+- **Avisos de R1–R3 são badges, não confirmação** (decisão de 14/10/2026): ficam visíveis na busca e na pessoa alocada, com a explicação no tooltip. **Alert Dialog é reservado ao R4** (convidar antes dos Círculos fecharem — dispara convite em lote) e não deve ser usado pra confirmações genéricas de UI. Ações reversíveis (como o remanejamento de equipe) usam Toast com Desfazer.
 - **Badge de cor do círculo** é sempre a mesma badge, reaproveitada em Lista de Fichas, Distribuição e Popover — consistência visual é o que faz a cor funcionar como atalho de reconhecimento.
 - **Ícone da equipe** (`EquipeIcon`): os PNGs oficiais das 16 equipes do Segue-me, usados pequenos (16–24px) e **sempre ao lado do nome da equipe**, nunca sozinhos — mesma regra do badge de círculo. Mantêm a cor original (num tamanho pequeno não competem com as cores funcionais); a UI ao redor continua neutra. Chave de lookup é o `slug` da `Equipe` (mesmo slug do seed), então o arquivo é `public/equipes/<slug>.png`.
 - **DataTable** é o padrão único pra qualquer listagem — Histórico de Fichas, Histórico de Montagens e Controle de Convites usam a mesma configuração de componente (colunas variam, comportamento não).

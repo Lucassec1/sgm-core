@@ -1,6 +1,7 @@
 import type {
   Alocacao,
   AvisoRegra,
+  CandidatoCasal,
   CandidatoJovem,
   CoordenadoresSugeridos,
   Equipe,
@@ -43,7 +44,8 @@ export function avisosDoErro(err: unknown): AvisoRegra[] | null {
   const body = err.body as { code?: string; avisos?: AvisoRegra[]; message?: string } | null;
   if (body?.code === 'AVISOS_REGRAS' && body.avisos?.length) return body.avisos;
   if (body?.code === 'REPETICAO_EQUIPE') {
-    return [{ regra: 'R2', nivel: 'atencao', mensagem: body.message ?? err.message }];
+    const mensagem = body.message ?? err.message;
+    return [{ regra: 'R2', nivel: 'atencao', rotulo: 'Já serviu nesta equipe', mensagem }];
   }
   return null;
 }
@@ -309,6 +311,12 @@ export const apiClient = {
   listCandidatosJovens(montagemId: string, vagaMontagemId?: string) {
     return request<CandidatoJovem[]>(
       `/montagens/${montagemId}/candidatos-jovens?${buildQuery({ vagaMontagemId })}`,
+    );
+  },
+
+  listCandidatosCasais(montagemId: string, vagaMontagemId?: string) {
+    return request<CandidatoCasal[]>(
+      `/montagens/${montagemId}/candidatos-casais?${buildQuery({ vagaMontagemId })}`,
     );
   },
 

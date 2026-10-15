@@ -169,6 +169,8 @@ export interface Alocacao {
   podeCoordenar?: boolean | null;
   podePalestrar?: boolean | null;
   substituidaPorId?: string | null;
+  /** Avisos de R1–R3 (badges) — calculados pelo server na listagem da montagem. */
+  avisos?: AvisoRegra[];
   createdAt: string;
   updatedAt: string;
 }
@@ -205,7 +207,7 @@ export interface ResumoMontagem {
 
 // R3 — desde 14/10/2026 a lista traz todo mundo: Grupo A (já serviu na equipe; avaliados
 // "pode coordenar" primeiro), Grupo B (ED/Comando Geral) e os demais (escolher gera aviso).
-type ComAvaliacao<T> = T & { avaliadoPodeCoordenar: boolean };
+type ComAvaliacao<T> = T & { avaliadoPodeCoordenar: boolean; vezesNaEquipe: number };
 interface GrupoCoordenacao {
   fichas: ComAvaliacao<Ficha>[];
   fichasCasais: ComAvaliacao<FichaCasal>[];
@@ -216,14 +218,23 @@ export interface CoordenadoresSugeridos {
   outros: GrupoCoordenacao;
 }
 
-// Candidato a vaga de jovem — `recusouNesteEncontro` marca quem recusou/desistiu (R1 só avisa).
-export type CandidatoJovem = Ficha & { recusouNesteEncontro: boolean };
+// Candidato a vaga — `recusouNesteEncontro` (R1) e `vezesNaEquipe` (R2, vezes que já serviu na
+// equipe da vaga em outros encontros) viram badges na busca; nenhum dos dois bloqueia.
+interface InfoCandidato {
+  recusouNesteEncontro: boolean;
+  vezesNaEquipe: number;
+}
+export type CandidatoJovem = Ficha & InfoCandidato;
+export type CandidatoCasal = FichaCasal & InfoCandidato;
 
-// Aviso de regra (R1–R4) devolvido pelo server num 409 AVISOS_REGRAS — não bloqueia, pede
-// confirmação consciente (ver docs/regras-imutaveis.md).
+// Aviso de regra (R1–R4) — nunca bloqueia (docs/regras-imutaveis.md). R1–R3 viram badge
+// (`Alocacao.avisos`); só o R4 (convidar antes dos Círculos) pede confirmação, via 409.
 export interface AvisoRegra {
   regra: 'R1' | 'R2' | 'R3' | 'R4';
   nivel: 'grave' | 'atencao';
+  /** Texto curto da badge ("4ª vez nesta equipe"). */
+  rotulo: string;
+  /** Explicação completa (tooltip / confirmação). */
   mensagem: string;
 }
 

@@ -308,16 +308,26 @@ export class MontagensService {
       ids(comandoGeralCasais),
     ];
 
+    const [vezesFichas, vezesCasais] = await Promise.all([
+      this.vezesNaEquipe(equipeId, montagemId, 'fichaId'),
+      this.vezesNaEquipe(equipeId, montagemId, 'fichaCasalId'),
+    ]);
+
     const separar = <
       T extends { id: string; jaFoiEquipeDirigente: boolean; alocacoes: { id: string }[] },
     >(
       itens: T[],
       grupoA: Set<string>,
       comandoGeralIds: Set<string>,
+      vezes: Map<string, number>,
     ) => {
       const semAvaliacoes = (i: T) => {
         const { alocacoes, ...resto } = i;
-        return { ...resto, avaliadoPodeCoordenar: alocacoes.length > 0 };
+        return {
+          ...resto,
+          avaliadoPodeCoordenar: alocacoes.length > 0,
+          vezesNaEquipe: vezes.get(i.id) ?? 0,
+        };
       };
       const a = itens
         .filter((i) => grupoA.has(i.id))
@@ -331,8 +341,8 @@ export class MontagensService {
       return { a, b, outros };
     };
 
-    const jovens = separar(fichas, idsGrupoA, idsComandoGeral);
-    const casais = separar(fichasCasais, idsGrupoACasais, idsComandoGeralCasais);
+    const jovens = separar(fichas, idsGrupoA, idsComandoGeral, vezesFichas);
+    const casais = separar(fichasCasais, idsGrupoACasais, idsComandoGeralCasais, vezesCasais);
 
     return {
       grupoA: { fichas: jovens.a, fichasCasais: casais.a },
@@ -349,40 +359,33 @@ export class MontagensService {
     const montagem = await this.findOne(montagemId, paroquiaId);
 
     let sexos: Sexo[] | undefined;
-    if (vagaMontagemId) {
-      const vaga = montagem.vagas.find((v) => v.id === vagaMontagemId);
-      if (!vaga) {
-        throw new BadRequestException(
-          `Vaga ${vagaMontagemId} não pertence à montagem ${montagemId}`,
-        );
-      }
+    const vaga = vagaMontagemId ? this.vagaDaMontagem(montagem, vagaMontagemId) : undefined;
+    if (vaga) {
       sexos = [
         ...(vaga.quantidadeRapazes > 0 ? [Sexo.RAPAZ] : []),
         ...(vaga.quantidadeMocas > 0 ? [Sexo.MOCA] : []),
       ];
     }
 
-    const saidas = await this.prisma.alocacao.findMany({
-      where: {
-        vagaMontagem: { montagemId },
-        status: { in: [StatusConvite.RECUSADO, StatusConvite.DESISTIU] },
-        fichaId: { not: null },
-      },
-      select: { fichaId: true },
-    });
-    const idsSaidas = new Set(saidas.map((a) => a.fichaId).filter((id): id is string => !!id));
-
-    const fichas = await this.prisma.ficha.findMany({
-      where: {
-        paroquiaId: montagem.paroquiaId,
-        situacao: 'ATIVA',
-        ...(sexos && { sexo: { in: sexos } }),
-      },
-    });
+    const [idsSaidas, vezes, fichas] = await Promise.all([
+      this.idsQueSairam(montagemId, 'fichaId'),
+      vaga ? this.vezesNaEquipe(vaga.equipeId, montagemId, 'fichaId') : Promise.resolve(null),
+      this.prisma.ficha.findMany({
+        where: {
+          paroquiaId: montagem.paroquiaId,
+          situacao: 'ATIVA',
+          ...(sexos && { sexo: { in: sexos } }),
+        },
+      }),
+    ]);
 
     const encontroAnterior = montagem.numeroEncontro - 1;
     return fichas
-      .map((f) => ({ ...f, recusouNesteEncontro: idsSaidas.has(f.id) }))
+      .map((f) => ({
+        ...f,
+        recusouNesteEncontro: idsSaidas.has(f.id),
+        vezesNaEquipe: vezes?.get(f.id) ?? 0,
+      }))
       .sort((a, b) => {
         if (a.recusouNesteEncontro !== b.recusouNesteEncontro)
           return a.recusouNesteEncontro ? 1 : -1;
@@ -391,6 +394,82 @@ export class MontagensService {
         if (aEhAnterior !== bEhAnterior) return aEhAnterior ? -1 : 1;
         return b.numeroEncontro - a.numeroEncontro;
       });
+  }
+
+  // Casais candidatos a uma vaga — mesmo formato dos jovens (recusou neste encontro, vezes que
+  // já serviu na equipe da vaga) pra badge na busca; ordem alfabética, recusados no fim.
+  async candidatosCasais(montagemId: string, paroquiaId: string, vagaMontagemId?: string) {
+    const montagem = await this.findOne(montagemId, paroquiaId);
+    const vaga = vagaMontagemId ? this.vagaDaMontagem(montagem, vagaMontagemId) : undefined;
+
+    const [idsSaidas, vezes, casais] = await Promise.all([
+      this.idsQueSairam(montagemId, 'fichaCasalId'),
+      vaga ? this.vezesNaEquipe(vaga.equipeId, montagemId, 'fichaCasalId') : Promise.resolve(null),
+      this.prisma.fichaCasal.findMany({
+        where: { paroquiaId: montagem.paroquiaId, situacao: 'ATIVA' },
+        orderBy: { nomeEle: 'asc' },
+      }),
+    ]);
+
+    return casais
+      .map((c) => ({
+        ...c,
+        recusouNesteEncontro: idsSaidas.has(c.id),
+        vezesNaEquipe: vezes?.get(c.id) ?? 0,
+      }))
+      .sort((a, b) => Number(a.recusouNesteEncontro) - Number(b.recusouNesteEncontro));
+  }
+
+  private vagaDaMontagem(
+    montagem: {
+      vagas: { id: string; equipeId: string; quantidadeRapazes: number; quantidadeMocas: number }[];
+    },
+    vagaMontagemId: string,
+  ) {
+    const vaga = montagem.vagas.find((v) => v.id === vagaMontagemId);
+    if (!vaga) {
+      throw new BadRequestException(`Vaga ${vagaMontagemId} não pertence à montagem`);
+    }
+    return vaga;
+  }
+
+  // R1 — quem recusou/desistiu nesta montagem.
+  private async idsQueSairam(montagemId: string, campo: 'fichaId' | 'fichaCasalId') {
+    const saidas = await this.prisma.alocacao.findMany({
+      where: {
+        vagaMontagem: { montagemId },
+        status: { in: [StatusConvite.RECUSADO, StatusConvite.DESISTIU] },
+        [campo]: { not: null },
+      },
+      select: { [campo]: true },
+    });
+    return new Set(
+      saidas
+        .map((a) => (a as Record<string, string | null>)[campo])
+        .filter((id): id is string => !!id),
+    );
+  }
+
+  // R2 — quantas vezes cada pessoa já serviu (aceito) na equipe, em outros encontros.
+  private async vezesNaEquipe(
+    equipeId: string,
+    montagemId: string,
+    campo: 'fichaId' | 'fichaCasalId',
+  ) {
+    const servicos = await this.prisma.alocacao.findMany({
+      where: {
+        status: StatusConvite.ACEITO,
+        vagaMontagem: { equipeId, montagemId: { not: montagemId } },
+        [campo]: { not: null },
+      },
+      select: { [campo]: true },
+    });
+    const vezes = new Map<string, number>();
+    for (const s of servicos) {
+      const id = (s as Record<string, string | null>)[campo];
+      if (id) vezes.set(id, (vezes.get(id) ?? 0) + 1);
+    }
+    return vezes;
   }
 
   async listarLog(montagemId: string, paroquiaId: string) {

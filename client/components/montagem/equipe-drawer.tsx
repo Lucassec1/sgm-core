@@ -143,6 +143,7 @@ export function EquipeDrawer({
                 {
                   regra: 'R4',
                   nivel: 'atencao',
+                  rotulo: 'Círculos em aberto',
                   mensagem:
                     'A Eq. dos Círculos ainda não fechou (nem todos aceitaram) — o costume é convidar os Círculos primeiro.',
                 },

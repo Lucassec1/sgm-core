@@ -169,7 +169,7 @@ Novo recurso: uma lista **geral** de pessoas cotadas como boas opções de subst
 ### Busca de pessoa para preencher vaga
 
 - Combobox com busca por nome, já filtrando automaticamente por: fichas Ativas, sexo compatível com a vaga, e priorizando (não escondendo) quem é do encontro anterior.
-- **Decidido:** aviso em tempo real, mas **não-bloqueante** — nada de Alert Dialog pedindo confirmação aqui (o Alert Dialog fica reservado aos avisos de R1–R4). Proposta:
+- **Decidido:** aviso em tempo real, mas **não-bloqueante** — nada de Alert Dialog pedindo confirmação aqui (R1–R3 são badges; o Alert Dialog fica só pro aviso de R4 ao convidar). Proposta:
   - Na busca, a pessoa já alocada aparece com uma badge discreta ao lado do nome: "Já em: Eq. Cozinha" — informação visível, mas não impede selecionar/mover.
   - Ao confirmar a nova alocação, o sistema move automaticamente (tira da equipe antiga, coloca na nova) e mostra um Toast: "João movido de Eq. Cozinha para Eq. Sala — Desfazer". Sem modal, sem clique de confirmação — só a opção de reverter caso tenha sido engano.
   - Como só existe uma montagem ativa por vez, esse remanejamento é sempre dentro do encontro atual — não há cenário de mover entre encontros diferentes.
@@ -179,27 +179,28 @@ Novo recurso: uma lista **geral** de pessoas cotadas como boas opções de subst
 
 ## 4. Design System — mapa de uso (shadcn)
 
-| Necessidade do sistema                                                | Componente shadcn                                                 |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Navegação geral (Fichas / Montagem)                                   | Sidebar                                                           |
-| Seções da Ficha do Jovem/Casal                                        | Separator (empilhadas, sem Tabs)                                  |
-| Abas da Montagem (Quadro, Lista, Convites, Substituições, Quadrantes) | Tabs                                                              |
-| Grid das 16 equipes                                                   | Card + Progress + Badge                                           |
-| Detalhe de uma equipe ao clicar no card                               | Drawer                                                            |
-| Confirmações obrigatórias (repetição de equipe, recusa)               | Alert Dialog                                                      |
-| Criação de nova montagem/ficha                                        | Dialog                                                            |
-| Busca de pessoa para vaga                                             | Command (combobox com busca)                                      |
-| Lista de substituição (banco geral de backups da montagem)            | DataTable ou List + Command para adicionar pessoas                |
-| Lista de Fichas, Histórico de equipes, Controle de Convites           | DataTable                                                         |
-| Status (Ativa/Inativa, Aceito/Recusado, cor do círculo)               | Badge                                                             |
-| Foto da pessoa                                                        | Avatar                                                            |
-| Auto-save, confirmações de ação                                       | Toast                                                             |
-| % de preenchimento da montagem                                        | Progress                                                          |
-| Upload de PDF (Quadrantes)                                            | (sem componente shadcn nativo — construir com input file + lista) |
+| Necessidade do sistema                                                | Componente shadcn                                                          |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Navegação geral (Fichas / Montagem)                                   | Sidebar                                                                    |
+| Seções da Ficha do Jovem/Casal                                        | Separator (empilhadas, sem Tabs)                                           |
+| Abas da Montagem (Quadro, Lista, Convites, Substituições, Quadrantes) | Tabs                                                                       |
+| Grid das 16 equipes                                                   | Card + Progress + Badge                                                    |
+| Detalhe de uma equipe ao clicar no card                               | Drawer                                                                     |
+| Avisos de regra na pessoa (recusou, Nª vez na equipe, nunca serviu)   | Badge (vermelho = foge da regra, âmbar = conferir, verde = ponto positivo) |
+| Confirmação ao convidar antes dos Círculos fecharem (R4)              | Alert Dialog                                                               |
+| Criação de nova montagem/ficha                                        | Dialog                                                                     |
+| Busca de pessoa para vaga                                             | Command (combobox com busca)                                               |
+| Lista de substituição (banco geral de backups da montagem)            | DataTable ou List + Command para adicionar pessoas                         |
+| Lista de Fichas, Histórico de equipes, Controle de Convites           | DataTable                                                                  |
+| Status (Ativa/Inativa, Aceito/Recusado, cor do círculo)               | Badge                                                                      |
+| Foto da pessoa                                                        | Avatar                                                                     |
+| Auto-save, confirmações de ação                                       | Toast                                                                      |
+| % de preenchimento da montagem                                        | Progress                                                                   |
+| Upload de PDF (Quadrantes)                                            | (sem componente shadcn nativo — construir com input file + lista)          |
 
 ---
 
 ## Observações fechadas
 
 - Só existe uma montagem ativa por vez (um encontro de cada vez) — por isso o remanejamento com Toast + Desfazer da seção de Montagem só precisa considerar o encontro atual, sem cenário de mover entre encontros diferentes.
-- Reforçando a regra R3 (coordenação), que já estava no documento de requisitos: uma pessoa só pode ser sugerida como **coordenadora** de uma equipe se (a) já serviu como equipista **naquela equipe específica**, ou (b) já foi Equipe Dirigente/Comando Geral (pode coordenar qualquer equipe nesse caso). Desde 14/10/2026, quem não se encaixa **aparece** no fim da lista, marcado "nunca serviu nesta equipe", e escolher essa pessoa pede confirmação — aviso, não bloqueio (ver R3 em `regras-imutaveis.md`).
+- Reforçando a regra R3 (coordenação), que já estava no documento de requisitos: uma pessoa só pode ser sugerida como **coordenadora** de uma equipe se (a) já serviu como equipista **naquela equipe específica**, ou (b) já foi Equipe Dirigente/Comando Geral (pode coordenar qualquer equipe nesse caso). Desde 14/10/2026, quem não se encaixa **aparece** no fim da lista, com a badge "Nunca serviu nesta equipe", que continua na pessoa depois de alocada — aviso, sem bloqueio nem confirmação (ver R3 em `regras-imutaveis.md`).

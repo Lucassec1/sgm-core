@@ -480,7 +480,9 @@ describe('avisosDoErro', () => {
     const { ApiError, avisosDoErro } = await import('./api-client');
     expect(
       avisosDoErro(new ApiError('x', 409, { code: 'REPETICAO_EQUIPE', message: 'Já serviu 1x' })),
-    ).toEqual([{ regra: 'R2', nivel: 'atencao', mensagem: 'Já serviu 1x' }]);
+    ).toEqual([
+      { regra: 'R2', nivel: 'atencao', rotulo: 'Já serviu nesta equipe', mensagem: 'Já serviu 1x' },
+    ]);
   });
 
   it('devolve null pra outros erros', async () => {

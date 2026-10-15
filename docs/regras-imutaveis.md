@@ -2,21 +2,20 @@
 
 > Este documento existe pra ser lido **junto com qualquer prompt de IA** que for gerar código, telas ou lógica de negócio. As regras aqui não são negociáveis nem interpretáveis — o sistema pode **avisar**, mas nunca pode **permitir** uma ação que viole uma delas, a menos que a própria regra abra exceção explícita.
 >
-> **Exceção explícita — R1 a R4 (decisão da equipe dirigente, 14/10/2026):** essas quatro são regras do Segue-me que o sistema **informa e pede confirmação**, mas **não bloqueia** — quem decide é a equipe dirigente, que conhece o contexto (ex.: falta de gente, encontro já realizado sendo registrado). O aviso é obrigatório: o sistema nunca deixa passar uma dessas situações em silêncio. **Não reintroduzir bloqueio** nessas quatro sem nova decisão registrada aqui. As demais regras (R5 em diante) continuam valendo como antes.
+> **Exceção explícita — R1 a R4 (decisão da equipe dirigente, 14/10/2026):** essas quatro são regras do Segue-me que o sistema **informa**, mas **não bloqueia** — quem decide é a equipe dirigente, que conhece o contexto (ex.: falta de gente, encontro já realizado sendo registrado). O aviso é obrigatório: o sistema nunca deixa passar uma dessas situações em silêncio. **R1–R3 viram badges** (na busca de pessoa, antes de escolher, e na pessoa já alocada — vaga, Lista completa, aba Convites), sem pedir confirmação. **Só R4 pede confirmação**, porque "Convidar" dispara convite pra várias pessoas de uma vez. **Não reintroduzir bloqueio** nessas quatro sem nova decisão registrada aqui. As demais regras (R5 em diante) continuam valendo como antes.
 
 ---
 
 ## R1 — Recusa ou desistência do convite
 
 - Quem recusa o convite ou desiste durante a montagem, em princípio, **não serve nesse encontro** — o costume é convidar de novo só no encontro seguinte.
-- O sistema **avisa** ("recusou o convite deste encontro", com o motivo) e pede confirmação ao colocar essa pessoa de novo em qualquer equipe do encontro atual. **Não bloqueia** (exceção explícita, ver topo).
-- Na busca de pessoa pra vaga, quem recusou aparece no fim da lista, marcado.
+- O sistema **avisa** com a badge "Recusou este encontro" — na busca de pessoa (onde quem recusou aparece no fim da lista) e na pessoa alocada, se ela for chamada de novo. **Não bloqueia nem pede confirmação** (exceção explícita, ver topo).
 
 ## R2 — Repetição de equipe
 
 - Uma pessoa pode servir na mesma equipe mais de uma vez, mas o ideal é não repetir.
-- O sistema exibe um **aviso explícito** ao tentar inserir alguém que já serviu naquela equipe — exige confirmação consciente do usuário pra prosseguir.
-- **Limite de referência: 3 vezes na mesma equipe.** Da 4ª vez em diante o aviso é **grave** (destacado em vermelho, "esta seria a 4ª vez") — mas **não bloqueia** (exceção explícita, ver topo). Vale igual pras 16 equipes, inclusive a Visitação.
+- O sistema mostra a badge "Nª vez nesta equipe" pra quem já serviu naquela equipe — na busca, antes de escolher, e na pessoa alocada. Âmbar na 2ª e 3ª vez.
+- **Limite de referência: 3 vezes na mesma equipe.** Da 4ª vez em diante a badge é **vermelha** — mas **não bloqueia nem pede confirmação** (exceção explícita, ver topo). Vale igual pras 16 equipes, inclusive a Visitação.
 - Serviço feito em outra paróquia (ex.: na paróquia madrinha, durante a implantação) também conta.
 
 ## R3 — Coordenação de equipe
@@ -26,7 +25,7 @@
   - Na sugestão de coordenadores, o sistema separa três grupos:
     - **Grupo A** (destaque, origem preferencial): já serviu como equipista naquela equipe — dentro dele, primeiro quem foi **avaliado como "pode coordenar"** naquela equipe.
     - **Grupo B** (alternativa): foi Equipe Dirigente/Comando Geral.
-    - **Outras pessoas:** aparecem no fim, marcadas "nunca serviu nesta equipe". Escolher alguém daqui gera aviso **grave** e pede confirmação — mas **não bloqueia** (exceção explícita, ver topo).
+    - **Outras pessoas:** aparecem no fim, com a badge vermelha "Nunca serviu nesta equipe", que continua na pessoa depois de alocada — **não bloqueia nem pede confirmação** (exceção explícita, ver topo).
   - Serviço feito em outra paróquia (ex.: na paróquia madrinha) também conta pro Grupo A.
 - **Coordenação por casal:** a regra acima (Grupo A/B) **não se aplica** — qualquer casal ativo pode coordenar qualquer equipe, sem precisar de histórico ali.
   - **Exceção — Eq. da Visitação:** por ter muitos casais (proporção alta pra sustentar a demanda de vagas, ver R6), os coordenadores de lá tradicionalmente sempre vêm de quem já serviu na própria equipe. Por isso, só pra essa equipe, a coordenação por casal segue a mesma regra de Grupo A/B da coordenação por jovem (histórico na equipe OU Equipe Dirigente/Comando Geral).
@@ -35,7 +34,7 @@
 
 - A Eq. dos Círculos é sempre a **primeira** a ser convidada, antes de qualquer outra equipe.
 - O costume é convidar as demais 14 equipes (fora Comando Geral) só depois que **todos** os membros dos Círculos tiverem aceitado o convite.
-- Convidar antes disso gera **aviso** e pede confirmação — **não bloqueia** (exceção explícita, ver topo). A montagem/rascunho das outras equipes nunca foi travada; o aviso é só sobre **enviar o convite**.
+- Convidar antes disso gera **aviso** e **pede confirmação** (única das quatro que pede, por disparar convite em lote) — **não bloqueia** (exceção explícita, ver topo). A montagem/rascunho das outras equipes nunca foi travada; o aviso é só sobre **enviar o convite**.
 
 ## R5 — Prioridade de convite entre jovens
 

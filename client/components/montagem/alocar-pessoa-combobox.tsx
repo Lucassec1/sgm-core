@@ -26,13 +26,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { avisosDoErro } from '@/lib/api-client';
 import { AvisosRegrasDialog } from './avisos-regras-dialog';
+import { BadgeAviso, avisoDeRepeticao } from './aviso-badges';
 import {
+  useCandidatosCasais,
   useCandidatosJovens,
   useCoordenadoresSugeridos,
   useCreateAlocacao,
   useDeleteAlocacao,
 } from '@/lib/hooks/use-montagens';
-import { useFichasCasais } from '@/lib/hooks/use-fichas-casais';
 import type { Alocacao, AvisoRegra, StatusConvite, VagaMontagem } from '@/lib/types';
 
 interface AvisosPendentes {
@@ -50,6 +51,7 @@ interface Opcao {
   grupo: Grupo;
   avaliadoPodeCoordenar?: boolean;
   recusouNesteEncontro?: boolean;
+  vezesNaEquipe?: number;
 }
 
 const TITULO_GRUPO: Record<'A' | 'B' | 'outros', string> = {
@@ -77,11 +79,12 @@ function statusParaCriar(status?: StatusConvite) {
 // - Se a pessoa já está alocada em OUTRA vaga desse encontro, pede confirmação explícita
 //   antes de mover (mostra de onde pra onde) — depois de confirmado, cria na vaga nova
 //   (preservando o status), remove da antiga, e ainda avisa por Toast com Desfazer.
-// - R1–R4 não bloqueiam (decisão de 14/10/2026): o server devolve 409 com os avisos e eles
-//   viram um Alert Dialog de confirmação consciente (AvisosRegrasDialog).
+// - R1–R3 não bloqueiam nem pedem confirmação (decisão de 14/10/2026): viram badges aqui na
+//   busca (recusou este encontro, Nª vez nesta equipe, nunca serviu nesta equipe, pode
+//   coordenar) e, depois de alocar, na vaga. Só o R4 (mover alguém já convidado antes dos
+//   Círculos fecharem) ainda chega como 409 e pede confirmação (AvisosRegrasDialog).
 // - Vaga de Coordenação (R3): lista em três grupos — já serviu na equipe (avaliados "pode
-//   coordenar" primeiro), já foi ED/Comando Geral, e as demais pessoas, marcadas "nunca serviu
-//   nesta equipe". Quem recusou o convite deste encontro aparece marcado (R1).
+//   coordenar" primeiro), já foi ED/Comando Geral, e as demais pessoas.
 // - Sugestões priorizam quem ainda não está em nenhuma equipe desse encontro.
 export function AlocarPessoaCombobox({
   montagemId,
@@ -116,9 +119,9 @@ export function AlocarPessoaCombobox({
     montagemId,
     tipoPessoa === 'JOVEM' && !ehCoordenacao ? vagaMontagemId : undefined,
   );
-  const candidatosCasais = useFichasCasais(
-    { situacao: 'ATIVA', pageSize: 200 },
-    { enabled: tipoPessoa === 'CASAL' && !ehCoordenacao },
+  const candidatosCasais = useCandidatosCasais(
+    montagemId,
+    tipoPessoa === 'CASAL' && !ehCoordenacao ? vagaMontagemId : undefined,
   );
   const coordenadores = useCoordenadoresSugeridos(montagemId, ehCoordenacao ? equipeId : undefined);
 
@@ -141,12 +144,14 @@ export function AlocarPessoaCombobox({
           nome: f.nomeCompleto,
           grupo,
           avaliadoPodeCoordenar: f.avaliadoPodeCoordenar,
+          vezesNaEquipe: f.vezesNaEquipe,
         }))
       : (dados?.fichasCasais ?? []).map((c) => ({
           id: c.id,
           nome: nomeCasal(c),
           grupo,
           avaliadoPodeCoordenar: c.avaliadoPodeCoordenar,
+          vezesNaEquipe: c.vezesNaEquipe,
         }));
   };
 
@@ -158,11 +163,14 @@ export function AlocarPessoaCombobox({
           nome: f.nomeCompleto,
           grupo: undefined,
           recusouNesteEncontro: f.recusouNesteEncontro,
+          vezesNaEquipe: f.vezesNaEquipe,
         }))
-      : (candidatosCasais.data?.items ?? []).map((c) => ({
+      : (candidatosCasais.data ?? []).map((c) => ({
           id: c.id,
           nome: nomeCasal(c),
           grupo: undefined,
+          recusouNesteEncontro: c.recusouNesteEncontro,
+          vezesNaEquipe: c.vezesNaEquipe,
         }));
 
   // Quem ainda não está em nenhuma equipe desse encontro aparece primeiro na lista — é
@@ -277,23 +285,9 @@ export function AlocarPessoaCombobox({
                             onSelect={() => selecionar(pessoa.id, pessoa.nome)}
                             className="py-2"
                           >
-                            <div className="flex flex-col">
+                            <div className="flex min-w-0 flex-col gap-1">
                               <span>{pessoa.nome}</span>
-                              {pessoa.avaliadoPodeCoordenar && (
-                                <span className="text-xs text-green-700 dark:text-green-400">
-                                  Avaliado(a): pode coordenar esta equipe
-                                </span>
-                              )}
-                              {pessoa.grupo === 'outros' && (
-                                <span className="text-xs text-red-600 dark:text-red-400">
-                                  Nunca serviu nesta equipe
-                                </span>
-                              )}
-                              {pessoa.recusouNesteEncontro && (
-                                <span className="text-xs text-red-600 dark:text-red-400">
-                                  Recusou o convite deste encontro
-                                </span>
-                              )}
+                              <OpcaoBadges pessoa={pessoa} />
                               {jaAlocadaEm && (
                                 <span className="text-xs text-muted-foreground">
                                   Já em: {nomeEquipeDaVaga(jaAlocadaEm.vagaMontagemId)}
@@ -347,5 +341,29 @@ export function AlocarPessoaCombobox({
         }}
       />
     </>
+  );
+}
+
+// Badges da pessoa na busca (R1–R3 só informam — decisão de 14/10/2026): o que se vê aqui é o
+// mesmo que vai aparecer na vaga depois de alocar.
+function OpcaoBadges({ pessoa }: { pessoa: Opcao }) {
+  const repeticao = avisoDeRepeticao(pessoa.vezesNaEquipe ?? 0);
+  if (
+    !pessoa.avaliadoPodeCoordenar &&
+    pessoa.grupo !== 'outros' &&
+    !pessoa.recusouNesteEncontro &&
+    !repeticao
+  ) {
+    return null;
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      {pessoa.avaliadoPodeCoordenar && <BadgeAviso nivel="positivo">Pode coordenar</BadgeAviso>}
+      {pessoa.grupo === 'outros' && (
+        <BadgeAviso nivel="grave">Nunca serviu nesta equipe</BadgeAviso>
+      )}
+      {pessoa.recusouNesteEncontro && <BadgeAviso nivel="grave">Recusou este encontro</BadgeAviso>}
+      {repeticao && <BadgeAviso nivel={repeticao.nivel}>{repeticao.rotulo}</BadgeAviso>}
+    </div>
   );
 }

@@ -10,6 +10,7 @@ import { useDeleteAlocacao } from '@/lib/hooks/use-montagens';
 import { AlocacaoAvaliacaoPopover } from './alocacao-avaliacao-popover';
 import { AlocacaoRowActions } from './alocacao-row-actions';
 import { AlocacaoStatusBadge } from './alocacao-status-badge';
+import { AvisoBadges } from './aviso-badges';
 import { AlocarPessoaCombobox } from './alocar-pessoa-combobox';
 import { PessoaPreviewPopover } from './pessoa-preview-popover';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
@@ -49,13 +50,14 @@ function LinhaAlocacao({
 
   return (
     <li className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm">
-      <div className="flex min-w-0 flex-1 items-center gap-2">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
         <div className="min-w-0 truncate">
           <PessoaPreviewPopover ficha={alocacao.ficha} fichaCasal={alocacao.fichaCasal}>
             {nomeAlocacao(alocacao)}
           </PessoaPreviewPopover>
         </div>
         {destacarCirculo && alocacao.ficha && <CirculoBadge cor={alocacao.ficha.corCirculo} />}
+        <AvisoBadges avisos={alocacao.avisos} />
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <AlocacaoStatusBadge status={alocacao.status} />

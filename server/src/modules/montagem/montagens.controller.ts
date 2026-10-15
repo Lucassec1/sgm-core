@@ -56,6 +56,15 @@ export class MontagensController {
     return this.montagensService.candidatosJovens(id, paroquiaId, vagaMontagemId);
   }
 
+  @Get(':id/candidatos-casais')
+  candidatosCasais(
+    @Param('id') id: string,
+    @ParoquiaAtual() paroquiaId: string,
+    @Query('vagaMontagemId') vagaMontagemId?: string,
+  ) {
+    return this.montagensService.candidatosCasais(id, paroquiaId, vagaMontagemId);
+  }
+
   @Get(':id/log')
   listarLog(@Param('id') id: string, @ParoquiaAtual() paroquiaId: string) {
     return this.montagensService.listarLog(id, paroquiaId);

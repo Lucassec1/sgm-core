@@ -1,4 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { StatusConvite } from '@prisma/client';
 import { MontagensService } from './montagens.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LogAtividadeService } from './log-atividade.service';
@@ -51,6 +52,8 @@ describe('MontagensService', () => {
       prisma as unknown as PrismaService,
       logAtividade as unknown as LogAtividadeService,
     );
+    // padrão: ninguém recusou e ninguém serviu antes (sobrescrito por teste quando precisar)
+    prisma.alocacao.findMany.mockResolvedValue([]);
   });
 
   describe('create — R6 (tamanho do encontro)', () => {
@@ -468,6 +471,77 @@ describe('MontagensService', () => {
         service.candidatosJovens(MONTAGEM_ID, PAROQUIA_ID, 'vaga-inexistente'),
       ).rejects.toThrow(BadRequestException);
       expect(prisma.ficha.findMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('candidatos — badges de R1/R2 na busca', () => {
+    const montagemComVaga = {
+      id: MONTAGEM_ID,
+      paroquiaId: PAROQUIA_ID,
+      numeroEncontro: 7,
+      vagas: [{ id: 'vaga-1', equipeId: 'equipe-1', quantidadeRapazes: 1, quantidadeMocas: 1 }],
+    };
+
+    it('jovens: com a vaga informada, conta quantas vezes cada um já serviu na equipe dela', async () => {
+      prisma.montagem.findUnique.mockResolvedValue(montagemComVaga);
+      prisma.alocacao.findMany.mockImplementation(async (args: any) =>
+        args.where.status === StatusConvite.ACEITO
+          ? [{ fichaId: 'f-veterano' }, { fichaId: 'f-veterano' }, { fichaId: 'f-veterano' }]
+          : [],
+      );
+      prisma.ficha.findMany.mockResolvedValue([
+        { id: 'f-veterano', numeroEncontro: 6 },
+        { id: 'f-novo', numeroEncontro: 6 },
+      ]);
+
+      const candidatos = await service.candidatosJovens(MONTAGEM_ID, PAROQUIA_ID, 'vaga-1');
+
+      expect(candidatos.map((c) => [c.id, c.vezesNaEquipe])).toEqual([
+        ['f-veterano', 3],
+        ['f-novo', 0],
+      ]);
+      // conta só serviço aceito nessa equipe, fora desta montagem
+      expect(prisma.alocacao.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: StatusConvite.ACEITO,
+            vagaMontagem: { equipeId: 'equipe-1', montagemId: { not: MONTAGEM_ID } },
+          }),
+        }),
+      );
+    });
+
+    it('casais: só da paróquia, ativos, com recusa e vezes na equipe; recusados no fim', async () => {
+      prisma.montagem.findUnique.mockResolvedValue(montagemComVaga);
+      prisma.alocacao.findMany.mockImplementation(async (args: any) =>
+        args.where.status === StatusConvite.ACEITO
+          ? [{ fichaCasalId: 'c-visitacao' }]
+          : [{ fichaCasalId: 'c-recusou' }],
+      );
+      prisma.fichaCasal.findMany.mockResolvedValue([
+        { id: 'c-recusou', nomeEle: 'A' },
+        { id: 'c-visitacao', nomeEle: 'B' },
+      ]);
+
+      const casais = await service.candidatosCasais(MONTAGEM_ID, PAROQUIA_ID, 'vaga-1');
+
+      expect(prisma.fichaCasal.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { paroquiaId: PAROQUIA_ID, situacao: 'ATIVA' } }),
+      );
+      expect(casais.map((c) => [c.id, c.recusouNesteEncontro, c.vezesNaEquipe])).toEqual([
+        ['c-visitacao', false, 1],
+        ['c-recusou', true, 0],
+      ]);
+    });
+
+    it('casais: R7 — montagem de outra paróquia dá NotFound', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        ...montagemComVaga,
+        paroquiaId: OUTRA_PAROQUIA_ID,
+      });
+      await expect(service.candidatosCasais(MONTAGEM_ID, PAROQUIA_ID)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -964,6 +1038,18 @@ describe('MontagensService', () => {
       ]) {
         expect(args.where.paroquiaId).toBe(PAROQUIA_ID);
       }
+    });
+
+    it('informa quantas vezes cada pessoa já serviu na equipe (badge de R2)', async () => {
+      mockFichas([{ id: 'serviu', serviuEm: ['equipe-1'] }, { id: 'nunca' }]);
+      prisma.alocacao.findMany.mockImplementation(async (args: any) =>
+        args.select?.fichaId ? [{ fichaId: 'serviu' }, { fichaId: 'serviu' }] : [],
+      );
+
+      const r = await service.coordenadoresSugeridos(MONTAGEM_ID, 'equipe-1', PAROQUIA_ID);
+
+      expect(r.grupoA.fichas[0]).toMatchObject({ id: 'serviu', vezesNaEquipe: 2 });
+      expect(r.outros.fichas[0]).toMatchObject({ id: 'nunca', vezesNaEquipe: 0 });
     });
 
     it('separa Grupo A, Grupo B e outros — e avaliados "pode coordenar" vêm primeiro no A', async () => {

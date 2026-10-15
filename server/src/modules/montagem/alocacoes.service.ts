@@ -21,8 +21,16 @@ export interface AvisoRegra {
   // `grave` = foge da regra (ex.: 4ª vez na equipe, nunca serviu e vai coordenar);
   // `atencao` = vale conferir (ex.: 2ª vez na equipe).
   nivel: 'grave' | 'atencao';
+  // Texto curto pra badge ("4ª vez nesta equipe"); `mensagem` é a explicação completa.
+  rotulo: string;
   mensagem: string;
 }
+
+const STATUS_ATIVOS: StatusConvite[] = [
+  StatusConvite.RASCUNHO,
+  StatusConvite.CONVIDADO,
+  StatusConvite.ACEITO,
+];
 
 // Regras de negócio do Segue-me (docs/regras-imutaveis.md) aplicadas na atribuição de pessoas
 // às vagas da Montagem. R7 (isolamento por paróquia) e R8 (Conselho) ficam de fora — ver
@@ -64,96 +72,96 @@ export class AlocacoesService {
     return vaga;
   }
 
-  // R1 — recusou/desistiu deste encontro.
-  private async avisoRecusa(
-    tx: Prisma.TransactionClient,
+  // Avisos de R1–R3 de cada alocação ativa da montagem, calculados em lote (poucas queries pra
+  // montagem inteira) — viram badges no client (decisão de 14/10/2026: R1–R3 não bloqueiam nem
+  // pedem confirmação, só ficam visíveis). Serviço feito em montagens finalizadas ou em
+  // andamento de outros encontros conta (status ACEITO).
+  private async avisosDasAlocacoes(
     montagemId: string,
-    fichaId?: string,
-    fichaCasalId?: string,
-  ): Promise<AvisoRegra | null> {
-    const saida = await tx.alocacao.findFirst({
-      where: {
-        vagaMontagem: { montagemId },
-        status: { in: [StatusConvite.RECUSADO, StatusConvite.DESISTIU] },
-        ...(fichaId ? { fichaId } : { fichaCasalId }),
-      },
-    });
-    if (!saida) return null;
-    const verbo = saida.status === StatusConvite.DESISTIU ? 'Desistiu' : 'Recusou o convite';
-    return {
-      regra: 'R1',
-      nivel: 'grave',
-      mensagem: `${verbo} deste encontro${saida.motivoRecusa ? ` (motivo: ${saida.motivoRecusa})` : ''}.`,
-    };
-  }
+    alocacoes: {
+      id: string;
+      status: StatusConvite;
+      tipoPessoa: string;
+      fichaId: string | null;
+      fichaCasalId: string | null;
+      ficha: { jaFoiEquipeDirigente: boolean } | null;
+      fichaCasal: { jaFoiEquipeDirigente: boolean } | null;
+      vagaMontagem: { equipe: Equipe; cargo: { ehCoordenacao: boolean } };
+    }[],
+  ): Promise<Map<string, AvisoRegra[]>> {
+    const chave = (a: { fichaId: string | null; fichaCasalId: string | null }) =>
+      a.fichaId ? `f:${a.fichaId}` : `c:${a.fichaCasalId}`;
+    const fichaIds = [
+      ...new Set(alocacoes.map((a) => a.fichaId).filter((id): id is string => !!id)),
+    ];
+    const casalIds = [
+      ...new Set(alocacoes.map((a) => a.fichaCasalId).filter((id): id is string => !!id)),
+    ];
 
-  // R2 — repetição de equipe: avisa a partir da 2ª vez; da 4ª em diante o aviso é grave.
-  private async avisoRepeticao(
-    tx: Prisma.TransactionClient,
-    equipe: Equipe,
-    montagemId: string,
-    fichaId: string | undefined,
-    fichaCasalId: string | undefined,
-  ): Promise<AvisoRegra | null> {
-    const vezesServidas = await tx.alocacao.count({
-      where: {
-        vagaMontagem: { equipeId: equipe.id, montagemId: { not: montagemId } },
-        status: StatusConvite.ACEITO,
-        ...(fichaId ? { fichaId } : { fichaCasalId }),
-      },
-    });
-    if (vezesServidas === 0) return null;
-    return {
-      regra: 'R2',
-      nivel: vezesServidas >= 3 ? 'grave' : 'atencao',
-      mensagem: `Já serviu ${vezesServidas}x em ${equipe.nome} — esta seria a ${vezesServidas + 1}ª vez.`,
-    };
-  }
-
-  // R3 — coordenação: quem nunca serviu como equipista naquela equipe (Grupo A) nem foi
-  // Equipe Dirigente/Comando Geral (Grupo B). Vale sempre pra jovem; pra casal só nas equipes
-  // com coordenacaoCasalExigeHistorico=true (hoje só a Visitação).
-  private async avisoCoordenacao(
-    tx: Prisma.TransactionClient,
-    equipe: Equipe,
-    montagemId: string,
-    fichaId: string | undefined,
-    fichaCasalId: string | undefined,
-  ): Promise<AvisoRegra | null> {
-    const grupoA = await tx.alocacao.count({
-      where: {
-        vagaMontagem: { equipeId: equipe.id, montagemId: { not: montagemId } },
-        status: StatusConvite.ACEITO,
-        ...(fichaId ? { fichaId } : { fichaCasalId }),
-      },
-    });
-    if (grupoA > 0) return null;
-
-    if (fichaId) {
-      const ficha = await tx.ficha.findUnique({ where: { id: fichaId } });
-      if (ficha?.jaFoiEquipeDirigente) return null;
-    } else if (fichaCasalId) {
-      const fichaCasal = await tx.fichaCasal.findUnique({ where: { id: fichaCasalId } });
-      if (fichaCasal?.jaFoiEquipeDirigente) return null;
-    }
-
-    const comandoGeral = await tx.equipe.findUnique({ where: { slug: 'comando-geral' } });
-    if (comandoGeral) {
-      const grupoBComandoGeral = await tx.alocacao.count({
+    const [servicosAnteriores, comandoGeral] = await Promise.all([
+      this.prisma.alocacao.findMany({
         where: {
-          vagaMontagem: { equipeId: comandoGeral.id },
           status: StatusConvite.ACEITO,
-          ...(fichaId ? { fichaId } : { fichaCasalId }),
+          vagaMontagem: { montagemId: { not: montagemId } },
+          OR: [{ fichaId: { in: fichaIds } }, { fichaCasalId: { in: casalIds } }],
         },
-      });
-      if (grupoBComandoGeral > 0) return null;
+        select: { fichaId: true, fichaCasalId: true, vagaMontagem: { select: { equipeId: true } } },
+      }),
+      this.prisma.equipe.findUnique({ where: { slug: 'comando-geral' } }),
+    ]);
+    // pessoa -> equipe -> vezes servidas (aceito) em outros encontros
+    const vezes = new Map<string, Map<string, number>>();
+    for (const s of servicosAnteriores) {
+      const porEquipe = vezes.get(chave(s)) ?? new Map<string, number>();
+      porEquipe.set(s.vagaMontagem.equipeId, (porEquipe.get(s.vagaMontagem.equipeId) ?? 0) + 1);
+      vezes.set(chave(s), porEquipe);
     }
+    const saiuDesteEncontro = new Set(
+      alocacoes
+        .filter((a) => a.status === StatusConvite.RECUSADO || a.status === StatusConvite.DESISTIU)
+        .map(chave),
+    );
 
-    return {
-      regra: 'R3',
-      nivel: 'grave',
-      mensagem: `Nunca serviu como equipista em ${equipe.nome} nem foi Equipe Dirigente/Comando Geral.`,
-    };
+    const resultado = new Map<string, AvisoRegra[]>();
+    for (const a of alocacoes) {
+      if (!STATUS_ATIVOS.includes(a.status)) continue;
+      const avisos: AvisoRegra[] = [];
+      const { equipe, cargo } = a.vagaMontagem;
+      const porEquipe = vezes.get(chave(a));
+      const naEquipe = porEquipe?.get(equipe.id) ?? 0;
+
+      if (saiuDesteEncontro.has(chave(a))) {
+        avisos.push({
+          regra: 'R1',
+          nivel: 'grave',
+          rotulo: 'Recusou este encontro',
+          mensagem: 'Recusou ou desistiu do convite deste encontro e foi chamada de novo.',
+        });
+      }
+      if (naEquipe > 0) {
+        avisos.push({
+          regra: 'R2',
+          nivel: naEquipe >= 3 ? 'grave' : 'atencao',
+          rotulo: `${naEquipe + 1}ª vez nesta equipe`,
+          mensagem: `Já serviu ${naEquipe}x em ${equipe.nome} — esta é a ${naEquipe + 1}ª vez.`,
+        });
+      }
+      const exigeHistorico =
+        cargo.ehCoordenacao && (a.tipoPessoa === 'JOVEM' || equipe.coordenacaoCasalExigeHistorico);
+      const grupoB =
+        !!(a.ficha ?? a.fichaCasal)?.jaFoiEquipeDirigente ||
+        (!!comandoGeral && (porEquipe?.get(comandoGeral.id) ?? 0) > 0);
+      if (exigeHistorico && naEquipe === 0 && !grupoB) {
+        avisos.push({
+          regra: 'R3',
+          nivel: 'grave',
+          rotulo: 'Nunca serviu nesta equipe',
+          mensagem: `Coordena ${equipe.nome} sem ter servido nela como equipista nem ter sido Equipe Dirigente/Comando Geral.`,
+        });
+      }
+      if (avisos.length) resultado.set(a.id, avisos);
+    }
+    return resultado;
   }
 
   // R4 — Eq. dos Círculos primeiro: convidar as demais equipes (exceto Círculos e Comando
@@ -180,12 +188,14 @@ export class AlocacoesService {
     return {
       regra: 'R4',
       nivel: 'atencao',
+      rotulo: 'Círculos em aberto',
       mensagem: 'A Eq. dos Círculos ainda não fechou (nem todos aceitaram).',
     };
   }
 
-  // Avisos de R1–R4 não bloqueiam (decisão de 14/10/2026, docs/regras-imutaveis.md): sem
-  // confirmação, devolvem 409 com a lista; o client mostra e reenvia com confirmarAvisos.
+  // R4 é o único aviso que pede confirmação (convidar dispara convite pra várias pessoas de uma
+  // vez — decisão de 14/10/2026, docs/regras-imutaveis.md): sem confirmação, 409 com a lista; o
+  // client mostra e reenvia com confirmarAvisos. R1–R3 só viram badge (avisosDasAlocacoes).
   private exigirConfirmacao(avisos: (AvisoRegra | null)[], confirmado: boolean | undefined) {
     const pendentes = avisos.filter((a): a is AvisoRegra => !!a);
     if (pendentes.length === 0 || confirmado) return;
@@ -206,37 +216,19 @@ export class AlocacoesService {
   }
 
   async create(montagemId: string, dto: CreateAlocacaoDto) {
-    // Avisos de regra (R1-R4) + escrita numa única transação Serializable: os avisos leem
-    // contagens que a própria escrita altera (ex.: quantas vezes serviu na equipe, R2), então
-    // ler e gravar precisam enxergar o mesmo estado — sem isso, duas alocações simultâneas da
-    // mesma pessoa+equipe sairiam sem o aviso certo. O log (R9) entra na mesma transação.
+    // Aviso de R4 + escrita (+ saída da lista de substituição + log R9) numa única transação
+    // Serializable, pra ler o estado dos Círculos e gravar enxergando a mesma foto.
     return this.comRetrySerializacao(() =>
       this.prisma.$transaction(
         async (tx) => {
           const vaga = await this.getVagaOuFalha(tx, montagemId, dto.vagaMontagemId);
 
-          const exigeCoordenacao =
-            vaga.cargo.ehCoordenacao &&
-            (dto.tipoPessoa === 'JOVEM' || vaga.equipe.coordenacaoCasalExigeHistorico);
-          this.exigirConfirmacao(
-            [
-              await this.avisoRecusa(tx, montagemId, dto.fichaId, dto.fichaCasalId),
-              await this.avisoRepeticao(tx, vaga.equipe, montagemId, dto.fichaId, dto.fichaCasalId),
-              exigeCoordenacao
-                ? await this.avisoCoordenacao(
-                    tx,
-                    vaga.equipe,
-                    montagemId,
-                    dto.fichaId,
-                    dto.fichaCasalId,
-                  )
-                : null,
-              dto.status === StatusConvite.CONVIDADO
-                ? await this.avisoConviteAntesDosCirculos(tx, vaga.equipe, montagemId)
-                : null,
-            ],
-            dto.confirmarAvisos || dto.confirmarRepeticao,
-          );
+          if (dto.status === StatusConvite.CONVIDADO) {
+            this.exigirConfirmacao(
+              [await this.avisoConviteAntesDosCirculos(tx, vaga.equipe, montagemId)],
+              dto.confirmarAvisos || dto.confirmarRepeticao,
+            );
+          }
 
           const alocacao = await tx.alocacao.create({
             data: {
@@ -281,7 +273,11 @@ export class AlocacoesService {
       include: ALOCACAO_INCLUDE,
       orderBy: { createdAt: 'asc' },
     });
-    return alocacoes.map((a) => this.ocultarSubstituicaoSeFinalizada(a));
+    const avisos = await this.avisosDasAlocacoes(montagemId, alocacoes);
+    return alocacoes.map((a) => ({
+      ...this.ocultarSubstituicaoSeFinalizada(a),
+      avisos: avisos.get(a.id) ?? [],
+    }));
   }
 
   async findOne(montagemId: string, id: string) {
