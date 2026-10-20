@@ -69,7 +69,9 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
 - **Produção**: Neon (Postgres), S3 (fotos/quadrantes), Render (server) e Vercel (client) — deploy feito em
   21/09/2026; validação em produção e documentos de operação em `docs/deploy.md` e `docs/sucessao.md`.
 - **CI**: GitHub Actions rodando lint + typecheck + testes + build (server e client) em push/PR pra `main`.
-  E2E (Playwright, `npm run test:e2e`) roda só local.
+  E2E (Playwright, `npm run test:e2e`) roda no CI também, depois que server e client passam — job
+  `e2e`, com Postgres de service container. Cobre Cadastro de Ficha, Montagem e o ciclo
+  Conselho → paróquia (observações, R7/R8) + atalhos do Dashboard.
 
 ## Isolamento por paróquia
 

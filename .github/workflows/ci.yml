@@ -77,3 +77,66 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  e2e:
+    name: E2E (Playwright)
+    # Só roda se lint/typecheck/testes/build passaram — não gasta minutos subindo tudo à toa.
+    needs: [server, client]
+    runs-on: ubuntu-latest
+    # Banco isolado dos testes (mesma URL de playwright.config.ts → TEST_DATABASE_URL); o
+    # global-setup detecta CI e só aplica migrations + seed-e2e, sem docker exec.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sgm
+          POSTGRES_PASSWORD: sgm
+          POSTGRES_DB: sgm_core_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sgm -d sgm_core_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: true
+      # prisma.config.ts exige DATABASE_URL só pra carregar (generate); o global-setup e o
+      # webServer do Playwright sobrescrevem com a URL do banco de teste.
+      DATABASE_URL: postgresql://sgm:sgm@localhost:5432/sgm_core_test?schema=public
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 24: o client exige >=22 (ver job client); o server roda igual.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+            client/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm ci --prefix server
+          npm ci --prefix client
+
+      - name: Generate Prisma client
+        working-directory: server
+        run: npx prisma generate
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E
+        run: npm run test:e2e
+
+      - name: Upload report (falha)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results/
+          retention-days: 7

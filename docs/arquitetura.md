@@ -72,7 +72,7 @@ Implementado como **guard central** (`ParoquiaScopeGuard` e `MontagemScopeGuard`
 ## 5. Testes
 
 - Unitários na **Service** (Jest), priorizando as regras de negócio (R1-R9) — são o ponto mais caro de errar. No client, Vitest para api-client, contexto de auth e hooks.
-- E2E (Playwright, pasta `e2e/`) nos fluxos críticos: Cadastro de Ficha e Montagem, contra server+client reais e um banco isolado (`sgm_core_test`). Não roda no CI ainda — roda local com `npm run test:e2e`.
+- E2E (Playwright, pasta `e2e/`) nos fluxos críticos: Cadastro de Ficha e Montagem, contra server+client reais e um banco isolado (`sgm_core_test`). Roda local com `npm run test:e2e` e no CI (job `e2e`, depois dos jobs de server e client), com Postgres como service container — o `e2e/global-setup.ts` detecta `CI` e pula o `docker exec` que cria o banco localmente. Desde 13/10/2026 cobre também o ciclo Conselho → paróquia (observações, R7/R8) e os atalhos do Dashboard.
 - Seed de dados fake (não fichas reais) para testar a lógica de montagem antes de importar dados reais.
 
 ## 6. CI/CD
