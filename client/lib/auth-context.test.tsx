@@ -81,6 +81,20 @@ describe('useLogout', () => {
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['auth', 'me'] });
     expect(window.location.href).toBe('/login');
   });
+
+  it('apaga o cache offline da Montagem (service worker) ao sair', async () => {
+    (apiClient.logout as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    const deleteSpy = vi.fn().mockResolvedValue(true);
+    vi.stubGlobal('caches', { delete: deleteSpy });
+    const { Wrapper } = wrapper();
+
+    const { result } = renderHook(() => useLogout(), { wrapper: Wrapper });
+    result.current.mutate();
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(deleteSpy).toHaveBeenCalledWith('sgm-montagem-leitura-v1');
+    vi.unstubAllGlobals();
+  });
 });
 
 describe('SessaoExpiradaListener', () => {

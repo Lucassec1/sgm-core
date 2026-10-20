@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Equipe, Prisma, StatusConvite } from '@prisma/client';
 import { AlocacoesService } from './alocacoes.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -50,8 +50,12 @@ function criarPrismaMock() {
       update: jest.fn(),
       delete: jest.fn(),
     },
-    ficha: { findUnique: jest.fn() },
-    fichaCasal: { findUnique: jest.fn() },
+    montagem: { findUnique: jest.fn().mockResolvedValue({ paroquiaId: 'paroquia-1' }) },
+    ficha: { findUnique: jest.fn(), findFirst: jest.fn().mockResolvedValue({ id: 'ficha-1' }) },
+    fichaCasal: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn().mockResolvedValue({ id: 'casal-1' }),
+    },
     equipe: { findUnique: jest.fn() },
     listaSubstituicao: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) },
   };
@@ -515,6 +519,40 @@ describe('AlocacoesService', () => {
         } as any),
       ).rejects.toThrow('erro qualquer');
       expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('create — R7 (pessoa de outra paróquia)', () => {
+    it('rejeita com 404 ficha que não é da paróquia da montagem, sem gravar', async () => {
+      mockVaga(equipeFake(), cargoFake());
+      prisma.ficha.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.create(MONTAGEM_ID, {
+          vagaMontagemId: VAGA_ID,
+          tipoPessoa: 'JOVEM',
+          fichaId: 'ficha-de-outra-paroquia',
+        } as any),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.ficha.findFirst).toHaveBeenCalledWith({
+        where: { id: 'ficha-de-outra-paroquia', paroquiaId: 'paroquia-1' },
+        select: { id: true },
+      });
+      expect(prisma.alocacao.create).not.toHaveBeenCalled();
+    });
+
+    it('rejeita com 404 casal que não é da paróquia da montagem', async () => {
+      mockVaga(equipeFake(), cargoFake());
+      prisma.fichaCasal.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.create(MONTAGEM_ID, {
+          vagaMontagemId: VAGA_ID,
+          tipoPessoa: 'CASAL',
+          fichaCasalId: 'casal-de-outra-paroquia',
+        } as any),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.alocacao.create).not.toHaveBeenCalled();
     });
   });
 

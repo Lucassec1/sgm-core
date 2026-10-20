@@ -55,7 +55,7 @@ export class ParoquiasService {
     const senhaHash = await bcrypt.hash(dto.senha, SALT_ROUNDS);
     await this.prisma.usuario.update({
       where: { id: usuario.id },
-      data: { senhaHash, ativo: true },
+      data: { senhaHash, ativo: true, senhaAlteradaEm: new Date() },
     });
     return { ok: true };
   }

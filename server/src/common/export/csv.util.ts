@@ -4,7 +4,13 @@
 
 function escapeCsvField(valor: unknown): string {
   if (valor === null || valor === undefined) return '';
-  const texto = valor instanceof Date ? valor.toISOString() : String(valor);
+  let texto = valor instanceof Date ? valor.toISOString() : String(valor);
+  // Injeção de fórmula: o Excel executa célula que começa com = + - @ (ou tab/CR) como
+  // fórmula — um nome cadastrado como "=HYPERLINK(...)" viraria link malicioso. O apóstrofo
+  // faz o Excel tratar como texto. Número e data não passam por aqui como texto livre.
+  if (typeof valor === 'string' && /^[=+\-@\t\r]/.test(texto)) {
+    texto = `'${texto}`;
+  }
   if (/[",\n;]/.test(texto)) {
     return `"${texto.replace(/"/g, '""')}"`;
   }

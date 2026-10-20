@@ -44,7 +44,10 @@ export class AuthService {
       throw new UnauthorizedException('Senha atual incorreta');
     }
     const senhaHash = await bcrypt.hash(senhaNova, 10);
-    await this.prisma.usuario.update({ where: { id: usuarioId }, data: { senhaHash } });
+    await this.prisma.usuario.update({
+      where: { id: usuarioId },
+      data: { senhaHash, senhaAlteradaEm: new Date() },
+    });
   }
 
   async me(usuarioId: string) {
