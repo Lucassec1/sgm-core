@@ -1,10 +1,12 @@
-import { ConflictException, ForbiddenException } from '@nestjs/common';
+import { ConflictException } from '@nestjs/common';
 import { Equipe, Prisma, StatusConvite } from '@prisma/client';
 import { AlocacoesService } from './alocacoes.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LogAtividadeService } from './log-atividade.service';
 
 // Testes unitários das regras R1-R4 e R9 (log + ocultar substituição) na AlocacoesService.
+// Desde 14/10/2026 R1-R4 não bloqueiam: viram avisos (409 AVISOS_REGRAS) que exigem
+// confirmação consciente (`confirmarAvisos`).
 // PrismaService é totalmente mockado — cada teste controla o que cada query retorna,
 // sem tocar em banco de dados. Ver docs/regras-imutaveis.md pro texto de cada regra.
 
@@ -84,6 +86,21 @@ describe('AlocacoesService', () => {
     );
   });
 
+  // Captura os avisos do 409 AVISOS_REGRAS (e garante que nada foi gravado).
+  async function avisosDe(promessa: Promise<unknown>) {
+    const erro = await promessa.then(
+      () => null,
+      (e: unknown) => e,
+    );
+    expect(erro).toBeInstanceOf(ConflictException);
+    const corpo = (erro as ConflictException).getResponse() as {
+      code: string;
+      avisos: { regra: string; nivel: string; mensagem: string }[];
+    };
+    expect(corpo.code).toBe('AVISOS_REGRAS');
+    return corpo.avisos;
+  }
+
   function mockVaga(equipe: Equipe, cargo: Record<string, unknown>) {
     prisma.vagaMontagem.findUnique.mockResolvedValue({
       id: VAGA_ID,
@@ -93,219 +110,152 @@ describe('AlocacoesService', () => {
     });
   }
 
-  describe('create — R1 (recusa/desistência bloqueia realocação)', () => {
-    it('bloqueia quando a pessoa já tem RECUSADO/DESISTIU nesse encontro', async () => {
-      mockVaga(equipeFake(), cargoFake());
+  describe('create — R1–R3 não bloqueiam nem pedem confirmação (viram badge)', () => {
+    it('aloca quem recusou, quem repete pela 4ª vez e quem nunca serviu na coordenação', async () => {
       prisma.alocacao.findFirst.mockResolvedValue({ id: 'antiga', status: StatusConvite.RECUSADO });
-
-      await expect(
-        service.create(MONTAGEM_ID, {
-          vagaMontagemId: VAGA_ID,
-          tipoPessoa: 'JOVEM',
-          fichaId: 'ficha-1',
-        } as any),
-      ).rejects.toThrow(ForbiddenException);
-      expect(prisma.alocacao.create).not.toHaveBeenCalled();
-    });
-
-    it('permite quando não há bloqueio', async () => {
-      mockVaga(equipeFake(), cargoFake());
-      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
-
-      await service.create(MONTAGEM_ID, {
-        vagaMontagemId: VAGA_ID,
-        tipoPessoa: 'JOVEM',
-        fichaId: 'ficha-1',
-      } as any);
-      expect(prisma.alocacao.create).toHaveBeenCalled();
-    });
-  });
-
-  describe('create — R2 (repetição de equipe)', () => {
-    it('exige confirmarRepeticao quando já serviu 1x ou mais', async () => {
-      mockVaga(equipeFake(), cargoFake());
-      prisma.alocacao.count.mockResolvedValue(1);
-
-      await expect(
-        service.create(MONTAGEM_ID, {
-          vagaMontagemId: VAGA_ID,
-          tipoPessoa: 'JOVEM',
-          fichaId: 'ficha-1',
-        } as any),
-      ).rejects.toThrow(ConflictException);
-      expect(prisma.alocacao.create).not.toHaveBeenCalled();
-    });
-
-    it('prossegue quando confirmarRepeticao: true', async () => {
-      mockVaga(equipeFake(), cargoFake());
-      prisma.alocacao.count.mockResolvedValue(1);
-      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
-
-      await service.create(MONTAGEM_ID, {
-        vagaMontagemId: VAGA_ID,
-        tipoPessoa: 'JOVEM',
-        fichaId: 'ficha-1',
-        confirmarRepeticao: true,
-      } as any);
-      expect(prisma.alocacao.create).toHaveBeenCalled();
-    });
-
-    it('bloqueia de verdade ao atingir 3x, mesmo confirmando', async () => {
-      mockVaga(equipeFake({ repeticaoLimiteFlexivel: false }), cargoFake());
-      prisma.alocacao.count.mockResolvedValue(3);
-
-      await expect(
-        service.create(MONTAGEM_ID, {
-          vagaMontagemId: VAGA_ID,
-          tipoPessoa: 'JOVEM',
-          fichaId: 'ficha-1',
-          confirmarRepeticao: true,
-        } as any),
-      ).rejects.toThrow(ForbiddenException);
-      expect(prisma.alocacao.create).not.toHaveBeenCalled();
-    });
-
-    it('Eq. da Visitação nunca bloqueia de verdade, mesmo passando de 3x', async () => {
-      mockVaga(equipeFake({ slug: 'visitacao', repeticaoLimiteFlexivel: true }), cargoFake());
       prisma.alocacao.count.mockResolvedValue(5);
+      prisma.ficha.findUnique.mockResolvedValue({ id: 'ficha-1', jaFoiEquipeDirigente: false });
       prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
+      mockVaga(equipeFake(), cargoFake({ nome: 'Coordenação', ehCoordenacao: true }));
 
       await service.create(MONTAGEM_ID, {
         vagaMontagemId: VAGA_ID,
-        tipoPessoa: 'CASAL',
-        fichaCasalId: 'casal-1',
-        confirmarRepeticao: true,
+        tipoPessoa: 'JOVEM',
+        fichaId: 'ficha-1',
       } as any);
+
       expect(prisma.alocacao.create).toHaveBeenCalled();
     });
   });
 
-  describe('create — R3 (coordenação)', () => {
-    const equipeAnimacao = equipeFake({ id: 'animacao-id' });
-    const cargoCoordenacao = cargoFake({ nome: 'Coordenação', ehCoordenacao: true });
+  describe('findAll — avisos de R1–R3 por alocação (badges)', () => {
+    const animacao = equipeFake({ id: 'animacao-id', nome: 'Eq. da Animação' });
+    const componentes = cargoFake();
+    const coordenacao = cargoFake({ nome: 'Coordenação', ehCoordenacao: true });
 
-    it('bloqueia quem nunca serviu na equipe nem foi Dirigente/Comando Geral', async () => {
-      mockVaga(equipeAnimacao, cargoCoordenacao);
-      prisma.alocacao.count.mockResolvedValue(0); // grupoA e comando geral, ambos 0
-      prisma.ficha.findUnique.mockResolvedValue({ id: 'ficha-1', jaFoiEquipeDirigente: false });
-
-      await expect(
-        service.create(MONTAGEM_ID, {
-          vagaMontagemId: VAGA_ID,
-          tipoPessoa: 'JOVEM',
-          fichaId: 'ficha-1',
-        } as any),
-      ).rejects.toThrow(ForbiddenException);
-    });
-
-    it('Grupo A: permite quem já serviu ACEITO naquela equipe (também confirma repetição)', async () => {
-      mockVaga(equipeAnimacao, cargoCoordenacao);
-      prisma.alocacao.count.mockResolvedValue(1); // R2 e Grupo A usam a mesma contagem aqui
-      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
-
-      await service.create(MONTAGEM_ID, {
-        vagaMontagemId: VAGA_ID,
+    function alocacao(overrides: Record<string, unknown>) {
+      return {
+        id: 'a',
+        status: StatusConvite.RASCUNHO,
         tipoPessoa: 'JOVEM',
         fichaId: 'ficha-1',
-        confirmarRepeticao: true,
-      } as any);
-      expect(prisma.alocacao.create).toHaveBeenCalled();
+        fichaCasalId: null,
+        ficha: { jaFoiEquipeDirigente: false },
+        fichaCasal: null,
+        substituidaPorId: null,
+        vagaMontagem: {
+          montagemId: MONTAGEM_ID,
+          equipe: animacao,
+          cargo: componentes,
+          montagem: { status: 'EM_ANDAMENTO' },
+        },
+        ...overrides,
+      };
+    }
+
+    // 1ª chamada de findMany: alocações da montagem; 2ª: serviços (aceitos) em outros encontros.
+    function mockAlocacoes(daMontagem: unknown[], servicosAnteriores: unknown[] = []) {
+      prisma.alocacao.findMany
+        .mockResolvedValueOnce(daMontagem)
+        .mockResolvedValueOnce(servicosAnteriores);
+    }
+    const serviu = (equipeId: string, fichaId = 'ficha-1') => ({
+      fichaId,
+      fichaCasalId: null,
+      vagaMontagem: { equipeId },
     });
 
-    it('Grupo B: permite quem já foi Equipe Dirigente mesmo sem histórico na equipe', async () => {
-      mockVaga(equipeAnimacao, cargoCoordenacao);
-      prisma.alocacao.count.mockResolvedValue(0);
-      prisma.ficha.findUnique.mockResolvedValue({ id: 'ficha-1', jaFoiEquipeDirigente: true });
-      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
-
-      await service.create(MONTAGEM_ID, {
-        vagaMontagemId: VAGA_ID,
-        tipoPessoa: 'JOVEM',
-        fichaId: 'ficha-1',
-      } as any);
-      expect(prisma.alocacao.create).toHaveBeenCalled();
+    it('sem histórico nem recusa, a alocação vem sem avisos', async () => {
+      mockAlocacoes([alocacao({})]);
+      const [a] = await service.findAll(MONTAGEM_ID);
+      expect(a.avisos).toEqual([]);
     });
 
-    it('Grupo B: permite quem já serviu no Comando Geral', async () => {
-      mockVaga(equipeAnimacao, cargoCoordenacao);
-      prisma.ficha.findUnique.mockResolvedValue({ id: 'ficha-1', jaFoiEquipeDirigente: false });
-      prisma.equipe.findUnique.mockResolvedValue(
-        equipeFake({ slug: 'comando-geral', id: 'comando-geral-id' }),
+    it('R1 — quem recusou e foi chamado de novo neste encontro ganha badge grave', async () => {
+      mockAlocacoes([
+        alocacao({ id: 'recusa', status: StatusConvite.RECUSADO }),
+        alocacao({ id: 'de-novo' }),
+      ]);
+      const [recusa, deNovo] = await service.findAll(MONTAGEM_ID);
+      expect(recusa.avisos).toEqual([]); // a própria recusa não é ativa
+      expect(deNovo.avisos).toEqual([
+        expect.objectContaining({ regra: 'R1', nivel: 'grave', rotulo: 'Recusou este encontro' }),
+      ]);
+    });
+
+    it('R2 — 2ª/3ª vez na equipe é atenção; da 4ª em diante, grave', async () => {
+      mockAlocacoes(
+        [alocacao({ id: 'segunda', fichaId: 'f2' }), alocacao({ id: 'quarta', fichaId: 'f4' })],
+        [serviu('animacao-id', 'f2'), ...Array(3).fill(serviu('animacao-id', 'f4'))],
       );
-      prisma.alocacao.count.mockImplementation(async (args: any) => {
-        return args.where.vagaMontagem.equipeId === 'comando-geral-id' ? 1 : 0;
-      });
-      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
-
-      await service.create(MONTAGEM_ID, {
-        vagaMontagemId: VAGA_ID,
-        tipoPessoa: 'JOVEM',
-        fichaId: 'ficha-1',
-      } as any);
-      expect(prisma.alocacao.create).toHaveBeenCalled();
+      const [segunda, quarta] = await service.findAll(MONTAGEM_ID);
+      expect(segunda.avisos).toEqual([
+        expect.objectContaining({ regra: 'R2', nivel: 'atencao', rotulo: '2ª vez nesta equipe' }),
+      ]);
+      expect(quarta.avisos).toEqual([
+        expect.objectContaining({ regra: 'R2', nivel: 'grave', rotulo: '4ª vez nesta equipe' }),
+      ]);
     });
 
-    it('coordenação de CASAL numa equipe comum não exige histórico (não é Visitação)', async () => {
-      mockVaga(
-        equipeFake({ id: 'animacao-id', coordenacaoCasalExigeHistorico: false }),
-        cargoCoordenacao,
-      );
-      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
-
-      await service.create(MONTAGEM_ID, {
-        vagaMontagemId: VAGA_ID,
-        tipoPessoa: 'CASAL',
-        fichaCasalId: 'casal-1',
-      } as any);
-
-      expect(prisma.alocacao.create).toHaveBeenCalled();
-      expect(prisma.ficha.findUnique).not.toHaveBeenCalled();
-      expect(prisma.fichaCasal.findUnique).not.toHaveBeenCalled();
+    it('R3 — coordenação sem ter servido na equipe nem ser ED/Comando Geral ganha badge grave', async () => {
+      mockAlocacoes([
+        alocacao({ vagaMontagem: { ...alocacao({}).vagaMontagem, cargo: coordenacao } }),
+      ]);
+      const [a] = await service.findAll(MONTAGEM_ID);
+      expect(a.avisos).toEqual([
+        expect.objectContaining({
+          regra: 'R3',
+          nivel: 'grave',
+          rotulo: 'Nunca serviu nesta equipe',
+        }),
+      ]);
     });
 
-    it('coordenação de CASAL na Visitação exige histórico (Grupo A/B) igual à de jovem', async () => {
-      mockVaga(
-        equipeFake({ slug: 'visitacao', coordenacaoCasalExigeHistorico: true }),
-        cargoCoordenacao,
+    it('R3 — não avisa quem já serviu na equipe, foi ED ou serviu no Comando Geral', async () => {
+      const naCoordenacao = (id: string, extra: Record<string, unknown> = {}) =>
+        alocacao({
+          id,
+          fichaId: id,
+          vagaMontagem: { ...alocacao({}).vagaMontagem, cargo: coordenacao },
+          ...extra,
+        });
+      mockAlocacoes(
+        [
+          naCoordenacao('serviu'),
+          naCoordenacao('dirigente', { ficha: { jaFoiEquipeDirigente: true } }),
+          naCoordenacao('comando'),
+        ],
+        [serviu('animacao-id', 'serviu'), serviu('comando-geral-id', 'comando')],
       );
-      prisma.alocacao.count.mockResolvedValue(0);
-      prisma.fichaCasal.findUnique.mockResolvedValue({
-        id: 'casal-1',
-        jaFoiEquipeDirigente: false,
-      });
+      const [serviuNaEquipe, dirigente, comando] = await service.findAll(MONTAGEM_ID);
+      expect(serviuNaEquipe.avisos.map((x) => x.regra)).toEqual(['R2']); // só a repetição
+      expect(dirigente.avisos).toEqual([]);
+      expect(comando.avisos).toEqual([]);
+    });
 
-      await expect(
-        service.create(MONTAGEM_ID, {
-          vagaMontagemId: VAGA_ID,
+    it('R3 — coordenação de casal só avisa nas equipes que exigem histórico (Visitação)', async () => {
+      const casal = (equipe: Equipe) =>
+        alocacao({
+          id: equipe.id,
           tipoPessoa: 'CASAL',
+          fichaId: null,
           fichaCasalId: 'casal-1',
-        } as any),
-      ).rejects.toThrow(ForbiddenException);
-    });
-
-    it('Grupo B (casal): permite casal que já foi Equipe Dirigente mesmo sem histórico na equipe', async () => {
-      mockVaga(
-        equipeFake({ slug: 'visitacao', coordenacaoCasalExigeHistorico: true }),
-        cargoCoordenacao,
-      );
-      prisma.alocacao.count.mockResolvedValue(0);
-      prisma.fichaCasal.findUnique.mockResolvedValue({
-        id: 'casal-1',
-        jaFoiEquipeDirigente: true,
-      });
-      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
-
-      await service.create(MONTAGEM_ID, {
-        vagaMontagemId: VAGA_ID,
-        tipoPessoa: 'CASAL',
-        fichaCasalId: 'casal-1',
-      } as any);
-      expect(prisma.alocacao.create).toHaveBeenCalled();
+          ficha: null,
+          fichaCasal: { jaFoiEquipeDirigente: false },
+          vagaMontagem: { ...alocacao({}).vagaMontagem, equipe, cargo: coordenacao },
+        });
+      mockAlocacoes([
+        casal(animacao),
+        casal(equipeFake({ id: 'visitacao-id', coordenacaoCasalExigeHistorico: true })),
+      ]);
+      const [comum, visitacao] = await service.findAll(MONTAGEM_ID);
+      expect(comum.avisos).toEqual([]);
+      expect(visitacao.avisos.map((x) => x.regra)).toEqual(['R3']);
     });
   });
 
   describe('create/update — R4 (Círculos primeiro)', () => {
-    it('bloqueia CONVIDADO numa equipe comum se os Círculos não fecharam', async () => {
+    it('avisa ao convidar numa equipe comum se os Círculos não fecharam', async () => {
       mockVaga(equipeFake({ bloqueiaConvitePosCirculos: true }), cargoFake());
       prisma.equipe.findUnique.mockResolvedValue(
         equipeFake({ slug: 'circulos', id: 'circulos-id' }),
@@ -315,14 +265,32 @@ describe('AlocacoesService', () => {
         { status: StatusConvite.RASCUNHO },
       ]);
 
-      await expect(
+      const avisos = await avisosDe(
         service.create(MONTAGEM_ID, {
           vagaMontagemId: VAGA_ID,
           tipoPessoa: 'JOVEM',
           fichaId: 'ficha-1',
           status: StatusConvite.CONVIDADO,
         } as any),
-      ).rejects.toThrow(ForbiddenException);
+      );
+      expect(avisos).toEqual([
+        {
+          regra: 'R4',
+          nivel: 'atencao',
+          rotulo: 'Círculos em aberto',
+          mensagem: 'A Eq. dos Círculos ainda não fechou (nem todos aceitaram).',
+        },
+      ]);
+
+      prisma.alocacao.create.mockResolvedValue({ id: 'nova' });
+      await service.create(MONTAGEM_ID, {
+        vagaMontagemId: VAGA_ID,
+        tipoPessoa: 'JOVEM',
+        fichaId: 'ficha-1',
+        status: StatusConvite.CONVIDADO,
+        confirmarAvisos: true,
+      } as any);
+      expect(prisma.alocacao.create).toHaveBeenCalled();
     });
 
     it('libera CONVIDADO quando todos os Círculos estão ACEITO', async () => {
@@ -373,7 +341,7 @@ describe('AlocacoesService', () => {
       expect(prisma.alocacao.create).toHaveBeenCalled();
     });
 
-    it('update: bloqueia transição pra CONVIDADO se os Círculos ainda não fecharam', async () => {
+    it('update: avisa na transição pra CONVIDADO se os Círculos ainda não fecharam', async () => {
       prisma.alocacao.findUnique.mockResolvedValue({
         id: 'aloc-1',
         status: StatusConvite.RASCUNHO,
@@ -389,10 +357,22 @@ describe('AlocacoesService', () => {
       );
       prisma.alocacao.findMany.mockResolvedValue([]);
 
-      await expect(
+      const avisos = await avisosDe(
         service.update(MONTAGEM_ID, 'aloc-1', { status: StatusConvite.CONVIDADO } as any),
-      ).rejects.toThrow(ForbiddenException);
+      );
+      expect(avisos[0]).toMatchObject({ regra: 'R4' });
       expect(prisma.alocacao.update).not.toHaveBeenCalled();
+
+      // Confirmado: convida, e o confirmarAvisos não vai parar no update do Prisma
+      prisma.alocacao.update.mockResolvedValue({ id: 'aloc-1' });
+      await service.update(MONTAGEM_ID, 'aloc-1', {
+        status: StatusConvite.CONVIDADO,
+        confirmarAvisos: true,
+      } as any);
+      expect(prisma.alocacao.update).toHaveBeenCalledWith({
+        where: { id: 'aloc-1' },
+        data: { status: StatusConvite.CONVIDADO },
+      });
     });
   });
 

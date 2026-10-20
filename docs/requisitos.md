@@ -91,7 +91,7 @@ Encontro com 233 pessoas (incluindo diretor espiritual — ver correção em `re
 
 A composição detalhada de cargos (coordenadores, apoio, equipe) por equipe está no documento original enviado pelo Segue-me — reproduzida integralmente na primeira mensagem desta conversa.
 
-A Eq. dos Círculos é sempre convidada primeiro; as demais só depois que todos os membros dos Círculos aceitarem (ver R4 em `regras-imutaveis.md` — o bloqueio é só sobre o envio do convite, não sobre rascunhar a distribuição).
+A Eq. dos Círculos é sempre convidada primeiro; as demais só depois que todos os membros dos Círculos aceitarem (ver R4 em `regras-imutaveis.md` — desde 14/10/2026 convidar antes da hora pede confirmação, não bloqueia; rascunhar a distribuição nunca foi travado).
 
 ## 4. Regras Obrigatórias
 

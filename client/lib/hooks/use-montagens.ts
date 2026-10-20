@@ -117,6 +117,17 @@ export function useUpdateAlocacao(montagemId: string) {
 
 // Sem vagaMontagemId: candidatos gerais (todos os jovens ATIVA elegíveis, sem filtro de
 // sexo) — usado na lista de substituição, que não é presa a uma vaga específica.
+export function useCandidatosCasais(
+  montagemId: string | undefined,
+  vagaMontagemId: string | undefined,
+) {
+  return useQuery({
+    queryKey: ['montagens', montagemId, 'candidatos-casais', vagaMontagemId],
+    queryFn: () => apiClient.listCandidatosCasais(montagemId as string, vagaMontagemId as string),
+    enabled: !!montagemId && !!vagaMontagemId,
+  });
+}
+
 export function useCandidatosJovensGeral(montagemId: string | undefined) {
   return useQuery({
     queryKey: ['montagens', montagemId, 'candidatos-jovens', 'geral'],

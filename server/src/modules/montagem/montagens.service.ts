@@ -243,8 +243,13 @@ export class MontagensService {
     return precisaRecalcular ? this.findOne(id, paroquiaId) : montagem;
   }
 
-  // R3 — sugestão de coordenadores: Grupo A (já serviu como equipista naquela equipe) e
-  // Grupo B (já foi Equipe Dirigente ou Comando Geral, pode coordenar qualquer equipe).
+  // R3 — sugestão de coordenadores. Desde 14/10/2026 R3 não bloqueia (só avisa), então a lista
+  // traz todo mundo, em três grupos:
+  // - Grupo A: já serviu (aceito) como equipista nessa equipe — quem foi avaliado como "pode
+  //   coordenar" nela vem primeiro (`avaliadoPodeCoordenar`);
+  // - Grupo B: já foi Equipe Dirigente ou Comando Geral;
+  // - outros: as demais fichas ativas da paróquia (escolher alguém daqui gera aviso de R3).
+  // Tudo filtrado pela paróquia da montagem (R7).
   async coordenadoresSugeridos(montagemId: string, equipeId: string, paroquiaId: string) {
     await this.findOne(montagemId, paroquiaId);
     const equipe = await this.prisma.equipe.findUnique({ where: { id: equipeId } });
@@ -253,113 +258,218 @@ export class MontagensService {
     }
     const comandoGeral = await this.prisma.equipe.findUnique({ where: { slug: 'comando-geral' } });
 
-    const [
-      grupoAFichas,
-      grupoAFichasCasais,
-      dirigentesFichas,
-      dirigentesFichasCasais,
-      comandoGeralFichas,
-      comandoGeralFichasCasais,
-    ] = await Promise.all([
+    const serviuNaEquipe = {
+      some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId } },
+    };
+    const serviuNoComandoGeral = comandoGeral
+      ? { some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId: comandoGeral.id } } }
+      : undefined;
+    // Avaliações "pode coordenar" dadas nas alocações dessa equipe — só pra ordenar o Grupo A.
+    const avaliacoesNaEquipe = {
+      where: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId }, podeCoordenar: true },
+      select: { id: true },
+    };
+    const ativas = { paroquiaId, situacao: 'ATIVA' as const };
+
+    const [fichas, fichasCasais] = await Promise.all([
       this.prisma.ficha.findMany({
-        where: {
-          situacao: 'ATIVA',
-          alocacoes: { some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId } } },
-        },
+        where: ativas,
+        include: { alocacoes: avaliacoesNaEquipe },
+        orderBy: { nomeCompleto: 'asc' },
       }),
       this.prisma.fichaCasal.findMany({
-        where: {
-          situacao: 'ATIVA',
-          alocacoes: { some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId } } },
-        },
+        where: ativas,
+        include: { alocacoes: avaliacoesNaEquipe },
+        orderBy: { nomeEle: 'asc' },
       }),
-      this.prisma.ficha.findMany({ where: { situacao: 'ATIVA', jaFoiEquipeDirigente: true } }),
-      this.prisma.fichaCasal.findMany({ where: { situacao: 'ATIVA', jaFoiEquipeDirigente: true } }),
-      comandoGeral
+    ]);
+    const soId = { select: { id: true } } as const;
+    const [grupoAFichas, grupoACasais, comandoGeralFichas, comandoGeralCasais] = await Promise.all([
+      this.prisma.ficha.findMany({ where: { ...ativas, alocacoes: serviuNaEquipe }, ...soId }),
+      this.prisma.fichaCasal.findMany({ where: { ...ativas, alocacoes: serviuNaEquipe }, ...soId }),
+      serviuNoComandoGeral
         ? this.prisma.ficha.findMany({
-            where: {
-              situacao: 'ATIVA',
-              alocacoes: {
-                some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId: comandoGeral.id } },
-              },
-            },
+            where: { ...ativas, alocacoes: serviuNoComandoGeral },
+            ...soId,
           })
         : Promise.resolve([]),
-      comandoGeral
+      serviuNoComandoGeral
         ? this.prisma.fichaCasal.findMany({
-            where: {
-              situacao: 'ATIVA',
-              alocacoes: {
-                some: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId: comandoGeral.id } },
-              },
-            },
+            where: { ...ativas, alocacoes: serviuNoComandoGeral },
+            ...soId,
           })
         : Promise.resolve([]),
     ]);
-
-    const uniquePorId = <T extends { id: string }>(items: T[]) => [
-      ...new Map(items.map((i) => [i.id, i])).values(),
+    const ids = (linhas: { id: string }[]) => new Set(linhas.map((l) => l.id));
+    const [idsGrupoA, idsGrupoACasais, idsComandoGeral, idsComandoGeralCasais] = [
+      ids(grupoAFichas),
+      ids(grupoACasais),
+      ids(comandoGeralFichas),
+      ids(comandoGeralCasais),
     ];
 
+    const [vezesFichas, vezesCasais] = await Promise.all([
+      this.vezesNaEquipe(equipeId, montagemId, 'fichaId'),
+      this.vezesNaEquipe(equipeId, montagemId, 'fichaCasalId'),
+    ]);
+
+    const separar = <
+      T extends { id: string; jaFoiEquipeDirigente: boolean; alocacoes: { id: string }[] },
+    >(
+      itens: T[],
+      grupoA: Set<string>,
+      comandoGeralIds: Set<string>,
+      vezes: Map<string, number>,
+    ) => {
+      const semAvaliacoes = (i: T) => {
+        const { alocacoes, ...resto } = i;
+        return {
+          ...resto,
+          avaliadoPodeCoordenar: alocacoes.length > 0,
+          vezesNaEquipe: vezes.get(i.id) ?? 0,
+        };
+      };
+      const a = itens
+        .filter((i) => grupoA.has(i.id))
+        .map(semAvaliacoes)
+        .sort((x, y) => Number(y.avaliadoPodeCoordenar) - Number(x.avaliadoPodeCoordenar));
+      const b = itens
+        .filter((i) => !grupoA.has(i.id) && (i.jaFoiEquipeDirigente || comandoGeralIds.has(i.id)))
+        .map(semAvaliacoes);
+      const naoSugeridos = new Set([...a, ...b].map((i) => i.id));
+      const outros = itens.filter((i) => !naoSugeridos.has(i.id)).map(semAvaliacoes);
+      return { a, b, outros };
+    };
+
+    const jovens = separar(fichas, idsGrupoA, idsComandoGeral, vezesFichas);
+    const casais = separar(fichasCasais, idsGrupoACasais, idsComandoGeralCasais, vezesCasais);
+
     return {
-      grupoA: {
-        fichas: uniquePorId(grupoAFichas),
-        fichasCasais: uniquePorId(grupoAFichasCasais),
-      },
-      grupoB: {
-        fichas: uniquePorId([...dirigentesFichas, ...comandoGeralFichas]),
-        fichasCasais: uniquePorId([...dirigentesFichasCasais, ...comandoGeralFichasCasais]),
-      },
+      grupoA: { fichas: jovens.a, fichasCasais: casais.a },
+      grupoB: { fichas: jovens.b, fichasCasais: casais.b },
+      outros: { fichas: jovens.outros, fichasCasais: casais.outros },
     };
   }
 
   // R5 — prioridade de convite: 1º jovens do encontro imediatamente anterior, depois os
-  // demais em ordem decrescente. Fichas inativas ou já recusadas/desistentes nesta montagem
-  // não entram. `vagaMontagemId`, quando informado, filtra também por sexo compatível com a
+  // demais em ordem decrescente. Fichas inativas não entram. Quem recusou/desistiu desta
+  // montagem entra no fim, marcado (`recusouNesteEncontro`) — R1 avisa, não bloqueia. `vagaMontagemId`, quando informado, filtra também por sexo compatível com a
   // vaga (VagaMontagem.quantidadeRapazes/quantidadeMocas — ver docs/requisitos.md, 2.2).
   async candidatosJovens(montagemId: string, paroquiaId: string, vagaMontagemId?: string) {
     const montagem = await this.findOne(montagemId, paroquiaId);
 
     let sexos: Sexo[] | undefined;
-    if (vagaMontagemId) {
-      const vaga = montagem.vagas.find((v) => v.id === vagaMontagemId);
-      if (!vaga) {
-        throw new BadRequestException(
-          `Vaga ${vagaMontagemId} não pertence à montagem ${montagemId}`,
-        );
-      }
+    const vaga = vagaMontagemId ? this.vagaDaMontagem(montagem, vagaMontagemId) : undefined;
+    if (vaga) {
       sexos = [
         ...(vaga.quantidadeRapazes > 0 ? [Sexo.RAPAZ] : []),
         ...(vaga.quantidadeMocas > 0 ? [Sexo.MOCA] : []),
       ];
     }
 
-    const excluidos = await this.prisma.alocacao.findMany({
+    const [idsSaidas, vezes, fichas] = await Promise.all([
+      this.idsQueSairam(montagemId, 'fichaId'),
+      vaga ? this.vezesNaEquipe(vaga.equipeId, montagemId, 'fichaId') : Promise.resolve(null),
+      this.prisma.ficha.findMany({
+        where: {
+          paroquiaId: montagem.paroquiaId,
+          situacao: 'ATIVA',
+          ...(sexos && { sexo: { in: sexos } }),
+        },
+      }),
+    ]);
+
+    const encontroAnterior = montagem.numeroEncontro - 1;
+    return fichas
+      .map((f) => ({
+        ...f,
+        recusouNesteEncontro: idsSaidas.has(f.id),
+        vezesNaEquipe: vezes?.get(f.id) ?? 0,
+      }))
+      .sort((a, b) => {
+        if (a.recusouNesteEncontro !== b.recusouNesteEncontro)
+          return a.recusouNesteEncontro ? 1 : -1;
+        const aEhAnterior = a.numeroEncontro === encontroAnterior;
+        const bEhAnterior = b.numeroEncontro === encontroAnterior;
+        if (aEhAnterior !== bEhAnterior) return aEhAnterior ? -1 : 1;
+        return b.numeroEncontro - a.numeroEncontro;
+      });
+  }
+
+  // Casais candidatos a uma vaga — mesmo formato dos jovens (recusou neste encontro, vezes que
+  // já serviu na equipe da vaga) pra badge na busca; ordem alfabética, recusados no fim.
+  async candidatosCasais(montagemId: string, paroquiaId: string, vagaMontagemId?: string) {
+    const montagem = await this.findOne(montagemId, paroquiaId);
+    const vaga = vagaMontagemId ? this.vagaDaMontagem(montagem, vagaMontagemId) : undefined;
+
+    const [idsSaidas, vezes, casais] = await Promise.all([
+      this.idsQueSairam(montagemId, 'fichaCasalId'),
+      vaga ? this.vezesNaEquipe(vaga.equipeId, montagemId, 'fichaCasalId') : Promise.resolve(null),
+      this.prisma.fichaCasal.findMany({
+        where: { paroquiaId: montagem.paroquiaId, situacao: 'ATIVA' },
+        orderBy: { nomeEle: 'asc' },
+      }),
+    ]);
+
+    return casais
+      .map((c) => ({
+        ...c,
+        recusouNesteEncontro: idsSaidas.has(c.id),
+        vezesNaEquipe: vezes?.get(c.id) ?? 0,
+      }))
+      .sort((a, b) => Number(a.recusouNesteEncontro) - Number(b.recusouNesteEncontro));
+  }
+
+  private vagaDaMontagem(
+    montagem: {
+      vagas: { id: string; equipeId: string; quantidadeRapazes: number; quantidadeMocas: number }[];
+    },
+    vagaMontagemId: string,
+  ) {
+    const vaga = montagem.vagas.find((v) => v.id === vagaMontagemId);
+    if (!vaga) {
+      throw new BadRequestException(`Vaga ${vagaMontagemId} não pertence à montagem`);
+    }
+    return vaga;
+  }
+
+  // R1 — quem recusou/desistiu nesta montagem.
+  private async idsQueSairam(montagemId: string, campo: 'fichaId' | 'fichaCasalId') {
+    const saidas = await this.prisma.alocacao.findMany({
       where: {
         vagaMontagem: { montagemId },
         status: { in: [StatusConvite.RECUSADO, StatusConvite.DESISTIU] },
-        fichaId: { not: null },
+        [campo]: { not: null },
       },
-      select: { fichaId: true },
+      select: { [campo]: true },
     });
-    const idsExcluidos = excluidos.map((a) => a.fichaId).filter((id): id is string => !!id);
+    return new Set(
+      saidas
+        .map((a) => (a as Record<string, string | null>)[campo])
+        .filter((id): id is string => !!id),
+    );
+  }
 
-    const fichas = await this.prisma.ficha.findMany({
+  // R2 — quantas vezes cada pessoa já serviu (aceito) na equipe, em outros encontros.
+  private async vezesNaEquipe(
+    equipeId: string,
+    montagemId: string,
+    campo: 'fichaId' | 'fichaCasalId',
+  ) {
+    const servicos = await this.prisma.alocacao.findMany({
       where: {
-        paroquiaId: montagem.paroquiaId,
-        situacao: 'ATIVA',
-        id: { notIn: idsExcluidos },
-        ...(sexos && { sexo: { in: sexos } }),
+        status: StatusConvite.ACEITO,
+        vagaMontagem: { equipeId, montagemId: { not: montagemId } },
+        [campo]: { not: null },
       },
+      select: { [campo]: true },
     });
-
-    const encontroAnterior = montagem.numeroEncontro - 1;
-    return fichas.sort((a, b) => {
-      const aEhAnterior = a.numeroEncontro === encontroAnterior;
-      const bEhAnterior = b.numeroEncontro === encontroAnterior;
-      if (aEhAnterior !== bEhAnterior) return aEhAnterior ? -1 : 1;
-      return b.numeroEncontro - a.numeroEncontro;
-    });
+    const vezes = new Map<string, number>();
+    for (const s of servicos) {
+      const id = (s as Record<string, string | null>)[campo];
+      if (id) vezes.set(id, (vezes.get(id) ?? 0) + 1);
+    }
+    return vezes;
   }
 
   async listarLog(montagemId: string, paroquiaId: string) {
