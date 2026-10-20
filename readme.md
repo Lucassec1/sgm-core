@@ -8,7 +8,7 @@ Monorepo: NestJS 11 (`/server`) · Next.js 16 (`/client`) · PostgreSQL · Docke
 
 - **Fichas** (jovem e casal, com foto 3x4), **Montagem** (16 equipes, convites, substituições,
   quadrantes, log de atividade), **login por paróquia** e **Conselho** estão implementados.
-- **Ainda falta:** exportação na interface (hoje o CSV existe só no backend) e `.xlsx` completa, upload de fotos em lote e a
+- **Ainda falta:** exportação na interface (hoje o CSV existe só no backend) e `.xlsx` completa, e a
   validação final do login/Conselho no client.
 - Detalhes, pendências e prioridades: [`docs/producao.md`](./docs/producao.md) e o "Estado
   atual" do [`CLAUDE.md`](./CLAUDE.md).
