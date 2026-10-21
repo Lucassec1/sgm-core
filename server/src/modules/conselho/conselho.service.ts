@@ -13,7 +13,13 @@ const VAGAS_INCLUDE = {
     include: {
       equipe: true,
       cargo: true,
-      alocacoes: { include: { ficha: true, fichaCasal: true } },
+      // Só o nome — R8 veda acesso às fichas, então telefone, endereço etc. não saem daqui.
+      alocacoes: {
+        include: {
+          ficha: { select: { id: true, nomeCompleto: true } },
+          fichaCasal: { select: { id: true, nomeEle: true, nomeEla: true } },
+        },
+      },
     },
     orderBy: [{ equipe: { ordem: 'asc' as const } }, { cargo: { ordem: 'asc' as const } }],
   },

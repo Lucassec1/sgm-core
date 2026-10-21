@@ -107,6 +107,10 @@ describe('AuthService', () => {
       );
       const novoHash = (prisma.usuario.update as jest.Mock).mock.calls[0][0].data.senhaHash;
       await expect(bcrypt.compare('nova-senha-forte', novoHash)).resolves.toBe(true);
+      // derruba as sessões abertas com a senha antiga (ver JwtStrategy)
+      expect((prisma.usuario.update as jest.Mock).mock.calls[0][0].data.senhaAlteradaEm).toEqual(
+        expect.any(Date),
+      );
     });
   });
 

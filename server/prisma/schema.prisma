@@ -41,6 +41,9 @@ model Usuario {
   role      RoleUsuario
   nome      String?
   ativo     Boolean     @default(true)
+  // Toda sessão emitida antes deste instante é recusada (JwtStrategy) — troca/reset de senha
+  // derruba quem estava logado com a senha antiga. Null = nunca alterada.
+  senhaAlteradaEm DateTime?
 
   paroquiaId String?
   paroquia   Paroquia? @relation(fields: [paroquiaId], references: [id])

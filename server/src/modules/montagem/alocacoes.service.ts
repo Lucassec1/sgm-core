@@ -9,6 +9,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { LogAtividadeService } from './log-atividade.service';
 import { CreateAlocacaoDto } from './dto/create-alocacao.dto';
 import { UpdateAlocacaoDto } from './dto/update-alocacao.dto';
+import { garantirPessoaDaParoquia } from './pessoa-da-paroquia';
 
 const ALOCACAO_INCLUDE = {
   vagaMontagem: { include: { equipe: true, cargo: true, montagem: { select: { status: true } } } },
@@ -222,6 +223,7 @@ export class AlocacoesService {
       this.prisma.$transaction(
         async (tx) => {
           const vaga = await this.getVagaOuFalha(tx, montagemId, dto.vagaMontagemId);
+          await garantirPessoaDaParoquia(tx, montagemId, dto);
 
           if (dto.status === StatusConvite.CONVIDADO) {
             this.exigirConfirmacao(

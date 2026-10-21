@@ -3,13 +3,14 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LogAtividadeService } from './log-atividade.service';
 import { CreateItemListaSubstituicaoDto } from './dto/create-item-lista-substituicao.dto';
+import { garantirPessoaDaParoquia } from './pessoa-da-paroquia';
 
 const ITEM_INCLUDE = { ficha: true, fichaCasal: true };
 
 // Lista geral de substituição da Montagem — "banco de backups" independente de vaga/equipe
 // (ver docs/ux-e-fluxos.md, seção 3). Por montagem: não carrega de um encontro pro outro.
-// Pertencimento à paróquia (R7) já é garantido pelo MontagemScopeGuard no controller — aqui
-// só confirma que a Montagem existe.
+// Pertencimento da Montagem à paróquia (R7) é garantido pelo MontagemScopeGuard no controller;
+// o da pessoa (fichaId/fichaCasalId do body), por garantirPessoaDaParoquia.
 @Injectable()
 export class ListaSubstituicaoService {
   constructor(
@@ -27,6 +28,7 @@ export class ListaSubstituicaoService {
 
     try {
       return await this.prisma.$transaction(async (tx) => {
+        await garantirPessoaDaParoquia(tx, montagemId, dto);
         const item = await tx.listaSubstituicao.create({
           data: {
             montagemId,

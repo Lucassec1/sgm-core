@@ -2,15 +2,23 @@ import './instrument';
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { verificarOrigem } from './common/auth/origem.middleware';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
+
+  // Em produção (Render) a requisição chega via um proxy — sem isso req.ip seria o IP do proxy
+  // e o rate limit (ThrottlerGuard) contaria todo mundo como um IP só.
+  if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+  }
 
   // contentSecurityPolicy desligada: essa API não serve HTML pro navegador do usuário final
   // (o client Next.js é servido separado) — CSP existe pra proteger página renderizada, não
@@ -27,15 +35,21 @@ async function bootstrap() {
   );
 
   // Allow-list de origens via env (CORS_ORIGINS, separadas por vírgula). Sem a env,
-  // reflete qualquer origem — cômodo pra dev local (tudo no docker-compose), mas
-  // CORS_ORIGINS deve ser definido assim que o client for servido de um domínio real.
-  const corsOrigins = process.env.CORS_ORIGINS?.split(',')
+  // reflete qualquer origem — cômodo pra dev local (tudo no docker-compose). Em produção a
+  // env é obrigatória: refletir qualquer origem com credentials deixaria qualquer site ler os
+  // dados de quem estiver logado.
+  const corsOrigins = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
     .map((origem) => origem.trim())
     .filter(Boolean);
+  if (process.env.NODE_ENV === 'production' && corsOrigins.length === 0) {
+    throw new Error('CORS_ORIGINS é obrigatório em produção (ver docs/deploy.md)');
+  }
   app.enableCors({
-    origin: corsOrigins && corsOrigins.length > 0 ? corsOrigins : true,
+    origin: corsOrigins.length > 0 ? corsOrigins : true,
     credentials: true,
   });
+  app.use(verificarOrigem(corsOrigins));
 
   // Contrato de API (docs/historico/code-review.md, checklist de hardening) — documentação gerada a
   // partir dos DTOs (class-validator, via plugin do nest-cli.json) e dos controllers. Só liga fora

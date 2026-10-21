@@ -59,9 +59,11 @@ comportamento em produção** e por isso merece atenção:
   (`server/src/common/auth/cookie.ts`). Como Render e Vercel são domínios diferentes, sem isso o
   navegador descarta o cookie e o login "funciona" no servidor mas o usuário volta pra tela de login.
   Também desliga o `pino-pretty` (só de desenvolvimento).
-- **`CORS_ORIGINS`** com a URL exata do client na Vercel (com `https://`, sem barra final). Vazio
-  reflete qualquer origem — aceitável só em dev. Se o client tiver mais de uma URL (domínio próprio +
-  `*.vercel.app`), liste todas separadas por vírgula.
+- **`CORS_ORIGINS`** com a URL exata do client na Vercel (com `https://`, sem barra final).
+  **Obrigatória em produção** — sem ela o server nem sobe (vazio refletiria qualquer origem). Também
+  é a lista usada contra CSRF: POST/PATCH/DELETE vindos de outra origem levam 403. Se o client
+  tiver mais de uma URL (domínio próprio + `*.vercel.app`, preview), liste todas separadas por
+  vírgula — uma URL faltando aparece como 403 "Origem não permitida" ao salvar qualquer coisa.
 - **`JWT_SECRET`** — valor forte e único, diferente do de desenvolvimento. Trocar invalida todas as
   sessões abertas (todo mundo precisa logar de novo), o que é seguro, só incômodo.
 - **`DATABASE_URL`** do Neon (a connection string do painel deles).
