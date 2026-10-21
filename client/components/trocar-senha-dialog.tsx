@@ -93,7 +93,9 @@ export function TrocarSenhaDialog() {
                 {...register('senhaAtual')}
               />
               {errors.senhaAtual && (
-                <p className="mt-1 text-xs text-red-600">{errors.senhaAtual.message}</p>
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                  {errors.senhaAtual.message}
+                </p>
               )}
             </div>
             <div>
@@ -105,7 +107,9 @@ export function TrocarSenhaDialog() {
                 {...register('senhaNova')}
               />
               {errors.senhaNova && (
-                <p className="mt-1 text-xs text-red-600">{errors.senhaNova.message}</p>
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                  {errors.senhaNova.message}
+                </p>
               )}
             </div>
             <div>
@@ -117,7 +121,9 @@ export function TrocarSenhaDialog() {
                 {...register('confirmarSenha')}
               />
               {errors.confirmarSenha && (
-                <p className="mt-1 text-xs text-red-600">{errors.confirmarSenha.message}</p>
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                  {errors.confirmarSenha.message}
+                </p>
               )}
             </div>
           </div>

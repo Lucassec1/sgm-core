@@ -42,7 +42,11 @@ export default function FichasListPage() {
       <FichasFiltros value={filtros} onChange={setFiltros} />
 
       {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
-      {isError && <p className="text-sm text-red-600">Não foi possível carregar as fichas.</p>}
+      {isError && (
+        <p className="text-sm text-red-600 dark:text-red-400">
+          Não foi possível carregar as fichas.
+        </p>
+      )}
 
       {data && (
         <Table>

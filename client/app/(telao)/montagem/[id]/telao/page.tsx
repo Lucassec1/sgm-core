@@ -39,7 +39,11 @@ export default function TelaoPage({ params }: { params: Promise<{ id: string }> 
 
   if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando...</p>;
   if (isError || !montagem)
-    return <p className="p-6 text-sm text-red-600">Não foi possível carregar a montagem.</p>;
+    return (
+      <p className="p-6 text-sm text-red-600 dark:text-red-400">
+        Não foi possível carregar a montagem.
+      </p>
+    );
 
   const gruposPorEquipe = agruparPorEquipe(montagem.vagas);
 

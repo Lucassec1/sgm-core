@@ -185,7 +185,9 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
               <Label htmlFor="nomeCompleto">Nome completo</Label>
               <Input id="nomeCompleto" {...register('nomeCompleto')} />
               {errors.nomeCompleto && (
-                <p className="text-xs text-red-600 mt-1">{errors.nomeCompleto.message}</p>
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                  {errors.nomeCompleto.message}
+                </p>
               )}
             </div>
           )}
@@ -204,7 +206,9 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
                 <SelectItem value="MOCA">Moça</SelectItem>
               </SelectContent>
             </Select>
-            {errors.sexo && <p className="text-xs text-red-600 mt-1">{errors.sexo.message}</p>}
+            {errors.sexo && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.sexo.message}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="dataNascimento">Data de nascimento</Label>
@@ -215,7 +219,9 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
               {...register('dataNascimento')}
             />
             {errors.dataNascimento && (
-              <p className="text-xs text-red-600 mt-1">{errors.dataNascimento.message}</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {errors.dataNascimento.message}
+              </p>
             )}
           </div>
           <div>
@@ -226,13 +232,17 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
             <Label htmlFor="telefone">Telefone</Label>
             <Input id="telefone" {...register('telefone')} />
             {errors.telefone && (
-              <p className="text-xs text-red-600 mt-1">{errors.telefone.message}</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {errors.telefone.message}
+              </p>
             )}
           </div>
           <div>
             <Label htmlFor="email">E-mail</Label>
             <Input id="email" type="email" {...register('email')} />
-            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.email.message}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="numeroEncontro">Nº do encontro</Label>
@@ -243,7 +253,9 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
               {...register('numeroEncontro')}
             />
             {errors.numeroEncontro && (
-              <p className="text-xs text-red-600 mt-1">{errors.numeroEncontro.message}</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {errors.numeroEncontro.message}
+              </p>
             )}
           </div>
           <div>
@@ -265,7 +277,9 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
               </SelectContent>
             </Select>
             {errors.corCirculo && (
-              <p className="text-xs text-red-600 mt-1">{errors.corCirculo.message}</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {errors.corCirculo.message}
+              </p>
             )}
           </div>
         </div>
