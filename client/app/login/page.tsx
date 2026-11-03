@@ -80,15 +80,7 @@ export default function LoginPage() {
           )}
         </div>
         <div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="senha">Senha</Label>
-            <Link
-              href="/esqueci-senha"
-              className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-            >
-              Esqueceu a senha?
-            </Link>
-          </div>
+          <Label htmlFor="senha">Senha</Label>
           <div className="relative">
             <Input
               id="senha"
@@ -123,6 +115,14 @@ export default function LoginPage() {
           {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
           Entrar
         </Button>
+        <p className="text-center text-xs text-muted-foreground">
+          <Link
+            href="/esqueci-senha"
+            className="underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Esqueceu a senha?
+          </Link>
+        </p>
       </form>
     </AuthLayout>
   );
