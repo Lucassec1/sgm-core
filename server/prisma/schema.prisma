@@ -44,6 +44,10 @@ model Usuario {
   // Toda sessão emitida antes deste instante é recusada (JwtStrategy) — troca/reset de senha
   // derruba quem estava logado com a senha antiga. Null = nunca alterada.
   senhaAlteradaEm DateTime?
+  // Recuperação de senha por link (/esqueci-senha). Na conta de paróquia deve ser um e-mail da
+  // paróquia, não pessoal de alguém da equipe: quem sai da equipe dirigente não pode continuar
+  // conseguindo recuperar a senha. Reset feito pelo Conselho limpa este campo pelo mesmo motivo.
+  emailRecuperacao String?
 
   paroquiaId String?
   paroquia   Paroquia? @relation(fields: [paroquiaId], references: [id])
@@ -51,9 +55,24 @@ model Usuario {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  observacoes ObservacaoMontagem[]
+  observacoes        ObservacaoMontagem[]
+  tokensRedefinicao  TokenRedefinicaoSenha[]
 
   @@index([paroquiaId])
+}
+
+// Link de "esqueci a senha" — guarda só o hash (sha256) do token, nunca o token em si: quem
+// ler o banco não consegue usar um link pendente. Uso único, vale 30 min.
+model TokenRedefinicaoSenha {
+  id        String    @id @default(uuid())
+  usuarioId String
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiraEm  DateTime
+  usadoEm   DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([usuarioId])
 }
 
 enum CorCirculo {

@@ -69,6 +69,18 @@ comportamento em produção** e por isso merece atenção:
 - **`DATABASE_URL`** do Neon (a connection string do painel deles).
 - **`AWS_REGION`, `S3_BUCKET_NAME`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`** — usuário IAM com
   acesso _só_ àquele bucket.
+- **`EMAIL_REMETENTE`** — remetente do e-mail de "Esqueceu a senha?" (ex.:
+  `SGM Core <nao-responda@seudominio.org>`), enviado pelo **Amazon SES** com as mesmas credenciais
+  AWS do S3. **Sem ela, o link de recuperação nunca chega** — a tela diz "enviamos", mas o server só
+  registra erro no log. Para funcionar:
+  1. No SES (mesma região do `AWS_REGION`, ou defina `SES_REGION`), verificar a identidade do
+     remetente — de preferência um **domínio** (registros DKIM no DNS). Um e-mail avulso (Gmail etc.)
+     até verifica, mas cai no spam ou é rejeitado pelos provedores.
+  2. Pedir a saída do **sandbox** do SES (formulário no painel, "Request production access"). No
+     sandbox, o SES só entrega para endereços verificados um a um.
+  3. Dar `ses:SendEmail` ao usuário IAM do server (hoje ele só tem acesso ao bucket).
+- **`CLIENT_URL`** — opcional. URL do client usada no link do e-mail; sem ela, vale a primeira
+  URL do `CORS_ORIGINS`.
 - **`SENTRY_DSN`** — opcional. Sem ela, nenhum erro é reportado.
 
 **Na Vercel:**

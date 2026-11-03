@@ -38,7 +38,13 @@ export class ParoquiasService {
     return this.prisma.$transaction(async (tx) => {
       const paroquia = await tx.paroquia.create({ data: { nome: dto.nome } });
       await tx.usuario.create({
-        data: { login: dto.login, senhaHash, role: RoleUsuario.PAROQUIA, paroquiaId: paroquia.id },
+        data: {
+          login: dto.login,
+          senhaHash,
+          role: RoleUsuario.PAROQUIA,
+          paroquiaId: paroquia.id,
+          emailRecuperacao: dto.emailRecuperacao?.trim().toLowerCase() ?? null,
+        },
       });
       return paroquia;
     });
@@ -53,10 +59,19 @@ export class ParoquiasService {
     }
 
     const senhaHash = await bcrypt.hash(dto.senha, SALT_ROUNDS);
-    await this.prisma.usuario.update({
-      where: { id: usuario.id },
-      data: { senhaHash, ativo: true, senhaAlteradaEm: new Date() },
-    });
+    await this.prisma.$transaction([
+      this.prisma.usuario.update({
+        where: { id: usuario.id },
+        data: {
+          senhaHash,
+          ativo: true,
+          senhaAlteradaEm: new Date(),
+          // sem e-mail novo, limpa — ver ResetCredenciaisDto
+          emailRecuperacao: dto.emailRecuperacao?.trim().toLowerCase() ?? null,
+        },
+      }),
+      this.prisma.tokenRedefinicaoSenha.deleteMany({ where: { usuarioId: usuario.id } }),
+    ]);
     return { ok: true };
   }
 }

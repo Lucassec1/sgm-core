@@ -111,6 +111,7 @@ export interface SessaoAtual {
   login: string;
   role: Role;
   nome: string | null;
+  emailRecuperacao: string | null;
   paroquia: { id: string; nome: string } | null;
 }
 
@@ -140,6 +141,28 @@ export const apiClient = {
     return request<{ ok: true }>('/auth/senha', {
       method: 'PATCH',
       body: JSON.stringify({ senhaAtual, senhaNova }),
+    });
+  },
+
+  alterarEmailRecuperacao(senhaAtual: string, email: string) {
+    return request<{ ok: true }>('/auth/email-recuperacao', {
+      method: 'PATCH',
+      body: JSON.stringify({ senhaAtual, email }),
+    });
+  },
+
+  // Resposta sempre { ok: true }, exista o login ou não (o server não revela quais existem).
+  esqueciSenha(login: string) {
+    return request<{ ok: true }>('/auth/esqueci-senha', {
+      method: 'POST',
+      body: JSON.stringify({ login }),
+    });
+  },
+
+  redefinirSenha(token: string, senhaNova: string) {
+    return request<{ ok: true }>('/auth/redefinir-senha', {
+      method: 'POST',
+      body: JSON.stringify({ token, senhaNova }),
     });
   },
 

@@ -5,6 +5,9 @@ import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { AlterarSenhaDto } from './dto/alterar-senha.dto';
+import { AlterarEmailRecuperacaoDto } from './dto/alterar-email-recuperacao.dto';
+import { EsqueciSenhaDto } from './dto/esqueci-senha.dto';
+import { RedefinirSenhaDto } from './dto/redefinir-senha.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { UsuarioAutenticado } from '../../common/types/usuario-autenticado';
 import { COOKIE_MAX_AGE_MS, COOKIE_NAME, cookieOptions } from '../../common/auth/cookie';
@@ -55,6 +58,34 @@ export class AuthController {
     // cookie que o guard acabou de renovar; reemite um novo pra quem trocou continuar logado.
     const token = await this.authService.login(req.user);
     res.cookie(COOKIE_NAME, token, { ...cookieOptions(), maxAge: COOKIE_MAX_AGE_MS });
+    return { ok: true };
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Patch('email-recuperacao')
+  async alterarEmailRecuperacao(
+    @Body() dto: AlterarEmailRecuperacaoDto,
+    @Req() req: Request & { user: UsuarioAutenticado },
+  ) {
+    await this.authService.alterarEmailRecuperacao(req.user.id, dto.senhaAtual, dto.email);
+    return { ok: true };
+  }
+
+  // "Esqueci a senha" — manda o link pro e-mail de recuperação da conta. Resposta sempre igual
+  // (ver AuthService.solicitarRedefinicao). Limite baixo: cada pedido pode disparar um e-mail.
+  @Public()
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @Post('esqueci-senha')
+  async esqueciSenha(@Body() dto: EsqueciSenhaDto) {
+    await this.authService.solicitarRedefinicao(dto.login);
+    return { ok: true };
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('redefinir-senha')
+  async redefinirSenha(@Body() dto: RedefinirSenhaDto) {
+    await this.authService.redefinirSenha(dto.token, dto.senhaNova);
     return { ok: true };
   }
 }

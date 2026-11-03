@@ -14,11 +14,15 @@ function criarPrismaMock() {
       findMany: jest.fn(),
       create: jest.fn(),
     },
-    $transaction: jest.fn((cb: any) =>
-      cb({
-        paroquia: { create: jest.fn().mockResolvedValue({ id: 'p1' }) },
-        usuario: { create: jest.fn() },
-      }),
+    tokenRedefinicaoSenha: { deleteMany: jest.fn() },
+    // callback (create) roda num client transacional fake; array (reset) só aguarda tudo
+    $transaction: jest.fn((arg: any) =>
+      Array.isArray(arg)
+        ? Promise.all(arg)
+        : arg({
+            paroquia: { create: jest.fn().mockResolvedValue({ id: 'p1' }) },
+            usuario: { create: jest.fn() },
+          }),
     ),
   };
 }
@@ -87,6 +91,26 @@ describe('ParoquiasService', () => {
       expect(resultado).toEqual({ ok: true });
       expect(prisma.usuario.update).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 'u1' } }),
+      );
+    });
+
+    it('sem e-mail novo, limpa o e-mail de recuperação e invalida links pendentes', async () => {
+      prisma.usuario.findFirst.mockResolvedValue({ id: 'u1' });
+      await service.resetCredenciais('p1', { senha: 'nova-senha-forte' });
+      expect(prisma.usuario.update.mock.calls[0][0].data.emailRecuperacao).toBeNull();
+      expect(prisma.tokenRedefinicaoSenha.deleteMany).toHaveBeenCalledWith({
+        where: { usuarioId: 'u1' },
+      });
+    });
+
+    it('grava o e-mail de recuperação novo quando informado', async () => {
+      prisma.usuario.findFirst.mockResolvedValue({ id: 'u1' });
+      await service.resetCredenciais('p1', {
+        senha: 'nova-senha-forte',
+        emailRecuperacao: ' Secretaria@Paroquia.org ',
+      });
+      expect(prisma.usuario.update.mock.calls[0][0].data.emailRecuperacao).toBe(
+        'secretaria@paroquia.org',
       );
     });
   });

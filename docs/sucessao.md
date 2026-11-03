@@ -84,8 +84,16 @@ _Quando o botão voltar, atualize esta seção dizendo onde ele fica._
 - **Virou a equipe dirigente?** Peça ao **Conselho** para trocar a senha da paróquia. Quem saiu não deve
   continuar com acesso. O Conselho faz isso dentro do próprio sistema, sem chamar ninguém técnico.
 - A senha da paróquia também pode ser trocada pela própria equipe, na tela do sistema (opção de trocar senha).
-- **Esqueceu a senha da conta do Conselho?** Esse caso provavelmente exige a pessoa técnica (a conta inicial do
-  Conselho é criada por ela, por fora do site). Chame-a em vez de tentar adivinhar a senha várias vezes.
+- **Esqueceu a senha?** Na tela de login, clique em **"Esqueceu a senha?"**: chega um link no **e-mail de
+  recuperação** da conta para criar uma senha nova (vale 30 minutos). Para isso funcionar, a equipe precisa
+  ter cadastrado esse e-mail antes (ícone de envelope no topo do sistema — fica com um ponto amarelo
+  enquanto não houver e-mail). Use um e-mail **da paróquia** (secretaria), não o pessoal de alguém: quem
+  sair da equipe não pode continuar recebendo o link. Sem e-mail cadastrado, só o Conselho redefine.
+- Quando o **Conselho** redefine a senha de uma paróquia, o e-mail de recuperação é apagado (pode ser de
+  quem saiu); a equipe nova cadastra o dela depois de entrar.
+- **Esqueceu a senha da conta do Conselho?** O mesmo "Esqueceu a senha?" funciona, se a pessoa tiver
+  cadastrado o e-mail dela (ícone de envelope). Sem isso, chame a pessoa técnica (a conta inicial do Conselho
+  é criada por ela, por fora do site) em vez de tentar adivinhar a senha várias vezes.
 - Nunca mande a senha por mensagem sem apagar depois, e nunca a coloque em grupo grande.
 
 ## 7. O que NÃO fazer sozinho

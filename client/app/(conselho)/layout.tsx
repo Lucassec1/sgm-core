@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LogoutButton } from '@/components/logout-button';
 import { TrocarSenhaDialog } from '@/components/trocar-senha-dialog';
+import { EmailRecuperacaoDialog } from '@/components/email-recuperacao-dialog';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LoadingScreen } from '@/components/loading-screen';
 import { useSessao } from '@/lib/auth-context';
@@ -43,6 +44,7 @@ export default function ConselhoLayout({ children }: { children: React.ReactNode
         <div className="ml-auto flex items-center gap-2">
           <span className="text-sm text-muted-foreground">{sessao.nome}</span>
           <ThemeToggle />
+          <EmailRecuperacaoDialog />
           <TrocarSenhaDialog />
           <LogoutButton />
         </div>
