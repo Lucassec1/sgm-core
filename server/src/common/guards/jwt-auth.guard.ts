@@ -43,6 +43,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       sub: request.user.id,
       role: request.user.role,
       paroquiaId: request.user.paroquiaId,
+      emitidoEm: Date.now(),
     });
     response.cookie(COOKIE_NAME, token, { ...cookieOptions(), maxAge: COOKIE_MAX_AGE_MS });
 

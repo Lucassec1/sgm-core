@@ -61,8 +61,10 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
   backend, mas o card de Exportação foi removido do dashboard em 17/09 e nenhuma tela leva a eles;
   o .xlsx completo também segue pendente (issue #58, `docs/producao.md` item 4). Quadrantes: binário no S3, mesmo
   padrão das fotos de Ficha.
-- **Auth: pronto** — login JWT (cookie httpOnly) por credencial de paróquia (compartilhada,
-  não individual), guard global exigindo sessão em quase tudo, isolamento real entre paróquias
+- **Auth: pronto** — login JWT (cookie httpOnly) por conta de paróquia (compartilhada, não
+  individual; login = e-mail da paróquia, cadastrado pelo Conselho; a senha é criada pela própria
+  paróquia no primeiro acesso, por link enviado ao e-mail via Amazon SES — o mesmo link serve pra
+  "esqueceu a senha"), guard global exigindo sessão em quase tudo, isolamento real entre paróquias
   (R7) e Conselho implementado de verdade (R8) — ver seção "Isolamento por paróquia" abaixo e
   `server/CLAUDE.md` pro padrão de guard/rota. `paroquiaId` não é mais aceito de nenhum
   endpoint vindo do client — sempre vem do token.

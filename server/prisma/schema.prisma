@@ -36,8 +36,12 @@ enum RoleUsuario {
 // mais barato de relaxar depois (ex. staging de senha nova) do que reforçar.
 model Usuario {
   id        String      @id @default(uuid())
+  // Conta de paróquia: `login` é o e-mail da paróquia, cadastrado pelo Conselho. Contas antigas
+  // (de antes do login por e-mail) podem ter um nome curto aqui até o Conselho trocar.
   login     String      @unique
-  senhaHash String
+  // Null = conta criada pelo Conselho e ainda sem primeiro acesso: a senha é criada pelo link
+  // que o sistema manda pro e-mail (`login`) — ninguém define senha sem provar que lê esse e-mail.
+  senhaHash String?
   role      RoleUsuario
   nome      String?
   ativo     Boolean     @default(true)
@@ -51,9 +55,24 @@ model Usuario {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  observacoes ObservacaoMontagem[]
+  observacoes        ObservacaoMontagem[]
+  tokensRedefinicao  TokenRedefinicaoSenha[]
 
   @@index([paroquiaId])
+}
+
+// Link de criar senha (primeiro acesso) ou redefinir (esqueceu) — guarda só o hash (sha256) do token, nunca o token em si: quem
+// ler o banco não consegue usar um link pendente. Uso único, vale 30 min.
+model TokenRedefinicaoSenha {
+  id        String    @id @default(uuid())
+  usuarioId String
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiraEm  DateTime
+  usadoEm   DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([usuarioId])
 }
 
 enum CorCirculo {

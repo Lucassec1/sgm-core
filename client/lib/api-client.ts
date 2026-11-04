@@ -114,6 +114,12 @@ export interface SessaoAtual {
   paroquia: { id: string; nome: string } | null;
 }
 
+export interface ParoquiaComConta {
+  id: string;
+  nome: string;
+  usuarios: { id: string; login: string; ativo: boolean; aguardandoPrimeiroAcesso: boolean }[];
+}
+
 function buildQuery(params: object) {
   const query = new URLSearchParams();
   Object.entries(params as Record<string, unknown>).forEach(([key, value]) => {
@@ -140,6 +146,22 @@ export const apiClient = {
     return request<{ ok: true }>('/auth/senha', {
       method: 'PATCH',
       body: JSON.stringify({ senhaAtual, senhaNova }),
+    });
+  },
+
+  // "Primeiro acesso ou esqueceu a senha?" — manda o link de criar/redefinir senha pro e-mail.
+  // Resposta sempre { ok: true }, exista a conta ou não (o server não revela quais existem).
+  esqueciSenha(login: string) {
+    return request<{ ok: true }>('/auth/esqueci-senha', {
+      method: 'POST',
+      body: JSON.stringify({ login }),
+    });
+  },
+
+  redefinirSenha(token: string, senhaNova: string) {
+    return request<{ ok: true }>('/auth/redefinir-senha', {
+      method: 'POST',
+      body: JSON.stringify({ token, senhaNova }),
     });
   },
 
@@ -435,23 +457,27 @@ export const apiClient = {
 
   // Conselho (R8) — leitura cross-paróquia de Montagem + observações.
   listParoquias() {
-    return request<
-      { id: string; nome: string; usuarios: { id: string; login: string; ativo: boolean }[] }[]
-    >('/paroquias');
+    return request<ParoquiaComConta[]>('/paroquias');
   },
 
-  createParoquia(data: { nome: string; login: string; senha: string }) {
+  // Conselho cria a conta só com o e-mail — a paróquia cria a senha no primeiro acesso.
+  createParoquia(data: { nome: string; email: string }) {
     return request<{ id: string; nome: string }>('/paroquias', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  resetCredenciaisParoquia(id: string, senha: string) {
-    return request<{ ok: true }>(`/paroquias/${id}/credenciais`, {
+  alterarEmailParoquia(id: string, email: string) {
+    return request<{ ok: true }>(`/paroquias/${id}/email`, {
       method: 'PATCH',
-      body: JSON.stringify({ senha }),
+      body: JSON.stringify({ email }),
     });
+  },
+
+  // Apaga a senha e derruba as sessões: a conta volta pro primeiro acesso (virada de equipe).
+  redefinirAcessoParoquia(id: string) {
+    return request<{ ok: true }>(`/paroquias/${id}/redefinir-acesso`, { method: 'PATCH' });
   },
 
   conselhoListMontagens(
