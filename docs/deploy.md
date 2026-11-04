@@ -26,6 +26,10 @@ Navegador ──► Vercel (client, Next.js 16) ──► Render (server, NestJS
 
 ## 2. Configuração esperada em cada painel
 
+**Branch de deploy: `producao`** (confirmado em 04/11/2026) — Render e Vercel publicam a partir dela,
+não da `main`. A `main` é onde os PRs de trabalho entram; um merge na `main` **não vai pro ar sozinho**.
+Ver seção 4.
+
 ### Render (server)
 
 | Campo          | Valor esperado                                                                      |
@@ -92,13 +96,28 @@ comportamento em produção** e por isso merece atenção:
 
 ## 4. Deploy de uma mudança
 
-1. Abrir PR pra `main`; o CI (lint, typecheck, testes, build) precisa passar.
-2. Fazer merge. Se o deploy é automático por push na `main` no Render e na Vercel **[confirmar]**, ele
-   dispara sozinho; senão, disparar manualmente nos dois painéis.
-3. **Mudou o schema (`server/prisma/schema.prisma`)?** A migration precisa rodar no Neon _antes_ (ou junto
-   com) o novo server. Ordem segura: aplicar a migration, depois subir o server. Migrations
-   destrutivas (remover coluna) exigem duas etapas — primeiro parar de usar a coluna, depois removê-la.
-4. Rodar o checklist da seção 5.
+Duas etapas: o trabalho entra na `main`; ir pro ar é um PR separado, `main` → `producao`.
+
+1. Abrir PR da branch de trabalho pra `main`; o CI (lint, typecheck, testes, build, E2E) precisa passar.
+   Fazer merge. **Nada vai pro ar ainda.**
+2. Quando quiser publicar, abrir PR **`main` → `producao`**
+   (`https://github.com/Lucassec1/sgm-core/compare/producao...main?expand=1`). A descrição do PR deve
+   listar o que vai junto — pode ser mais de um PR acumulado da `main`.
+3. **Antes de mergear**, conferir no que vai junto:
+   - **Mudou o schema (`server/prisma/schema.prisma`)?** A migration precisa rodar no Neon _antes_ (ou
+     junto com) o novo server — se o Render não roda `npx prisma migrate deploy` sozinho (ver tabela da
+     seção 2), aplicar à mão contra o Neon primeiro. Server novo com banco velho = erro 500 em toda
+     requisição logada. Migrations destrutivas (remover coluna) exigem duas etapas — primeiro parar de
+     usar a coluna, depois removê-la.
+   - **Variável de ambiente nova ou obrigatória?** Cadastrar no painel antes (seção 3) — sem
+     `CORS_ORIGINS`, por exemplo, o server nem sobe.
+4. Fazer merge na `producao`. Render e Vercel disparam o deploy sozinhos (se não dispararem, disparar
+   manualmente nos dois painéis) e confirmar que os dois ficaram verdes.
+5. Rodar o checklist da seção 5.
+
+Nunca faça commit direto na `producao` nem merge de outra branch nela: ela só recebe a `main`. Assim
+ela fica sempre igual a algum ponto da `main` (`git log origin/producao..origin/main` mostra o que
+ainda não foi publicado), e voltar uma versão é reverter o merge na `producao`.
 
 **Nunca rode `npm run prisma:seed` contra o banco de produção** — ele cria fichas e casais falsos.
 
