@@ -1,0 +1,16 @@
+// Só pro editor/typecheck dos testes E2E (Playwright) e do playwright.config.ts na raiz —
+// server/ e client/ têm tsconfig próprio. Sem ele o VS Code não carrega os tipos do Node
+// (process, __dirname, node:path) nesses arquivos.
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["e2e/**/*.ts", "playwright.config.ts"]
+}
