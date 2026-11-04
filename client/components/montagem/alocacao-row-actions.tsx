@@ -20,8 +20,8 @@ import type { Alocacao } from '@/lib/types';
 
 // Transições de status por convite (fora de RASCUNHO/CONVIDADO, ver docs/ux-e-fluxos.md,
 // 1.2 "Controle de Convites"). Tanto recusa quanto desistência exigem registrar o motivo
-// da saída — fica no histórico da ficha e na aba Convites do encontro. R1 bloqueia a
-// pessoa no resto do encontro assim que qualquer um dos dois é registrado (backend).
+// da saída — fica no histórico da ficha e na aba Convites do encontro. A partir daí, chamar a
+// pessoa de novo neste encontro gera aviso de R1 (não bloqueia desde 14/10/2026).
 export function AlocacaoRowActions({
   montagemId,
   alocacao,
@@ -56,8 +56,8 @@ export function AlocacaoRowActions({
             {saidaAberta === 'DESISTIU' ? 'Registrar desistência' : 'Registrar recusa'}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            Essa pessoa fica bloqueada pro restante deste encontro (R1) — só pode ser convidada de
-            novo no próximo. O motivo aparece no histórico da ficha e na aba Convites.
+            Se alguém tentar chamar essa pessoa de novo neste encontro, o sistema vai avisar que ela
+            recusou (R1). O motivo aparece no histórico da ficha e na aba Convites.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <Textarea

@@ -18,7 +18,8 @@ export default function FichaDetailPage({ params }: { params: Promise<{ id: stri
   const removerFoto = useRemoverFotoFicha(id);
 
   if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando...</p>;
-  if (isError || !ficha) return <p className="p-6 text-sm text-red-600">Ficha não encontrada.</p>;
+  if (isError || !ficha)
+    return <p className="p-6 text-sm text-red-600 dark:text-red-400">Ficha não encontrada.</p>;
 
   async function aoTrocarFoto(file: File) {
     try {

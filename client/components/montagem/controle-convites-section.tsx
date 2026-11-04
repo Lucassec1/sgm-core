@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/table';
 import { EquipeIcon } from '@/components/equipes/equipe-icon';
 import { AlocacaoStatusBadge } from './alocacao-status-badge';
+import { AvisoBadges } from './aviso-badges';
 import { AlocarPessoaCombobox } from './alocar-pessoa-combobox';
 import { PessoaPreviewPopover } from './pessoa-preview-popover';
 import type { Alocacao, StatusConvite, VagaMontagem } from '@/lib/types';
@@ -121,9 +122,12 @@ export function ControleConvitesSection({
               {visiveis.map((a) => (
                 <TableRow key={a.id}>
                   <TableCell className="font-medium">
-                    <PessoaPreviewPopover ficha={a.ficha} fichaCasal={a.fichaCasal}>
-                      {nomeAlocacao(a)}
-                    </PessoaPreviewPopover>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <PessoaPreviewPopover ficha={a.ficha} fichaCasal={a.fichaCasal}>
+                        {nomeAlocacao(a)}
+                      </PessoaPreviewPopover>
+                      <AvisoBadges avisos={a.avisos} />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <span className="flex items-center gap-1.5 text-sm">

@@ -26,6 +26,10 @@ Navegador ──► Vercel (client, Next.js 16) ──► Render (server, NestJS
 
 ## 2. Configuração esperada em cada painel
 
+**Branch de deploy: `producao`** (confirmado em 04/11/2026) — Render e Vercel publicam a partir dela,
+não da `main`. A `main` é onde os PRs de trabalho entram; um merge na `main` **não vai pro ar sozinho**.
+Ver seção 4.
+
 ### Render (server)
 
 | Campo          | Valor esperado                                                                      |
@@ -59,14 +63,29 @@ comportamento em produção** e por isso merece atenção:
   (`server/src/common/auth/cookie.ts`). Como Render e Vercel são domínios diferentes, sem isso o
   navegador descarta o cookie e o login "funciona" no servidor mas o usuário volta pra tela de login.
   Também desliga o `pino-pretty` (só de desenvolvimento).
-- **`CORS_ORIGINS`** com a URL exata do client na Vercel (com `https://`, sem barra final). Vazio
-  reflete qualquer origem — aceitável só em dev. Se o client tiver mais de uma URL (domínio próprio +
-  `*.vercel.app`), liste todas separadas por vírgula.
+- **`CORS_ORIGINS`** com a URL exata do client na Vercel (com `https://`, sem barra final).
+  **Obrigatória em produção** — sem ela o server nem sobe (vazio refletiria qualquer origem). Também
+  é a lista usada contra CSRF: POST/PATCH/DELETE vindos de outra origem levam 403. Se o client
+  tiver mais de uma URL (domínio próprio + `*.vercel.app`, preview), liste todas separadas por
+  vírgula — uma URL faltando aparece como 403 "Origem não permitida" ao salvar qualquer coisa.
 - **`JWT_SECRET`** — valor forte e único, diferente do de desenvolvimento. Trocar invalida todas as
   sessões abertas (todo mundo precisa logar de novo), o que é seguro, só incômodo.
 - **`DATABASE_URL`** do Neon (a connection string do painel deles).
 - **`AWS_REGION`, `S3_BUCKET_NAME`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`** — usuário IAM com
   acesso _só_ àquele bucket.
+- **`EMAIL_REMETENTE`** — remetente do e-mail com o link de criar/redefinir senha (ex.:
+  `SGM Core <nao-responda@seudominio.org>`), enviado pelo **Amazon SES** com as mesmas credenciais
+  AWS do S3. **Obrigatória na prática:** paróquia nova só cria a senha por esse link (primeiro acesso),
+  então sem ela **nenhuma paróquia nova consegue entrar** e ninguém recupera senha — a tela diz
+  "enviamos", mas o server só registra erro no log. Para funcionar:
+  1. No SES (mesma região do `AWS_REGION`, ou defina `SES_REGION`), verificar a identidade do
+     remetente — de preferência um **domínio** (registros DKIM no DNS). Um e-mail avulso (Gmail etc.)
+     até verifica, mas cai no spam ou é rejeitado pelos provedores.
+  2. Pedir a saída do **sandbox** do SES (formulário no painel, "Request production access"). No
+     sandbox, o SES só entrega para endereços verificados um a um.
+  3. Dar `ses:SendEmail` ao usuário IAM do server (hoje ele só tem acesso ao bucket).
+- **`CLIENT_URL`** — opcional. URL do client usada no link do e-mail; sem ela, vale a primeira
+  URL do `CORS_ORIGINS`.
 - **`SENTRY_DSN`** — opcional. Sem ela, nenhum erro é reportado.
 
 **Na Vercel:**
@@ -77,13 +96,28 @@ comportamento em produção** e por isso merece atenção:
 
 ## 4. Deploy de uma mudança
 
-1. Abrir PR pra `main`; o CI (lint, typecheck, testes, build) precisa passar.
-2. Fazer merge. Se o deploy é automático por push na `main` no Render e na Vercel **[confirmar]**, ele
-   dispara sozinho; senão, disparar manualmente nos dois painéis.
-3. **Mudou o schema (`server/prisma/schema.prisma`)?** A migration precisa rodar no Neon _antes_ (ou junto
-   com) o novo server. Ordem segura: aplicar a migration, depois subir o server. Migrations
-   destrutivas (remover coluna) exigem duas etapas — primeiro parar de usar a coluna, depois removê-la.
-4. Rodar o checklist da seção 5.
+Duas etapas: o trabalho entra na `main`; ir pro ar é um PR separado, `main` → `producao`.
+
+1. Abrir PR da branch de trabalho pra `main`; o CI (lint, typecheck, testes, build, E2E) precisa passar.
+   Fazer merge. **Nada vai pro ar ainda.**
+2. Quando quiser publicar, abrir PR **`main` → `producao`**
+   (`https://github.com/Lucassec1/sgm-core/compare/producao...main?expand=1`). A descrição do PR deve
+   listar o que vai junto — pode ser mais de um PR acumulado da `main`.
+3. **Antes de mergear**, conferir no que vai junto:
+   - **Mudou o schema (`server/prisma/schema.prisma`)?** A migration precisa rodar no Neon _antes_ (ou
+     junto com) o novo server — se o Render não roda `npx prisma migrate deploy` sozinho (ver tabela da
+     seção 2), aplicar à mão contra o Neon primeiro. Server novo com banco velho = erro 500 em toda
+     requisição logada. Migrations destrutivas (remover coluna) exigem duas etapas — primeiro parar de
+     usar a coluna, depois removê-la.
+   - **Variável de ambiente nova ou obrigatória?** Cadastrar no painel antes (seção 3) — sem
+     `CORS_ORIGINS`, por exemplo, o server nem sobe.
+4. Fazer merge na `producao`. Render e Vercel disparam o deploy sozinhos (se não dispararem, disparar
+   manualmente nos dois painéis) e confirmar que os dois ficaram verdes.
+5. Rodar o checklist da seção 5.
+
+Nunca faça commit direto na `producao` nem merge de outra branch nela: ela só recebe a `main`. Assim
+ela fica sempre igual a algum ponto da `main` (`git log origin/producao..origin/main` mostra o que
+ainda não foi publicado), e voltar uma versão é reverter o merge na `producao`.
 
 **Nunca rode `npm run prisma:seed` contra o banco de produção** — ele cria fichas e casais falsos.
 
@@ -117,7 +151,10 @@ SEED_CONSELHO_LOGIN=... SEED_CONSELHO_SENHA='...' SEED_CONSELHO_NOME='...' \
   npm run prisma:seed:bootstrap-conselho
 ```
 
-Depois, essa conta cria as demais (Conselho e credenciais de paróquia) pela interface.
+Depois, essa conta cadastra as paróquias pela interface (nome + e-mail da paróquia; a paróquia cria a
+senha no primeiro acesso). Contas de paróquia antigas, com login que não é e-mail (ex.: `paroquia-x`),
+continuam entrando com a senha atual — mas o Conselho deve trocar o login pelo e-mail da paróquia
+("Trocar e-mail") pra ela conseguir recuperar a senha sozinha. A tela do Conselho marca essas contas.
 
 ## 7. Limites do plano gratuito — o que confirmar nos painéis
 

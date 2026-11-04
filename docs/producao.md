@@ -132,7 +132,8 @@ Não impedem nada hoje, mas são exatamente sobre sobreviver com o mínimo de co
   escrita pra quem programa. Vale um documento curto, separado, em português simples: pra quem ligar, o que
   NÃO tentar mexer sozinho, onde os dados ficam.
 - **Testes E2E dos fluxos críticos — FEITO:** Playwright cobre Cadastro de Ficha e Montagem ponta a ponta
-  (`e2e/`, `npm run test:e2e`). Ainda não roda no CI (#60).
+  (`e2e/`, `npm run test:e2e`), e desde 13/10/2026 também o ciclo Conselho → paróquia. Roda no CI a
+  cada PR (#60).
 - **Arquitetura está mais simples que o documentado, e tudo bem — RESOLVIDO (21/09/2026, `docs/arquitetura.md` corrigido).** `docs/arquitetura.md` descreve
   Controller → Service → Repository; na prática as Services chamam o Prisma direto. Pra um mantenedor só,
   isso é a escolha certa, não dívida técnica — só vale ajustar o doc pra refletir a decisão real.

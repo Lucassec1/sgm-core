@@ -21,7 +21,8 @@ export default function FichaCasalDetailPage({ params }: { params: Promise<{ id:
   const removerFoto = useRemoverFotoFichaCasal(id);
 
   if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando...</p>;
-  if (isError || !ficha) return <p className="p-6 text-sm text-red-600">Casal não encontrado.</p>;
+  if (isError || !ficha)
+    return <p className="p-6 text-sm text-red-600 dark:text-red-400">Casal não encontrado.</p>;
 
   const nomeCasal = `${ficha.nomeEle} & ${ficha.nomeEla}`;
 

@@ -19,7 +19,11 @@ export default function ConselhoParoquiaMontagensPage({
       <h1 className="text-lg font-semibold">Montagens</h1>
 
       {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
-      {isError && <p className="text-sm text-red-600">Não foi possível carregar as montagens.</p>}
+      {isError && (
+        <p className="text-sm text-red-600 dark:text-red-400">
+          Não foi possível carregar as montagens.
+        </p>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data?.items.map((montagem) => (

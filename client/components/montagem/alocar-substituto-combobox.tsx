@@ -15,9 +15,10 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { EquipeIcon } from '@/components/equipes/equipe-icon';
-import { ApiError } from '@/lib/api-client';
+import { avisosDoErro } from '@/lib/api-client';
 import { useCreateAlocacao } from '@/lib/hooks/use-montagens';
-import type { Alocacao, ListaSubstituicaoItem, VagaMontagem } from '@/lib/types';
+import type { Alocacao, AvisoRegra, ListaSubstituicaoItem, VagaMontagem } from '@/lib/types';
+import { AvisosRegrasDialog } from './avisos-regras-dialog';
 
 const STATUS_ATIVO = ['RASCUNHO', 'CONVIDADO', 'ACEITO'];
 
@@ -37,6 +38,9 @@ export function AlocarSubstitutoCombobox({
   alocacoes: Alocacao[];
 }) {
   const [open, setOpen] = useState(false);
+  const [pendente, setPendente] = useState<{ vaga: VagaMontagem; avisos: AvisoRegra[] } | null>(
+    null,
+  );
   const createAlocacao = useCreateAlocacao(montagemId);
 
   const sexo = item.ficha?.sexo;
@@ -63,7 +67,7 @@ export function AlocarSubstitutoCombobox({
         a.vaga.equipe.ordem - b.vaga.equipe.ordem || a.vaga.cargo.ordem - b.vaga.cargo.ordem,
     );
 
-  async function alocar(vaga: VagaMontagem) {
+  async function alocar(vaga: VagaMontagem, confirmarAvisos?: boolean) {
     try {
       await createAlocacao.mutateAsync({
         vagaMontagemId: vaga.id,
@@ -72,14 +76,15 @@ export function AlocarSubstitutoCombobox({
           ? { fichaId: item.fichaId }
           : { fichaCasalId: item.fichaCasalId ?? undefined }),
         status: 'CONVIDADO',
+        ...(confirmarAvisos && { confirmarAvisos }),
       });
       toast.success(`Alocado em ${vaga.equipe.nome} · ${vaga.cargo.nome}.`);
       setOpen(false);
+      setPendente(null);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 409) {
-        toast.error(
-          'Já serviu nessa equipe antes — aloque pela Lista completa pra confirmar a repetição (R2).',
-        );
+      const avisos = avisosDoErro(err);
+      if (avisos) {
+        setPendente({ vaga, avisos });
         setOpen(false);
         return;
       }
@@ -88,38 +93,46 @@ export function AlocarSubstitutoCombobox({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen} modal>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-7 gap-1 px-2 text-xs">
-          <UserPlus className="h-3.5 w-3.5" />
-          Alocar
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <Command>
-          <CommandInput placeholder="Vaga em aberto..." />
-          <CommandList className="max-h-72">
-            <CommandEmpty>Nenhuma vaga em aberto compatível.</CommandEmpty>
-            <CommandGroup>
-              {opcoes.map(({ vaga, falta }) => (
-                <CommandItem
-                  key={vaga.id}
-                  value={`${vaga.equipe.nome} ${vaga.cargo.nome}`}
-                  onSelect={() => alocar(vaga)}
-                  className="gap-2 py-2"
-                >
-                  <EquipeIcon slug={vaga.equipe.slug} nome={vaga.equipe.nome} size={18} />
-                  <span className="flex-1">
-                    {vaga.equipe.nome}{' '}
-                    <span className="text-muted-foreground">· {vaga.cargo.nome}</span>
-                  </span>
-                  <span className="text-xs text-muted-foreground">faltam {falta}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <>
+      <Popover open={open} onOpenChange={setOpen} modal>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="h-7 gap-1 px-2 text-xs">
+            <UserPlus className="h-3.5 w-3.5" />
+            Alocar
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80 p-0" align="end">
+          <Command>
+            <CommandInput placeholder="Vaga em aberto..." />
+            <CommandList className="max-h-72">
+              <CommandEmpty>Nenhuma vaga em aberto compatível.</CommandEmpty>
+              <CommandGroup>
+                {opcoes.map(({ vaga, falta }) => (
+                  <CommandItem
+                    key={vaga.id}
+                    value={`${vaga.equipe.nome} ${vaga.cargo.nome}`}
+                    onSelect={() => alocar(vaga)}
+                    className="gap-2 py-2"
+                  >
+                    <EquipeIcon slug={vaga.equipe.slug} nome={vaga.equipe.nome} size={18} />
+                    <span className="flex-1">
+                      {vaga.equipe.nome}{' '}
+                      <span className="text-muted-foreground">· {vaga.cargo.nome}</span>
+                    </span>
+                    <span className="text-xs text-muted-foreground">faltam {falta}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      <AvisosRegrasDialog
+        avisos={pendente?.avisos ?? null}
+        acao="Alocar mesmo assim"
+        onCancelar={() => setPendente(null)}
+        onConfirmar={() => pendente && alocar(pendente.vaga, true)}
+      />
+    </>
   );
 }

@@ -121,7 +121,7 @@ export function EditarTamanhoEncontroDialog({ montagem }: { montagem: Montagem }
                 {ehImplantacao ? '52 a 72 (já incluindo os 12 sementeira)' : '40 a 60'}
               </p>
               {errors.numeroJovensVivenciando && (
-                <p className="text-xs text-red-600 mt-1">
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                   {errors.numeroJovensVivenciando.message}
                 </p>
               )}

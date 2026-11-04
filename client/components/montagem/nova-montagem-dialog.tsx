@@ -99,7 +99,9 @@ export function NovaMontagemDialog() {
             <div>
               <Label htmlFor="data">Data do encontro</Label>
               <Input id="data" type="date" {...register('data')} />
-              {errors.data && <p className="text-xs text-red-600 mt-1">{errors.data.message}</p>}
+              {errors.data && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.data.message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="numeroJovensVivenciando">Nº de jovens vivenciando</Label>
@@ -112,7 +114,7 @@ export function NovaMontagemDialog() {
                 {ehImplantacao ? '52 a 72 (já incluindo os 12 sementeira)' : '40 a 60'}
               </p>
               {errors.numeroJovensVivenciando && (
-                <p className="text-xs text-red-600 mt-1">
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                   {errors.numeroJovensVivenciando.message}
                 </p>
               )}

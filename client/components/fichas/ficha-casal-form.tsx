@@ -171,14 +171,18 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
                 <Label htmlFor="nomeEle">Nome (dele)</Label>
                 <Input id="nomeEle" {...register('nomeEle')} />
                 {errors.nomeEle && (
-                  <p className="text-xs text-red-600 mt-1">{errors.nomeEle.message}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                    {errors.nomeEle.message}
+                  </p>
                 )}
               </div>
               <div>
                 <Label htmlFor="nomeEla">Nome (dela)</Label>
                 <Input id="nomeEla" {...register('nomeEla')} />
                 {errors.nomeEla && (
-                  <p className="text-xs text-red-600 mt-1">{errors.nomeEla.message}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                    {errors.nomeEla.message}
+                  </p>
                 )}
               </div>
             </>
@@ -205,28 +209,36 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
             <Label htmlFor="telefoneEle">Telefone (dele)</Label>
             <Input id="telefoneEle" {...register('telefoneEle')} />
             {errors.telefoneEle && (
-              <p className="text-xs text-red-600 mt-1">{errors.telefoneEle.message}</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {errors.telefoneEle.message}
+              </p>
             )}
           </div>
           <div>
             <Label htmlFor="telefoneEla">Telefone (dela)</Label>
             <Input id="telefoneEla" {...register('telefoneEla')} />
             {errors.telefoneEla && (
-              <p className="text-xs text-red-600 mt-1">{errors.telefoneEla.message}</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {errors.telefoneEla.message}
+              </p>
             )}
           </div>
           <div>
             <Label htmlFor="emailEle">E-mail (dele)</Label>
             <Input id="emailEle" type="email" {...register('emailEle')} />
             {errors.emailEle && (
-              <p className="text-xs text-red-600 mt-1">{errors.emailEle.message}</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {errors.emailEle.message}
+              </p>
             )}
           </div>
           <div>
             <Label htmlFor="emailEla">E-mail (dela)</Label>
             <Input id="emailEla" type="email" {...register('emailEla')} />
             {errors.emailEla && (
-              <p className="text-xs text-red-600 mt-1">{errors.emailEla.message}</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {errors.emailEla.message}
+              </p>
             )}
           </div>
 

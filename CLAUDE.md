@@ -17,6 +17,7 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
 
 - `docs/requisitos.md` — o que o sistema faz (requisitos funcionais e não funcionais)
 - `docs/regras-imutaveis.md` — regras de negócio do Segue-me (R1 a R9). **Ler sempre** antes de mexer em qualquer lógica do módulo Montagem — nenhuma dessas regras pode ser violada, mesmo sem pedido explícito.
+- `docs/implantacao.md` — norma oficial do Segue-me sobre implantação (madrinha, afilhada, sementeira, montagem dos 3 primeiros encontros). Base do modelo de sementeira/pessoa de fora (#63).
 - `docs/ux-e-fluxos.md` — fluxos de usuário e decisões de UX. Ler antes de criar ou alterar qualquer tela.
 - `docs/design-system.md` — tokens visuais e mapa de componentes shadcn. Ler antes de estilizar algo novo.
 - `docs/arquitetura.md` — decisões técnicas (backend, frontend, multi-tenancy, testes, CI/CD). **Ler sempre** antes de criar estrutura de pastas, escolher biblioteca nova ou decidir padrão de código.
@@ -46,10 +47,12 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
   histórico de equipes e dados cadastrais em seções empilhadas. Upload real de foto 3x4
   (JPEG/PNG/WEBP, até 5MB) — binário no S3 (bucket privado, ver
   `server/src/common/uploads/s3-storage.ts`), não filesystem (hospedagem com disco efêmero
-  perderia o arquivo a cada restart/deploy). Upload em lote (pasta inteira + tela de
-  conferência, vinculando pelo nome do arquivo) ainda não existe.
+  perderia o arquivo a cada restart/deploy). Upload em lote: botão "Fotos em lote"
+  nas listas de Jovens e Casais — escolhe arquivos ou uma pasta, sugere a ficha pelo nome do arquivo
+  (`client/lib/fotos-lote.ts`) e mostra uma tela de conferência antes de enviar; envia um por vez
+  pelo endpoint individual, esperando quando bate no rate limit (429).
 - **Módulo Montagem: quase completo** — schema, backend (montagens, alocações, equipes,
-  lista de substituição, log de atividade, quadrantes) com regras R1–R6 e R9 aplicadas e
+  lista de substituição, log de atividade, quadrantes) com regras R1–R6 e R9 aplicadas (R1–R4 não bloqueiam desde 14/10/2026: R1–R3 viram badge, R4 pede confirmação) e
   testadas (specs em `server/src/modules/montagem/*.spec.ts`); frontend com quadro das 16
   equipes, drawer por equipe, lista completa, aba Convites (status + saídas/motivos + log),
   aba Substituições, aba Quadrantes (upload/download de PDF), criar/editar/finalizar
@@ -58,15 +61,21 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
   backend, mas o card de Exportação foi removido do dashboard em 17/09 e nenhuma tela leva a eles;
   o .xlsx completo também segue pendente (issue #58, `docs/producao.md` item 4). Quadrantes: binário no S3, mesmo
   padrão das fotos de Ficha.
-- **Auth: pronto** — login JWT (cookie httpOnly) por credencial de paróquia (compartilhada,
-  não individual), guard global exigindo sessão em quase tudo, isolamento real entre paróquias
+- **Auth: pronto** — login JWT (cookie httpOnly) por conta de paróquia (compartilhada, não
+  individual; login = e-mail da paróquia, cadastrado pelo Conselho; a senha é criada pela própria
+  paróquia no primeiro acesso, por link enviado ao e-mail via Amazon SES — o mesmo link serve pra
+  "esqueceu a senha"), guard global exigindo sessão em quase tudo, isolamento real entre paróquias
   (R7) e Conselho implementado de verdade (R8) — ver seção "Isolamento por paróquia" abaixo e
   `server/CLAUDE.md` pro padrão de guard/rota. `paroquiaId` não é mais aceito de nenhum
   endpoint vindo do client — sempre vem do token.
 - **Produção**: Neon (Postgres), S3 (fotos/quadrantes), Render (server) e Vercel (client) — deploy feito em
   21/09/2026; validação em produção e documentos de operação em `docs/deploy.md` e `docs/sucessao.md`.
+  **Deploy sai da branch `producao`, não da `main`** — publicar é um PR `main` → `producao`
+  (`docs/deploy.md`, seção 4).
 - **CI**: GitHub Actions rodando lint + typecheck + testes + build (server e client) em push/PR pra `main`.
-  E2E (Playwright, `npm run test:e2e`) roda só local.
+  E2E (Playwright, `npm run test:e2e`) roda no CI também, depois que server e client passam — job
+  `e2e`, com Postgres de service container. Cobre Cadastro de Ficha, Montagem e o ciclo
+  Conselho → paróquia (observações, R7/R8) + atalhos do Dashboard.
 
 ## Isolamento por paróquia
 

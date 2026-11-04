@@ -95,6 +95,19 @@
   animation: breathe 2.2s ease-in-out infinite;
 }
 
+/* Quem pede menos movimento no sistema (acessibilidade — enjoo, distração) não recebe
+   animação nem transição: abrir drawer, toast e a "respiração" do logo ficam instantâneos. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Modo telão / impressão do Quadro de Equipes (docs/propostas.md, proposta #5) — margem
    enxuta e fundo sempre branco na página impressa, independente do tema escuro na tela. */
 @media print {

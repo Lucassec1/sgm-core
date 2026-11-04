@@ -5,7 +5,7 @@ import * as Sentry from '@sentry/nextjs';
 
 // Error boundary raiz do App Router — reporta pro Sentry (inativo sem NEXT_PUBLIC_SENTRY_DSN,
 // ver instrumentation-client.ts) e mostra uma tela mínima de erro. Só entra em jogo quando um
-// erro escapa de todos os error.tsx específicos de rota (nenhum existe ainda).
+// erro escapa dos error.tsx de (app)/(conselho) — ex.: falha no próprio layout raiz.
 export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
   useEffect(() => {
     Sentry.captureException(error);

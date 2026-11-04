@@ -19,7 +19,8 @@ import { PessoaPreviewPopover } from './pessoa-preview-popover';
 import type { ListaSubstituicaoItem } from '@/lib/types';
 
 // Quem já está no encontro não é opção de substituição: ou está ocupando uma vaga
-// (RASCUNHO/CONVIDADO/ACEITO), ou recusou/desistiu e não pode servir esse encontro (R1).
+// (RASCUNHO/CONVIDADO/ACEITO), ou recusou/desistiu — não faz sentido como "pronto pra entrar"
+// (chamar de novo quem recusou continua possível pela busca da vaga, com aviso de R1).
 // Quem foi SUBSTITUIDO saiu da vaga e volta a ficar disponível como backup.
 const STATUS_INDISPONIVEL = ['RASCUNHO', 'CONVIDADO', 'ACEITO', 'RECUSADO', 'DESISTIU'];
 

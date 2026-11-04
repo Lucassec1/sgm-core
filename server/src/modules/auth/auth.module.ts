@@ -5,6 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { EmailService } from '../../common/email/email.service';
 
 // Extraído pra variável — precisa ser a MESMA referência em `imports` e `exports` pro Nest
 // tratar como o mesmo módulo dinâmico (JwtAuthGuard, registrado direto em app.module.ts,
@@ -25,7 +26,7 @@ const jwtModule = JwtModule.registerAsync({
 @Module({
   imports: [PassportModule, jwtModule],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, EmailService],
   exports: [AuthService, jwtModule],
 })
 export class AuthModule {}

@@ -27,6 +27,12 @@ function garantirDatabase() {
 }
 
 export default async function globalSetup() {
+  // No CI o Postgres é um service container do GitHub Actions que já sobe com o banco
+  // sgm_core_test criado (POSTGRES_DB) — não existe o container do docker-compose pra dar exec.
+  if (process.env.CI) {
+    return prepararBanco();
+  }
+
   try {
     garantirDatabase();
   } catch {
@@ -36,6 +42,10 @@ export default async function globalSetup() {
     );
   }
 
+  prepararBanco();
+}
+
+function prepararBanco() {
   const serverDir = path.resolve(__dirname, '../server');
   const env = { ...process.env, DATABASE_URL: TEST_DATABASE_URL };
 

@@ -23,7 +23,11 @@ export default function MontagemPage() {
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
-      {isError && <p className="text-sm text-red-600">Não foi possível carregar as montagens.</p>}
+      {isError && (
+        <p className="text-sm text-red-600 dark:text-red-400">
+          Não foi possível carregar as montagens.
+        </p>
+      )}
 
       {data && emAndamento && (
         <Link href={`/montagem/${emAndamento.id}`}>

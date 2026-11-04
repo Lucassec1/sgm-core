@@ -17,6 +17,7 @@ import { CirculoBadge } from '@/components/fichas/circulo-badge';
 import { StatusBadge } from '@/components/fichas/status-badge';
 import { FichasFiltros, type FiltrosFichas } from '@/components/fichas/fichas-filtros';
 import { FichasTabsNav } from '@/components/fichas/fichas-tabs-nav';
+import { UploadFotosLoteDialog } from '@/components/fichas/upload-fotos-lote-dialog';
 import { fotoSrc } from '@/lib/utils';
 
 export default function FichasListPage() {
@@ -28,9 +29,12 @@ export default function FichasListPage() {
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">Fichas</h1>
-        <Button asChild>
-          <Link href="/fichas/novo">Nova Ficha</Link>
-        </Button>
+        <div className="flex gap-2">
+          <UploadFotosLoteDialog tipo="jovem" />
+          <Button asChild>
+            <Link href="/fichas/novo">Nova Ficha</Link>
+          </Button>
+        </div>
       </div>
 
       <FichasTabsNav />
@@ -38,7 +42,11 @@ export default function FichasListPage() {
       <FichasFiltros value={filtros} onChange={setFiltros} />
 
       {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
-      {isError && <p className="text-sm text-red-600">Não foi possível carregar as fichas.</p>}
+      {isError && (
+        <p className="text-sm text-red-600 dark:text-red-400">
+          Não foi possível carregar as fichas.
+        </p>
+      )}
 
       {data && (
         <Table>

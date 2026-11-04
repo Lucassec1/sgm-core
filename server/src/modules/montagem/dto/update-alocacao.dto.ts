@@ -13,6 +13,9 @@ export class UpdateAlocacaoDto {
 
   @EmptyToUndefined() @IsOptional() @IsUUID() substituidaPorId?: string;
 
+  // Confirma consciente o aviso de R4 ao convidar antes de a Eq. dos Círculos fechar.
+  @IsOptional() @IsBoolean() confirmarAvisos?: boolean;
+
   // R9 — quem fez a ação, pro log de atividade (sem Auth real ainda, digitado manualmente).
   @IsOptional() @IsString() usuario?: string;
 }

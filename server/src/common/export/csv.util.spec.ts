@@ -32,4 +32,11 @@ describe('toCsv', () => {
     const csv = toCsv(['a', 'b'], [[null, undefined]]);
     expect(csv).toBe('﻿a;b\r\n;');
   });
+
+  it('neutraliza injeção de fórmula em texto (= + - @), sem mexer em número', () => {
+    const csv = toCsv(['a', 'b', 'c', 'd'], [['=HYPERLINK("x")', '@SUM(A1)', '+1', -3]]);
+    expect(csv.replace('\uFEFF', '').split('\r\n')[1]).toBe(
+      '"\'=HYPERLINK(""x"")";\'@SUM(A1);\'+1;-3',
+    );
+  });
 });

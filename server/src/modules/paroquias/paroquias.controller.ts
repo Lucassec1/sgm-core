@@ -3,7 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { RoleUsuario } from '@prisma/client';
 import { ParoquiasService } from './paroquias.service';
 import { CreateParoquiaDto } from './dto/create-paroquia.dto';
-import { ResetCredenciaisDto } from './dto/reset-credenciais.dto';
+import { AlterarEmailParoquiaDto } from './dto/alterar-email-paroquia.dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 
@@ -26,8 +26,13 @@ export class ParoquiasController {
     return this.paroquiasService.create(dto);
   }
 
-  @Patch(':id/credenciais')
-  resetCredenciais(@Param('id') id: string, @Body() dto: ResetCredenciaisDto) {
-    return this.paroquiasService.resetCredenciais(id, dto);
+  @Patch(':id/email')
+  alterarEmail(@Param('id') id: string, @Body() dto: AlterarEmailParoquiaDto) {
+    return this.paroquiasService.alterarEmail(id, dto.email);
+  }
+
+  @Patch(':id/redefinir-acesso')
+  redefinirAcesso(@Param('id') id: string) {
+    return this.paroquiasService.redefinirAcesso(id);
   }
 }

@@ -12,7 +12,11 @@ const MONTAGEM_ID = 'montagem-1';
 
 function criarPrismaMock() {
   const mock: Record<string, unknown> = {
-    montagem: { findUnique: jest.fn().mockResolvedValue({ id: MONTAGEM_ID }) },
+    montagem: {
+      findUnique: jest.fn().mockResolvedValue({ id: MONTAGEM_ID, paroquiaId: 'paroquia-1' }),
+    },
+    ficha: { findFirst: jest.fn().mockResolvedValue({ id: 'ficha-1' }) },
+    fichaCasal: { findFirst: jest.fn().mockResolvedValue({ id: 'casal-1' }) },
     listaSubstituicao: {
       create: jest.fn(),
       findMany: jest.fn(),
@@ -49,6 +53,15 @@ describe('ListaSubstituicaoService', () => {
 
       await expect(
         service.create(MONTAGEM_ID, { tipoPessoa: 'JOVEM', fichaId: 'ficha-1' } as any),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.listaSubstituicao.create).not.toHaveBeenCalled();
+    });
+
+    it('rejeita com 404 ficha de outra paróquia (R7), sem gravar', async () => {
+      prisma.ficha.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.create(MONTAGEM_ID, { tipoPessoa: 'JOVEM', fichaId: 'ficha-alheia' } as any),
       ).rejects.toThrow(NotFoundException);
       expect(prisma.listaSubstituicao.create).not.toHaveBeenCalled();
     });

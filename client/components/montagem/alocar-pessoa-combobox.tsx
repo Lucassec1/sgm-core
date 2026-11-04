@@ -24,20 +24,41 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { ApiError } from '@/lib/api-client';
+import { avisosDoErro } from '@/lib/api-client';
+import { AvisosRegrasDialog } from './avisos-regras-dialog';
+import { BadgeAviso, avisoDeRepeticao } from './aviso-badges';
 import {
+  useCandidatosCasais,
   useCandidatosJovens,
   useCoordenadoresSugeridos,
   useCreateAlocacao,
   useDeleteAlocacao,
 } from '@/lib/hooks/use-montagens';
-import { useFichasCasais } from '@/lib/hooks/use-fichas-casais';
-import type { Alocacao, StatusConvite, VagaMontagem } from '@/lib/types';
+import type { Alocacao, AvisoRegra, StatusConvite, VagaMontagem } from '@/lib/types';
 
-interface RepeticaoConflito {
+interface AvisosPendentes {
   pessoaId: string;
-  message: string;
+  nome: string;
+  avisos: AvisoRegra[];
 }
+
+// Grupo da pessoa na lista: A/B/outros (vaga de Coordenação, R3) ou comum.
+type Grupo = 'A' | 'B' | 'outros' | undefined;
+
+interface Opcao {
+  id: string;
+  nome: string;
+  grupo: Grupo;
+  avaliadoPodeCoordenar?: boolean;
+  recusouNesteEncontro?: boolean;
+  vezesNaEquipe?: number;
+}
+
+const TITULO_GRUPO: Record<'A' | 'B' | 'outros', string> = {
+  A: 'Já serviram nesta equipe',
+  B: 'Já foram Equipe Dirigente / Comando Geral',
+  outros: 'Outras pessoas',
+};
 
 interface MovimentacaoPendente {
   pessoaId: string;
@@ -58,11 +79,12 @@ function statusParaCriar(status?: StatusConvite) {
 // - Se a pessoa já está alocada em OUTRA vaga desse encontro, pede confirmação explícita
 //   antes de mover (mostra de onde pra onde) — depois de confirmado, cria na vaga nova
 //   (preservando o status), remove da antiga, e ainda avisa por Toast com Desfazer.
-// - R2 (repetição de equipe) chega como 409 estruturado e vira um Alert Dialog de confirmação
-//   consciente — essa sim é uma regra imutável, exige decisão explícita.
-// - R1/R3 (bloqueio real) e outros erros chegam como 403/outros e só avisam por toast. Pra
-//   vaga de Coordenação, a busca já mostra só quem pode coordenar (Grupo A/B do R3) — não dá
-//   pra escolher alguém que a regra vai barrar de qualquer jeito.
+// - R1–R3 não bloqueiam nem pedem confirmação (decisão de 14/10/2026): viram badges aqui na
+//   busca (recusou este encontro, Nª vez nesta equipe, nunca serviu nesta equipe, pode
+//   coordenar) e, depois de alocar, na vaga. Só o R4 (mover alguém já convidado antes dos
+//   Círculos fecharem) ainda chega como 409 e pede confirmação (AvisosRegrasDialog).
+// - Vaga de Coordenação (R3): lista em três grupos — já serviu na equipe (avaliados "pode
+//   coordenar" primeiro), já foi ED/Comando Geral, e as demais pessoas.
 // - Sugestões priorizam quem ainda não está em nenhuma equipe desse encontro.
 export function AlocarPessoaCombobox({
   montagemId,
@@ -86,7 +108,7 @@ export function AlocarPessoaCombobox({
   todasAlocacoes: Alocacao[];
 }) {
   const [open, setOpen] = useState(false);
-  const [conflito, setConflito] = useState<RepeticaoConflito | null>(null);
+  const [avisosPendentes, setAvisosPendentes] = useState<AvisosPendentes | null>(null);
   const [movimentacaoPendente, setMovimentacaoPendente] = useState<MovimentacaoPendente | null>(
     null,
   );
@@ -97,9 +119,9 @@ export function AlocarPessoaCombobox({
     montagemId,
     tipoPessoa === 'JOVEM' && !ehCoordenacao ? vagaMontagemId : undefined,
   );
-  const candidatosCasais = useFichasCasais(
-    { situacao: 'ATIVA', pageSize: 200 },
-    { enabled: tipoPessoa === 'CASAL' && !ehCoordenacao },
+  const candidatosCasais = useCandidatosCasais(
+    montagemId,
+    tipoPessoa === 'CASAL' && !ehCoordenacao ? vagaMontagemId : undefined,
   );
   const coordenadores = useCoordenadoresSugeridos(montagemId, ehCoordenacao ? equipeId : undefined);
 
@@ -112,45 +134,43 @@ export function AlocarPessoaCombobox({
     );
   }
 
-  // Vaga de Coordenação: só Grupo A (já serviu nessa equipe) / Grupo B (já foi Equipe
-  // Dirigente/Comando Geral) aparecem — R3 é bloqueio real, não vale oferecer quem a regra
-  // vai barrar de qualquer jeito. Fora disso, lista normal de candidatos da vaga.
-  const opcoesBase = ehCoordenacao
-    ? tipoPessoa === 'JOVEM'
-      ? [
-          ...(coordenadores.data?.grupoA.fichas ?? []).map((f) => ({
-            id: f.id,
-            nome: f.nomeCompleto,
-            grupo: 'A' as const,
-          })),
-          ...(coordenadores.data?.grupoB.fichas ?? []).map((f) => ({
-            id: f.id,
-            nome: f.nomeCompleto,
-            grupo: 'B' as const,
-          })),
-        ]
-      : [
-          ...(coordenadores.data?.grupoA.fichasCasais ?? []).map((c) => ({
-            id: c.id,
-            nome: `${c.nomeEle} e ${c.nomeEla}`,
-            grupo: 'A' as const,
-          })),
-          ...(coordenadores.data?.grupoB.fichasCasais ?? []).map((c) => ({
-            id: c.id,
-            nome: `${c.nomeEle} e ${c.nomeEla}`,
-            grupo: 'B' as const,
-          })),
-        ]
+  const nomeCasal = (c: { nomeEle: string; nomeEla: string }) => `${c.nomeEle} e ${c.nomeEla}`;
+  const grupoCoordenacao = (grupo: 'A' | 'B' | 'outros'): Opcao[] => {
+    const dados =
+      coordenadores.data?.[grupo === 'outros' ? 'outros' : grupo === 'A' ? 'grupoA' : 'grupoB'];
+    return tipoPessoa === 'JOVEM'
+      ? (dados?.fichas ?? []).map((f) => ({
+          id: f.id,
+          nome: f.nomeCompleto,
+          grupo,
+          avaliadoPodeCoordenar: f.avaliadoPodeCoordenar,
+          vezesNaEquipe: f.vezesNaEquipe,
+        }))
+      : (dados?.fichasCasais ?? []).map((c) => ({
+          id: c.id,
+          nome: nomeCasal(c),
+          grupo,
+          avaliadoPodeCoordenar: c.avaliadoPodeCoordenar,
+          vezesNaEquipe: c.vezesNaEquipe,
+        }));
+  };
+
+  const opcoesBase: Opcao[] = ehCoordenacao
+    ? [...grupoCoordenacao('A'), ...grupoCoordenacao('B'), ...grupoCoordenacao('outros')]
     : tipoPessoa === 'JOVEM'
       ? (candidatosJovens.data ?? []).map((f) => ({
           id: f.id,
           nome: f.nomeCompleto,
           grupo: undefined,
+          recusouNesteEncontro: f.recusouNesteEncontro,
+          vezesNaEquipe: f.vezesNaEquipe,
         }))
-      : (candidatosCasais.data?.items ?? []).map((c) => ({
+      : (candidatosCasais.data ?? []).map((c) => ({
           id: c.id,
-          nome: `${c.nomeEle} e ${c.nomeEla}`,
+          nome: nomeCasal(c),
           grupo: undefined,
+          recusouNesteEncontro: c.recusouNesteEncontro,
+          vezesNaEquipe: c.vezesNaEquipe,
         }));
 
   // Quem ainda não está em nenhuma equipe desse encontro aparece primeiro na lista — é
@@ -194,7 +214,7 @@ export function AlocarPessoaCombobox({
     alocar(pessoaId, nome);
   }
 
-  async function alocar(pessoaId: string, nome: string, confirmarRepeticao?: boolean) {
+  async function alocar(pessoaId: string, nome: string, confirmarAvisos?: boolean) {
     const antiga = alocacaoAtualDaPessoa(pessoaId);
 
     try {
@@ -203,9 +223,9 @@ export function AlocarPessoaCombobox({
         tipoPessoa,
         ...(tipoPessoa === 'JOVEM' ? { fichaId: pessoaId } : { fichaCasalId: pessoaId }),
         status: statusParaCriar(antiga?.status),
-        ...(confirmarRepeticao && { confirmarRepeticao }),
+        ...(confirmarAvisos && { confirmarAvisos }),
       });
-      setConflito(null);
+      setAvisosPendentes(null);
       setMovimentacaoPendente(null);
       setOpen(false);
 
@@ -223,9 +243,9 @@ export function AlocarPessoaCombobox({
         });
       }
     } catch (err) {
-      if (err instanceof ApiError && err.status === 409) {
-        const body = err.body as { message?: string };
-        setConflito({ pessoaId, message: body.message ?? err.message });
+      const avisos = avisosDoErro(err);
+      if (avisos) {
+        setAvisosPendentes({ pessoaId, nome, avisos });
         setOpen(false);
         return;
       }
@@ -249,38 +269,38 @@ export function AlocarPessoaCombobox({
           <Command>
             <CommandInput placeholder="Buscar por nome..." />
             <CommandList className="max-h-[360px]">
-              <CommandEmpty>
-                {ehCoordenacao
-                  ? 'Ninguém pode coordenar essa equipe ainda (precisa já ter servido aqui ou sido Equipe Dirigente/Comando Geral).'
-                  : 'Ninguém encontrado.'}
-              </CommandEmpty>
-              <CommandGroup>
-                {opcoes.map((pessoa) => {
-                  const jaAlocadaEm = alocacaoAtualDaPessoa(pessoa.id);
+              <CommandEmpty>Ninguém encontrado.</CommandEmpty>
+              {(ehCoordenacao ? (['A', 'B', 'outros'] as const) : ([undefined] as const)).map(
+                (grupo) => {
+                  const doGrupo = opcoes.filter((p) => p.grupo === grupo);
+                  if (doGrupo.length === 0) return null;
                   return (
-                    <CommandItem
-                      key={pessoa.id}
-                      value={pessoa.nome}
-                      onSelect={() => selecionar(pessoa.id, pessoa.nome)}
-                      className="py-2"
-                    >
-                      <div className="flex flex-col">
-                        <span>{pessoa.nome}</span>
-                        {pessoa.grupo === 'B' && (
-                          <span className="text-xs text-muted-foreground">
-                            Já foi Equipe Dirigente/Comando Geral
-                          </span>
-                        )}
-                        {jaAlocadaEm && (
-                          <span className="text-xs text-muted-foreground">
-                            Já em: {nomeEquipeDaVaga(jaAlocadaEm.vagaMontagemId)}
-                          </span>
-                        )}
-                      </div>
-                    </CommandItem>
+                    <CommandGroup key={grupo ?? 'todos'} heading={grupo && TITULO_GRUPO[grupo]}>
+                      {doGrupo.map((pessoa) => {
+                        const jaAlocadaEm = alocacaoAtualDaPessoa(pessoa.id);
+                        return (
+                          <CommandItem
+                            key={pessoa.id}
+                            value={pessoa.nome}
+                            onSelect={() => selecionar(pessoa.id, pessoa.nome)}
+                            className="py-2"
+                          >
+                            <div className="flex min-w-0 flex-col gap-1">
+                              <span>{pessoa.nome}</span>
+                              <OpcaoBadges pessoa={pessoa} />
+                              {jaAlocadaEm && (
+                                <span className="text-xs text-muted-foreground">
+                                  Já em: {nomeEquipeDaVaga(jaAlocadaEm.vagaMontagemId)}
+                                </span>
+                              )}
+                            </div>
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
                   );
-                })}
-              </CommandGroup>
+                },
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
@@ -312,25 +332,38 @@ export function AlocarPessoaCombobox({
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={!!conflito} onOpenChange={(v) => !v && setConflito(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Essa pessoa já serviu nessa equipe</AlertDialogTitle>
-            <AlertDialogDescription>{conflito?.message}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                const pessoa = opcoes.find((o) => o.id === conflito?.pessoaId);
-                if (conflito && pessoa) alocar(conflito.pessoaId, pessoa.nome, true);
-              }}
-            >
-              Alocar mesmo assim
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AvisosRegrasDialog
+        avisos={avisosPendentes?.avisos ?? null}
+        acao="Alocar mesmo assim"
+        onCancelar={() => setAvisosPendentes(null)}
+        onConfirmar={() => {
+          if (avisosPendentes) alocar(avisosPendentes.pessoaId, avisosPendentes.nome, true);
+        }}
+      />
     </>
+  );
+}
+
+// Badges da pessoa na busca (R1–R3 só informam — decisão de 14/10/2026): o que se vê aqui é o
+// mesmo que vai aparecer na vaga depois de alocar.
+function OpcaoBadges({ pessoa }: { pessoa: Opcao }) {
+  const repeticao = avisoDeRepeticao(pessoa.vezesNaEquipe ?? 0);
+  if (
+    !pessoa.avaliadoPodeCoordenar &&
+    pessoa.grupo !== 'outros' &&
+    !pessoa.recusouNesteEncontro &&
+    !repeticao
+  ) {
+    return null;
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      {pessoa.avaliadoPodeCoordenar && <BadgeAviso nivel="positivo">Pode coordenar</BadgeAviso>}
+      {pessoa.grupo === 'outros' && (
+        <BadgeAviso nivel="grave">Nunca serviu nesta equipe</BadgeAviso>
+      )}
+      {pessoa.recusouNesteEncontro && <BadgeAviso nivel="grave">Recusou este encontro</BadgeAviso>}
+      {repeticao && <BadgeAviso nivel={repeticao.nivel}>{repeticao.rotulo}</BadgeAviso>}
+    </div>
   );
 }

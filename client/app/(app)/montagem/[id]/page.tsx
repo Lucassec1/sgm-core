@@ -30,7 +30,11 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
 
   if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando...</p>;
   if (isError || !montagem)
-    return <p className="p-6 text-sm text-red-600">Não foi possível carregar a montagem.</p>;
+    return (
+      <p className="p-6 text-sm text-red-600 dark:text-red-400">
+        Não foi possível carregar a montagem.
+      </p>
+    );
 
   const gruposPorEquipe = agruparVagasPorEquipe(montagem.vagas);
   const alocacoesPorVaga = new Map<string, Alocacao[]>();
@@ -102,8 +106,8 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
         <TabsContent value="equipes" className="space-y-4">
           {!circulosFechado && (
             <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
-              Aguardando a Eq. dos Círculos fechar (todos aceitos) — as outras equipes já podem ser
-              rascunhadas, mas o convite delas só é liberado depois.
+              A Eq. dos Círculos ainda não fechou (nem todos aceitaram). O costume é convidar as
+              outras equipes depois — dá pra rascunhar já, e convidar antes pede confirmação.
             </div>
           )}
 

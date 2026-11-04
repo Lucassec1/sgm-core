@@ -11,7 +11,7 @@
 - **Radius:** 0.5rem (8px) como padrão — mantém consistência com o kit shadcn que você encontrou na Community.
 - **Paleta base:** zinc/neutral (fundo branco, texto zinc-950, bordas zinc-200, texto secundário zinc-500) — paleta neutra de propósito, porque as cores "com significado" do sistema (cor do círculo, status) já competem bastante por atenção visual; a UI em si fica neutra pra não disputar destaque com essas cores funcionais.
 - **Tema:** claro e escuro, alternável (claro → escuro → automático/SO) pelo botão no header. Implementado com `next-themes` + classe `.dark` no `<html>`; os tokens shadcn (`--background`, `--card`, `--sidebar-*` etc.) têm o par escuro em `app/globals.css`. Escolha do usuário persiste em `localStorage`; sem escolha, segue o SO. O contexto de uso (fim de semana inteiro de tela, período noturno do encontro em salão com pouca luz) torna o escuro mais que estético.
-  - Cores funcionais no escuro: badge de círculo não muda (pílula sólida com hex exato + texto de contraste calculado). Badges de status e caixas de aviso âmbar ganham variante `dark:` (tom `-950` de fundo + texto `-400`/`-200`). Texto de erro de formulário (`text-red-600`, espalhado pelos forms) ainda não tem variante `dark:` — legível, mas é polimento pendente (ver Pendências).
+  - Cores funcionais no escuro: badge de círculo não muda (pílula sólida com hex exato + texto de contraste calculado). Badges de status e caixas de aviso âmbar ganham variante `dark:` (tom `-950` de fundo + texto `-400`/`-200`). Texto de erro (formulários e "Não foi possível carregar X") é sempre `text-red-600 dark:text-red-400` — não `text-destructive`: no escuro o token `--destructive` tem ~30% de luminosidade, pensado pra fundo de botão, e fica ilegível como texto.
 
 ### Cores funcionais (uso restrito, não decorativo)
 
@@ -54,7 +54,8 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 | Visões dentro de uma Montagem                  | Tabs                                                                               | Quadro de Equipes, Lista completa, Convites, Substituições, Quadrantes            |
 | Detalhe de uma equipe                          | Drawer                                                                             | Ao clicar no card de uma equipe                                                   |
 | Pré-visualização rápida de pessoa              | Popover                                                                            | Busca de pessoa na Distribuição                                                   |
-| Confirmações obrigatórias (R1, R2, R3)         | Alert Dialog                                                                       | Distribuição de vaga, Controle de Convites                                        |
+| Avisos de regra (R1, R2, R3)                   | Badge (`AvisoBadges`/`BadgeAviso`) — vermelho grave, âmbar atenção, verde positivo | Busca de pessoa, vaga (Drawer/Lista completa), aba Convites                       |
+| Confirmação de convite antes dos Círculos (R4) | Alert Dialog (`AvisosRegrasDialog`)                                                | Drawer da equipe (Convidar), alocar substituto                                    |
 | Criação de nova montagem/ficha                 | Dialog                                                                             | Nova Montagem, Nova Ficha                                                         |
 | Busca de pessoa para vaga                      | Command (combobox com busca)                                                       | Distribuição de vaga                                                              |
 | Lista de substituição (banco geral de backups) | DataTable/List + Command                                                           | Aba "Substituições" dentro da Montagem                                            |
@@ -71,7 +72,7 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 
 ## 3. Padrões de uso
 
-- **Alert Dialog é reservado pras regras R1-R3** (recusa, limite de 3x, coordenação) — não usar pra confirmações genéricas de UI. Ações reversíveis (como o remanejamento de equipe) usam Toast com Desfazer, não Alert Dialog.
+- **Avisos de R1–R3 são badges, não confirmação** (decisão de 14/10/2026): ficam visíveis na busca e na pessoa alocada, com a explicação no tooltip. **Alert Dialog é reservado ao R4** (convidar antes dos Círculos fecharem — dispara convite em lote) e não deve ser usado pra confirmações genéricas de UI. Ações reversíveis (como o remanejamento de equipe) usam Toast com Desfazer.
 - **Badge de cor do círculo** é sempre a mesma badge, reaproveitada em Lista de Fichas, Distribuição e Popover — consistência visual é o que faz a cor funcionar como atalho de reconhecimento.
 - **Ícone da equipe** (`EquipeIcon`): os PNGs oficiais das 16 equipes do Segue-me, usados pequenos (16–24px) e **sempre ao lado do nome da equipe**, nunca sozinhos — mesma regra do badge de círculo. Mantêm a cor original (num tamanho pequeno não competem com as cores funcionais); a UI ao redor continua neutra. Chave de lookup é o `slug` da `Equipe` (mesmo slug do seed), então o arquivo é `public/equipes/<slug>.png`.
 - **DataTable** é o padrão único pra qualquer listagem — Histórico de Fichas, Histórico de Montagens e Controle de Convites usam a mesma configuração de componente (colunas variam, comportamento não).
@@ -81,6 +82,4 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 
 ## Pendências
 
-- **Polimento do tema escuro nos textos de erro de formulário.** `text-red-600` aparece ~22x nos forms
-  (`ficha-form.tsx`, `ficha-casal-form.tsx`, `nova-montagem-dialog.tsx` etc.) sem variante `dark:`. Fica
-  legível no escuro, mas o ideal é trocar por um token (`text-destructive`) numa passada dedicada.
+Nenhuma no momento. (A última — texto de erro sem variante escura — foi resolvida em 13/10/2026, #77.)

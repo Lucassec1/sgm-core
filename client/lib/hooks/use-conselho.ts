@@ -42,3 +42,29 @@ export function useParoquias() {
     queryFn: () => apiClient.listParoquias(),
   });
 }
+
+// Gestão das contas de paróquia (só Conselho) — invalidam a lista pra status/e-mail atualizarem.
+export function useCriarParoquia() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { nome: string; email: string }) => apiClient.createParoquia(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['paroquias'] }),
+  });
+}
+
+export function useAlterarEmailParoquia() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, email }: { id: string; email: string }) =>
+      apiClient.alterarEmailParoquia(id, email),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['paroquias'] }),
+  });
+}
+
+export function useRedefinirAcessoParoquia() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiClient.redefinirAcessoParoquia(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['paroquias'] }),
+  });
+}

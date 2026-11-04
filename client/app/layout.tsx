@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Providers } from './providers';
 
@@ -8,6 +8,15 @@ export const metadata: Metadata = {
   icons: {
     icon: '/logo-segue-me.png',
   },
+};
+
+// Cor da barra do navegador no celular acompanhando o tema do sistema — mesmos valores de
+// --background (claro/escuro) em globals.css.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#09090b' },
+  ],
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

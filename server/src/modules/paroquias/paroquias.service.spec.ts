@@ -3,23 +3,20 @@ import { ParoquiasService } from './paroquias.service';
 import { PrismaService } from '../../prisma/prisma.service';
 
 function criarPrismaMock() {
+  const tx = {
+    paroquia: { create: jest.fn().mockResolvedValue({ id: 'p1', nome: 'Paróquia X' }) },
+    usuario: { create: jest.fn() },
+  };
   return {
+    tx,
     usuario: {
-      findUnique: jest.fn(),
       findFirst: jest.fn(),
-      create: jest.fn(),
       update: jest.fn(),
     },
-    paroquia: {
-      findMany: jest.fn(),
-      create: jest.fn(),
-    },
-    $transaction: jest.fn((cb: any) =>
-      cb({
-        paroquia: { create: jest.fn().mockResolvedValue({ id: 'p1' }) },
-        usuario: { create: jest.fn() },
-      }),
-    ),
+    paroquia: { findMany: jest.fn() },
+    tokenRedefinicaoSenha: { deleteMany: jest.fn() },
+    // callback (create) roda num client transacional fake; array só aguarda tudo
+    $transaction: jest.fn((arg: any) => (Array.isArray(arg) ? Promise.all(arg) : arg(tx))),
   };
 }
 
@@ -33,61 +30,114 @@ describe('ParoquiasService', () => {
   });
 
   describe('findAll', () => {
-    it('lista paróquias ordenadas por nome, com os usuários PAROQUIA de cada uma', async () => {
-      prisma.paroquia.findMany.mockResolvedValue([{ id: 'p1', nome: 'Paróquia X' }]);
+    it('diz se a conta aguarda o primeiro acesso, sem nunca devolver o hash da senha', async () => {
+      prisma.paroquia.findMany.mockResolvedValue([
+        {
+          id: 'p1',
+          nome: 'Paróquia X',
+          usuarios: [{ id: 'u1', login: 'x@gmail.com', ativo: true, senhaHash: null }],
+        },
+        {
+          id: 'p2',
+          nome: 'Paróquia Y',
+          usuarios: [{ id: 'u2', login: 'y@gmail.com', ativo: true, senhaHash: 'hash' }],
+        },
+      ]);
 
       const resultado = await service.findAll();
 
-      expect(prisma.paroquia.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          orderBy: { nome: 'asc' },
-          include: {
-            usuarios: {
-              where: { role: 'PAROQUIA' },
-              select: { id: true, login: true, ativo: true },
-            },
-          },
-        }),
-      );
-      expect(resultado).toEqual([{ id: 'p1', nome: 'Paróquia X' }]);
+      expect(resultado).toEqual([
+        {
+          id: 'p1',
+          nome: 'Paróquia X',
+          usuarios: [
+            { id: 'u1', login: 'x@gmail.com', ativo: true, aguardandoPrimeiroAcesso: true },
+          ],
+        },
+        {
+          id: 'p2',
+          nome: 'Paróquia Y',
+          usuarios: [
+            { id: 'u2', login: 'y@gmail.com', ativo: true, aguardandoPrimeiroAcesso: false },
+          ],
+        },
+      ]);
+      expect(JSON.stringify(resultado)).not.toContain('hash');
     });
   });
 
   describe('create', () => {
-    it('rejeita login já em uso', async () => {
-      prisma.usuario.findUnique.mockResolvedValue({ id: 'u1' });
-      await expect(
-        service.create({ nome: 'Paróquia X', login: 'existente', senha: 'senha-forte' }),
-      ).rejects.toThrow(ConflictException);
+    it('rejeita e-mail já cadastrado (sem diferenciar maiúsculas)', async () => {
+      prisma.usuario.findFirst.mockResolvedValue({ id: 'existente' });
+      await expect(service.create({ nome: 'X', email: 'X@Gmail.com' })).rejects.toThrow(
+        ConflictException,
+      );
+      expect(prisma.usuario.findFirst).toHaveBeenCalledWith({
+        where: { login: { equals: 'x@gmail.com', mode: 'insensitive' } },
+      });
     });
 
-    it('cria paróquia + usuário numa transação', async () => {
-      prisma.usuario.findUnique.mockResolvedValue(null);
+    it('cria a paróquia e a conta com o e-mail normalizado e SEM senha', async () => {
+      prisma.usuario.findFirst.mockResolvedValue(null);
+
       const paroquia = await service.create({
-        nome: 'Paróquia X',
-        login: 'nova',
-        senha: 'senha-forte',
+        nome: ' Paróquia X ',
+        email: ' ParoquiaX@Gmail.com ',
       });
-      expect(paroquia).toEqual({ id: 'p1' });
-      expect(prisma.$transaction).toHaveBeenCalled();
+
+      expect(paroquia).toEqual({ id: 'p1', nome: 'Paróquia X' });
+      expect(prisma.tx.paroquia.create).toHaveBeenCalledWith({ data: { nome: 'Paróquia X' } });
+      const { data } = prisma.tx.usuario.create.mock.calls[0][0];
+      expect(data).toEqual({ login: 'paroquiax@gmail.com', role: 'PAROQUIA', paroquiaId: 'p1' });
+      expect(data.senhaHash).toBeUndefined();
     });
   });
 
-  describe('resetCredenciais', () => {
-    it('lança NotFoundException se não existir usuário PAROQUIA pra essa paróquia', async () => {
+  describe('alterarEmail', () => {
+    it('lança NotFoundException se a paróquia não tiver conta', async () => {
       prisma.usuario.findFirst.mockResolvedValue(null);
-      await expect(service.resetCredenciais('p1', { senha: 'nova-senha-forte' })).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.alterarEmail('p1', 'novo@gmail.com')).rejects.toThrow(NotFoundException);
     });
 
-    it('atualiza a senha do usuário existente', async () => {
-      prisma.usuario.findFirst.mockResolvedValue({ id: 'u1' });
-      const resultado = await service.resetCredenciais('p1', { senha: 'nova-senha-forte' });
-      expect(resultado).toEqual({ ok: true });
-      expect(prisma.usuario.update).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: 'u1' } }),
+    it('rejeita e-mail que já é de outra conta', async () => {
+      prisma.usuario.findFirst
+        .mockResolvedValueOnce({ id: 'u1', login: 'paroquia-antiga' })
+        .mockResolvedValueOnce({ id: 'u2' });
+      await expect(service.alterarEmail('p1', 'outra@gmail.com')).rejects.toThrow(
+        ConflictException,
       );
+      expect(prisma.usuario.update).not.toHaveBeenCalled();
+    });
+
+    it('troca o login pelo e-mail (migra conta antiga) e invalida links pendentes', async () => {
+      prisma.usuario.findFirst
+        .mockResolvedValueOnce({ id: 'u1', login: 'paroquia-antiga' })
+        .mockResolvedValueOnce(null);
+
+      await service.alterarEmail('p1', ' Nova@Gmail.com ');
+
+      expect(prisma.usuario.update).toHaveBeenCalledWith({
+        where: { id: 'u1' },
+        data: { login: 'nova@gmail.com' },
+      });
+      expect(prisma.tokenRedefinicaoSenha.deleteMany).toHaveBeenCalledWith({
+        where: { usuarioId: 'u1' },
+      });
+    });
+  });
+
+  describe('redefinirAcesso', () => {
+    it('apaga a senha, derruba sessões e volta a conta pro primeiro acesso', async () => {
+      prisma.usuario.findFirst.mockResolvedValue({ id: 'u1' });
+
+      await expect(service.redefinirAcesso('p1')).resolves.toEqual({ ok: true });
+
+      const { where, data } = prisma.usuario.update.mock.calls[0][0];
+      expect(where).toEqual({ id: 'u1' });
+      expect(data).toEqual({ senhaHash: null, ativo: true, senhaAlteradaEm: expect.any(Date) });
+      expect(prisma.tokenRedefinicaoSenha.deleteMany).toHaveBeenCalledWith({
+        where: { usuarioId: 'u1' },
+      });
     });
   });
 });
