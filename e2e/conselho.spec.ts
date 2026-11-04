@@ -57,4 +57,33 @@ test.describe('Conselho e paróquia', () => {
     expect(negada.status()).toBe(404);
     await contextoOutra.close();
   });
+
+  test('Conselho cadastra paróquia só com o e-mail e o primeiro acesso manda o link de criar senha', async ({
+    page,
+    browser,
+  }) => {
+    // nome/e-mail únicos por execução — o banco E2E é reaproveitado entre rodadas locais
+    const sufixo = Date.now();
+    const nome = `Paróquia Primeiro Acesso ${sufixo}`;
+    const email = `paroquia-${sufixo}@e2e.test`;
+    await login(page, 'conselho');
+    await page.getByRole('button', { name: 'Nova paróquia' }).click();
+    await page.getByLabel('Nome').fill(nome);
+    await page.getByLabel('E-mail da paróquia').fill(email);
+    await page.getByRole('button', { name: 'Cadastrar' }).click();
+
+    const card = page.getByRole('group', { name: nome });
+    await expect(card.getByText(email)).toBeVisible();
+    await expect(card.getByText('Aguardando primeiro acesso')).toBeVisible();
+
+    // A paróquia entra só com o e-mail: sem senha ainda, o sistema avisa que mandou o link
+    const contexto = await browser.newContext();
+    const paroquia = await contexto.newPage();
+    await paroquia.goto('/login');
+    await paroquia.getByLabel('E-mail').fill(email);
+    await paroquia.getByRole('button', { name: 'Entrar' }).click();
+    await expect(paroquia.getByRole('status')).toContainText('Primeiro acesso.');
+    await expect(paroquia).toHaveURL(/\/login$/);
+    await contexto.close();
+  });
 });

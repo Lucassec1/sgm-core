@@ -302,13 +302,28 @@ describe('apiClient', () => {
       ['listParoquias', () => apiClient.listParoquias(), { method: 'GET', path: '/paroquias' }],
       [
         'createParoquia',
-        () => apiClient.createParoquia({ nome: 'Sé', login: 'se', senha: '123' }),
+        () => apiClient.createParoquia({ nome: 'Sé', email: 'se@gmail.com' }),
         { method: 'POST', path: '/paroquias' },
       ],
       [
-        'resetCredenciaisParoquia',
-        () => apiClient.resetCredenciaisParoquia('p1', 'nova'),
-        { method: 'PATCH', path: '/paroquias/p1/credenciais' },
+        'alterarEmailParoquia',
+        () => apiClient.alterarEmailParoquia('p1', 'nova@gmail.com'),
+        { method: 'PATCH', path: '/paroquias/p1/email' },
+      ],
+      [
+        'redefinirAcessoParoquia',
+        () => apiClient.redefinirAcessoParoquia('p1'),
+        { method: 'PATCH', path: '/paroquias/p1/redefinir-acesso' },
+      ],
+      [
+        'esqueciSenha',
+        () => apiClient.esqueciSenha('se@gmail.com'),
+        { method: 'POST', path: '/auth/esqueci-senha' },
+      ],
+      [
+        'redefinirSenha',
+        () => apiClient.redefinirSenha('tok', 'novaSenha1'),
+        { method: 'POST', path: '/auth/redefinir-senha' },
       ],
       [
         'conselhoListMontagens',

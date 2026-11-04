@@ -13,7 +13,7 @@ export const CONSELHO_NOME = 'Conselheira E2E';
 export async function login(page: Page, conta: keyof typeof CREDENCIAIS = 'paroquia') {
   const { login: usuario, senha, destino } = CREDENCIAIS[conta];
   await page.goto('/login');
-  await page.getByLabel('Usuário').fill(usuario);
+  await page.getByLabel('E-mail').fill(usuario);
   await page.getByLabel('Senha', { exact: true }).fill(senha);
   await page.getByRole('button', { name: 'Entrar' }).click();
   await expect(page).toHaveURL(destino);

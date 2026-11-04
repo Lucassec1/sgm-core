@@ -69,6 +69,7 @@ describe('JwtAuthGuard', () => {
       sub: 'u1',
       role: 'PAROQUIA',
       paroquiaId: 'p1',
+      emitidoEm: expect.any(Number),
     });
     expect(response.cookie).toHaveBeenCalledWith(
       'sgm_token',

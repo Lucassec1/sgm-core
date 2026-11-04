@@ -48,7 +48,7 @@ export default function RedefinirSenhaPage() {
     if (!token) return;
     try {
       await apiClient.redefinirSenha(token, values.senhaNova);
-      toast.success('Senha redefinida. Entre com a senha nova.');
+      toast.success('Senha criada. Entre com o e-mail e a senha nova.');
       router.replace('/login');
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
@@ -82,9 +82,10 @@ export default function RedefinirSenhaPage() {
   return (
     <AuthLayout>
       <div className="mb-6">
-        <h2 className="text-lg font-semibold">Criar senha nova</h2>
+        <h2 className="text-lg font-semibold">Criar senha</h2>
         <p className="text-sm text-muted-foreground">
-          Mínimo de 8 caracteres. Quem estiver logado com a senha antiga será desconectado.
+          Mínimo de 8 caracteres. Se a conta já tinha senha, quem estiver logado com a antiga será
+          desconectado.
         </p>
       </div>
 

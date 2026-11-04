@@ -48,18 +48,38 @@ describe('JwtStrategy', () => {
     ).rejects.toThrow(UnauthorizedException);
   });
 
-  it('recusa token emitido antes da última troca de senha e aceita os posteriores', async () => {
+  it('recusa token emitido antes da última troca de senha, mesmo no mesmo segundo', async () => {
     const { strategy, prisma } = criarStrategy();
-    const trocaEm = new Date('2026-10-20T12:00:00Z');
-    const trocaSeg = trocaEm.getTime() / 1000;
+    const trocaEm = new Date('2026-10-20T12:00:00.500Z');
     prisma.usuario.findUnique.mockResolvedValue({ ...USUARIO_ATIVO, senhaAlteradaEm: trocaEm });
+    const payload = { sub: 'u1', role: 'PAROQUIA' as const, paroquiaId: 'p1' };
 
+    // 400 ms antes da troca, mesmo segundo — antes passava (comparação em segundos)
     await expect(
-      strategy.validate({ sub: 'u1', role: 'PAROQUIA', paroquiaId: 'p1', iat: trocaSeg - 1 }),
+      strategy.validate({ ...payload, emitidoEm: trocaEm.getTime() - 400 }),
     ).rejects.toThrow(UnauthorizedException);
-    await expect(
-      strategy.validate({ sub: 'u1', role: 'PAROQUIA', paroquiaId: 'p1', iat: trocaSeg }),
-    ).resolves.toEqual({ id: 'u1', role: 'PAROQUIA', paroquiaId: 'p1' });
+    await expect(strategy.validate({ ...payload, emitidoEm: trocaEm.getTime() })).resolves.toEqual({
+      id: 'u1',
+      role: 'PAROQUIA',
+      paroquiaId: 'p1',
+    });
+  });
+
+  it('token antigo sem emitidoEm: usa o iat contando do início do segundo', async () => {
+    const { strategy, prisma } = criarStrategy();
+    const trocaEm = new Date('2026-10-20T12:00:00.500Z');
+    const segundoDaTroca = Math.floor(trocaEm.getTime() / 1000);
+    prisma.usuario.findUnique.mockResolvedValue({ ...USUARIO_ATIVO, senhaAlteradaEm: trocaEm });
+    const payload = { sub: 'u1', role: 'PAROQUIA' as const, paroquiaId: 'p1' };
+
+    await expect(strategy.validate({ ...payload, iat: segundoDaTroca })).rejects.toThrow(
+      UnauthorizedException,
+    );
+    await expect(strategy.validate({ ...payload, iat: segundoDaTroca + 1 })).resolves.toEqual({
+      id: 'u1',
+      role: 'PAROQUIA',
+      paroquiaId: 'p1',
+    });
   });
 
   describe('extractFromCookie (via passport-jwt jwtFromRequest)', () => {

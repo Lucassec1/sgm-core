@@ -44,21 +44,51 @@ describe('LoginPage', () => {
     vi.clearAllMocks();
   });
 
-  it('mostra erro de validação e não chama a API quando os campos estão vazios', async () => {
+  it('mostra erro de validação e não chama a API quando o e-mail está vazio', async () => {
     const user = userEvent.setup();
     renderPage();
 
     await user.click(screen.getByRole('button', { name: 'Entrar' }));
 
-    expect(await screen.findByText('Informe o usuário')).toBeInTheDocument();
-    expect(screen.getByText('Informe a senha')).toBeInTheDocument();
+    expect(await screen.findByText('Informe o e-mail')).toBeInTheDocument();
     expect(apiClient.login).not.toHaveBeenCalled();
+  });
+
+  it('primeiro acesso: avisa que o link de criar senha foi enviado pro e-mail', async () => {
+    (apiClient.login as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new ApiError('Primeiro acesso', 403, { code: 'PRIMEIRO_ACESSO' }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.type(screen.getByLabelText('E-mail'), 'paroquia@gmail.com');
+    await user.click(screen.getByRole('button', { name: 'Entrar' }));
+
+    expect(apiClient.login).toHaveBeenCalledWith('paroquia@gmail.com', '');
+    const aviso = await screen.findByRole('status');
+    expect(aviso).toHaveTextContent('Primeiro acesso.');
+    expect(aviso).toHaveTextContent('paroquia@gmail.com');
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it('conta que já tem senha + senha vazia: pede a senha em vez de "inválidos"', async () => {
+    (apiClient.login as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new ApiError('Unauthorized', 401, { message: 'Unauthorized' }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.type(screen.getByLabelText('E-mail'), 'paroquia@gmail.com');
+    await user.click(screen.getByRole('button', { name: 'Entrar' }));
+
+    expect(await screen.findByText('Informe a senha')).toBeInTheDocument();
+    expect(toast.error).not.toHaveBeenCalled();
   });
 
   it('chama apiClient.login com os valores digitados e redireciona ao ter sucesso', async () => {
     (apiClient.login as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: '1',
-      login: 'paroquia-dev',
+      login: 'paroquia@gmail.com',
       role: 'PAROQUIA',
       nome: null,
       paroquia: null,
@@ -67,12 +97,12 @@ describe('LoginPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.type(screen.getByLabelText('Usuário'), 'paroquia-dev');
+    await user.type(screen.getByLabelText('E-mail'), 'paroquia@gmail.com');
     await user.type(screen.getByLabelText('Senha'), 'senha123');
     await user.click(screen.getByRole('button', { name: 'Entrar' }));
 
     await waitFor(() => {
-      expect(apiClient.login).toHaveBeenCalledWith('paroquia-dev', 'senha123');
+      expect(apiClient.login).toHaveBeenCalledWith('paroquia@gmail.com', 'senha123');
     });
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith('/');
@@ -87,12 +117,12 @@ describe('LoginPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.type(screen.getByLabelText('Usuário'), 'paroquia-dev');
+    await user.type(screen.getByLabelText('E-mail'), 'paroquia@gmail.com');
     await user.type(screen.getByLabelText('Senha'), 'senha-errada');
     await user.click(screen.getByRole('button', { name: 'Entrar' }));
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Login ou senha inválidos.');
+      expect(toast.error).toHaveBeenCalledWith('E-mail ou senha inválidos.');
     });
     expect(pushMock).not.toHaveBeenCalled();
   });

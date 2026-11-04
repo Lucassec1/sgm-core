@@ -1,5 +1,5 @@
 -- AlterTable
-ALTER TABLE "Usuario" ADD COLUMN     "emailRecuperacao" TEXT;
+ALTER TABLE "Usuario" ALTER COLUMN "senhaHash" DROP NOT NULL;
 
 -- CreateTable
 CREATE TABLE "TokenRedefinicaoSenha" (

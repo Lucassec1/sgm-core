@@ -36,18 +36,18 @@ enum RoleUsuario {
 // mais barato de relaxar depois (ex. staging de senha nova) do que reforçar.
 model Usuario {
   id        String      @id @default(uuid())
+  // Conta de paróquia: `login` é o e-mail da paróquia, cadastrado pelo Conselho. Contas antigas
+  // (de antes do login por e-mail) podem ter um nome curto aqui até o Conselho trocar.
   login     String      @unique
-  senhaHash String
+  // Null = conta criada pelo Conselho e ainda sem primeiro acesso: a senha é criada pelo link
+  // que o sistema manda pro e-mail (`login`) — ninguém define senha sem provar que lê esse e-mail.
+  senhaHash String?
   role      RoleUsuario
   nome      String?
   ativo     Boolean     @default(true)
   // Toda sessão emitida antes deste instante é recusada (JwtStrategy) — troca/reset de senha
   // derruba quem estava logado com a senha antiga. Null = nunca alterada.
   senhaAlteradaEm DateTime?
-  // Recuperação de senha por link (/esqueci-senha). Na conta de paróquia deve ser um e-mail da
-  // paróquia, não pessoal de alguém da equipe: quem sai da equipe dirigente não pode continuar
-  // conseguindo recuperar a senha. Reset feito pelo Conselho limpa este campo pelo mesmo motivo.
-  emailRecuperacao String?
 
   paroquiaId String?
   paroquia   Paroquia? @relation(fields: [paroquiaId], references: [id])
@@ -61,7 +61,7 @@ model Usuario {
   @@index([paroquiaId])
 }
 
-// Link de "esqueci a senha" — guarda só o hash (sha256) do token, nunca o token em si: quem
+// Link de criar senha (primeiro acesso) ou redefinir (esqueceu) — guarda só o hash (sha256) do token, nunca o token em si: quem
 // ler o banco não consegue usar um link pendente. Uso único, vale 30 min.
 model TokenRedefinicaoSenha {
   id        String    @id @default(uuid())

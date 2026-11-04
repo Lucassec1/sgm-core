@@ -78,22 +78,27 @@ _Quando o botão voltar, atualize esta seção dizendo onde ele fica._
 
 ## 6. Senhas e acessos
 
-- Cada **paróquia** tem **uma** senha, compartilhada pela equipe dirigente (como uma conta de Drive).
-  Isso significa que o sistema não sabe _qual pessoa_ fez cada alteração; por isso, ao registrar algo na
-  montagem, o nome da pessoa é digitado à mão.
-- **Virou a equipe dirigente?** Peça ao **Conselho** para trocar a senha da paróquia. Quem saiu não deve
-  continuar com acesso. O Conselho faz isso dentro do próprio sistema, sem chamar ninguém técnico.
-- A senha da paróquia também pode ser trocada pela própria equipe, na tela do sistema (opção de trocar senha).
-- **Esqueceu a senha?** Na tela de login, clique em **"Esqueceu a senha?"**: chega um link no **e-mail de
-  recuperação** da conta para criar uma senha nova (vale 30 minutos). Para isso funcionar, a equipe precisa
-  ter cadastrado esse e-mail antes (ícone de envelope no topo do sistema — fica com um ponto amarelo
-  enquanto não houver e-mail). Use um e-mail **da paróquia** (secretaria), não o pessoal de alguém: quem
-  sair da equipe não pode continuar recebendo o link. Sem e-mail cadastrado, só o Conselho redefine.
-- Quando o **Conselho** redefine a senha de uma paróquia, o e-mail de recuperação é apagado (pode ser de
-  quem saiu); a equipe nova cadastra o dela depois de entrar.
-- **Esqueceu a senha da conta do Conselho?** O mesmo "Esqueceu a senha?" funciona, se a pessoa tiver
-  cadastrado o e-mail dela (ícone de envelope). Sem isso, chame a pessoa técnica (a conta inicial do Conselho
-  é criada por ela, por fora do site) em vez de tentar adivinhar a senha várias vezes.
+- Cada **paróquia** tem **uma** conta, compartilhada pela equipe dirigente: o login é o **e-mail da
+  paróquia** (o mesmo do Drive, por exemplo) e a senha é uma só para a equipe. Isso significa que o sistema
+  não sabe _qual pessoa_ fez cada alteração; por isso, ao registrar algo na montagem, o nome da pessoa é
+  digitado à mão.
+- **Quem cadastra a paróquia é o Conselho**, só com o nome e o e-mail — o Conselho nunca vê nem define a
+  senha. Ninguém consegue criar conta sozinho.
+- **Primeiro acesso:** a equipe digita o e-mail da paróquia na tela de login e clica em **Entrar** (sem
+  senha). O sistema manda um link para esse e-mail; abrindo o link, a equipe cria a senha. O link vale 30
+  minutos e só funciona uma vez — se passar do prazo, é só tentar entrar de novo.
+- **Esqueceu a senha?** Na tela de login, clique em **"Primeiro acesso ou esqueceu a senha?"**, digite o
+  e-mail da paróquia e use o link que chegar para criar uma senha nova.
+- A senha também pode ser trocada pela própria equipe, de dentro do sistema (ícone de chave no topo).
+- **Virou a equipe dirigente?** Quem saiu não deve continuar com acesso. Duas coisas:
+  1. **Troque a senha do Gmail da paróquia** e confira o telefone de recuperação dele (não pode ser o
+     celular pessoal de quem saiu). Quem abre esse e-mail consegue criar uma senha nova no sistema.
+  2. Peça ao **Conselho** para **redefinir o acesso** da paróquia (botão na tela do Conselho): a senha
+     antiga deixa de valer, quem estiver logado é desconectado, e a equipe nova faz o primeiro acesso de novo.
+- **E-mail da paróquia mudou?** O Conselho troca, na mesma tela ("Trocar e-mail"). A senha continua a mesma.
+- **Esqueceu a senha da conta do Conselho?** Se o login da conta for um e-mail, o mesmo "esqueceu a senha"
+  funciona. Se não for, chame a pessoa técnica (a conta inicial do Conselho é criada por ela, por fora do
+  site) em vez de tentar adivinhar a senha várias vezes.
 - Nunca mande a senha por mensagem sem apagar depois, e nunca a coloque em grupo grande.
 
 ## 7. O que NÃO fazer sozinho

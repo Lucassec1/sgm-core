@@ -69,10 +69,11 @@ comportamento em produção** e por isso merece atenção:
 - **`DATABASE_URL`** do Neon (a connection string do painel deles).
 - **`AWS_REGION`, `S3_BUCKET_NAME`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`** — usuário IAM com
   acesso _só_ àquele bucket.
-- **`EMAIL_REMETENTE`** — remetente do e-mail de "Esqueceu a senha?" (ex.:
+- **`EMAIL_REMETENTE`** — remetente do e-mail com o link de criar/redefinir senha (ex.:
   `SGM Core <nao-responda@seudominio.org>`), enviado pelo **Amazon SES** com as mesmas credenciais
-  AWS do S3. **Sem ela, o link de recuperação nunca chega** — a tela diz "enviamos", mas o server só
-  registra erro no log. Para funcionar:
+  AWS do S3. **Obrigatória na prática:** paróquia nova só cria a senha por esse link (primeiro acesso),
+  então sem ela **nenhuma paróquia nova consegue entrar** e ninguém recupera senha — a tela diz
+  "enviamos", mas o server só registra erro no log. Para funcionar:
   1. No SES (mesma região do `AWS_REGION`, ou defina `SES_REGION`), verificar a identidade do
      remetente — de preferência um **domínio** (registros DKIM no DNS). Um e-mail avulso (Gmail etc.)
      até verifica, mas cai no spam ou é rejeitado pelos provedores.
@@ -131,7 +132,10 @@ SEED_CONSELHO_LOGIN=... SEED_CONSELHO_SENHA='...' SEED_CONSELHO_NOME='...' \
   npm run prisma:seed:bootstrap-conselho
 ```
 
-Depois, essa conta cria as demais (Conselho e credenciais de paróquia) pela interface.
+Depois, essa conta cadastra as paróquias pela interface (nome + e-mail da paróquia; a paróquia cria a
+senha no primeiro acesso). Contas de paróquia antigas, com login que não é e-mail (ex.: `paroquia-x`),
+continuam entrando com a senha atual — mas o Conselho deve trocar o login pelo e-mail da paróquia
+("Trocar e-mail") pra ela conseguir recuperar a senha sozinha. A tela do Conselho marca essas contas.
 
 ## 7. Limites do plano gratuito — o que confirmar nos painéis
 

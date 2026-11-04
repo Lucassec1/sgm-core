@@ -11,6 +11,8 @@ interface JwtPayload {
   role: UsuarioAutenticado['role'];
   paroquiaId: string | null;
   iat?: number;
+  // Momento da emissão em ms (o `iat` padrão é em segundos) — ver validate().
+  emitidoEm?: number;
 }
 
 // Lê o token do cookie httpOnly (sgm_token), não do header Authorization — decisão de produto:
@@ -43,11 +45,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!usuario || !usuario.ativo) {
       throw new UnauthorizedException();
     }
-    // `iat` tem precisão de segundo; um token emitido no mesmo segundo da troca ainda vale.
-    if (
-      usuario.senhaAlteradaEm &&
-      (payload.iat ?? 0) < Math.floor(usuario.senhaAlteradaEm.getTime() / 1000)
-    ) {
+    // Compara em ms: com o `iat` (segundos), uma sessão iniciada no mesmo segundo da troca ou
+    // do reset sobrevivia a ele. Token antigo, sem `emitidoEm`, conta como emitido no início do
+    // segundo do `iat` (lado seguro).
+    const emitidoEm = payload.emitidoEm ?? (payload.iat ?? 0) * 1000;
+    if (usuario.senhaAlteradaEm && emitidoEm < usuario.senhaAlteradaEm.getTime()) {
       throw new UnauthorizedException();
     }
     return { id: usuario.id, role: usuario.role, paroquiaId: usuario.paroquiaId };
