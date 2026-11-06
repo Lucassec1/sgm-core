@@ -3,6 +3,8 @@ import { EquipesController } from './equipes.controller';
 import { EquipesService } from './equipes.service';
 import { MontagensController } from './montagens.controller';
 import { MontagensService } from './montagens.service';
+import { SugestoesMontagemService } from './sugestoes-montagem.service';
+import { ResumoMontagemService } from './resumo-montagem.service';
 import { AlocacoesController } from './alocacoes.controller';
 import { AlocacoesService } from './alocacoes.service';
 import { ListaSubstituicaoController } from './lista-substituicao.controller';
@@ -22,6 +24,8 @@ import { QuadrantesService } from './quadrantes.service';
   providers: [
     EquipesService,
     MontagensService,
+    SugestoesMontagemService,
+    ResumoMontagemService,
     AlocacoesService,
     ListaSubstituicaoService,
     LogAtividadeService,
