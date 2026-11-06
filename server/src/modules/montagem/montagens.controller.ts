@@ -2,6 +2,8 @@ import { Body, Controller, Get, Param, Patch, Post, Query, Res, UseGuards } from
 import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { MontagensService } from './montagens.service';
+import { SugestoesMontagemService } from './sugestoes-montagem.service';
+import { ResumoMontagemService } from './resumo-montagem.service';
 import { CreateMontagemDto } from './dto/create-montagem.dto';
 import { UpdateMontagemDto } from './dto/update-montagem.dto';
 import { QueryMontagensDto } from './dto/query-montagens.dto';
@@ -12,7 +14,11 @@ import { ParoquiaAtual } from '../../common/decorators/paroquia-atual.decorator'
 @ApiTags('montagens')
 @Controller('montagens')
 export class MontagensController {
-  constructor(private readonly montagensService: MontagensService) {}
+  constructor(
+    private readonly montagensService: MontagensService,
+    private readonly sugestoesService: SugestoesMontagemService,
+    private readonly resumoService: ResumoMontagemService,
+  ) {}
 
   @Post()
   create(@Body() dto: CreateMontagemDto, @ParoquiaAtual() paroquiaId: string) {
@@ -44,7 +50,7 @@ export class MontagensController {
     @Param('equipeId') equipeId: string,
     @ParoquiaAtual() paroquiaId: string,
   ) {
-    return this.montagensService.coordenadoresSugeridos(id, equipeId, paroquiaId);
+    return this.sugestoesService.coordenadoresSugeridos(id, equipeId, paroquiaId);
   }
 
   @Get(':id/candidatos-jovens')
@@ -53,7 +59,7 @@ export class MontagensController {
     @ParoquiaAtual() paroquiaId: string,
     @Query('vagaMontagemId') vagaMontagemId?: string,
   ) {
-    return this.montagensService.candidatosJovens(id, paroquiaId, vagaMontagemId);
+    return this.sugestoesService.candidatosJovens(id, paroquiaId, vagaMontagemId);
   }
 
   @Get(':id/candidatos-casais')
@@ -62,22 +68,22 @@ export class MontagensController {
     @ParoquiaAtual() paroquiaId: string,
     @Query('vagaMontagemId') vagaMontagemId?: string,
   ) {
-    return this.montagensService.candidatosCasais(id, paroquiaId, vagaMontagemId);
+    return this.sugestoesService.candidatosCasais(id, paroquiaId, vagaMontagemId);
   }
 
   @Get(':id/log')
   listarLog(@Param('id') id: string, @ParoquiaAtual() paroquiaId: string) {
-    return this.montagensService.listarLog(id, paroquiaId);
+    return this.resumoService.listarLog(id, paroquiaId);
   }
 
   @Get(':id/observacoes')
   listarObservacoes(@Param('id') id: string, @ParoquiaAtual() paroquiaId: string) {
-    return this.montagensService.listarObservacoes(id, paroquiaId);
+    return this.resumoService.listarObservacoes(id, paroquiaId);
   }
 
   @Get(':id/resumo')
   resumo(@Param('id') id: string, @ParoquiaAtual() paroquiaId: string) {
-    return this.montagensService.resumo(id, paroquiaId);
+    return this.resumoService.resumo(id, paroquiaId);
   }
 
   @Get(':id/export')
