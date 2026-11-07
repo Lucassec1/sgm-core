@@ -45,15 +45,13 @@ describe('ObservacoesConselhoCard', () => {
     render(<ObservacoesConselhoCard montagemId="m1" />);
 
     expect(screen.getByText('Observações do Conselho')).toBeInTheDocument();
-    expect(
-      screen.getByText('2 observações registradas pelo Conselho nesta montagem.'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('2 observações')).toBeInTheDocument();
     const textos = screen
       .getAllByText(/Rever coordenação|Montagem bem equilibrada/)
       .map((e) => e.textContent);
     expect(textos).toEqual(['Rever coordenação da Cozinha', 'Montagem bem equilibrada']);
-    expect(screen.getByText(/^Ana ·/)).toBeInTheDocument();
-    expect(screen.getByText(/^Conselho ·/)).toBeInTheDocument();
+    expect(screen.getByText('Ana')).toBeInTheDocument();
+    expect(screen.getByText('Conselho')).toBeInTheDocument();
   });
 
   it('busca as observações da montagem certa', () => {

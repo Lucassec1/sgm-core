@@ -8,9 +8,12 @@ import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api-client';
 import { useDeleteQuadrante, useQuadrantes, useUploadQuadrante } from '@/lib/hooks/use-montagens';
 
+const NUMERO = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
+
+// Espaço não separável entre número e unidade ("1,4 MB" não quebra no meio).
 function formatarTamanho(bytes: number) {
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)}\u00a0KB`;
+  return `${NUMERO.format(bytes / (1024 * 1024))}\u00a0MB`;
 }
 
 // Aba Quadrantes (docs/requisitos.md, 2.3) — só anexo de PDF da Eq. da Gráfica, sem campos
@@ -61,7 +64,7 @@ export function QuadrantesSection({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <p className="max-w-md text-sm text-muted-foreground">
-          PDFs dos quadrantes da Equipe da Gráfica. Só anexo — sem campos pra preencher.
+          PDFs dos quadrantes da Equipe da Gráfica, guardados junto da montagem.
         </p>
         {!readOnly && (
           <>
@@ -79,15 +82,17 @@ export function QuadrantesSection({
               onClick={() => inputRef.current?.click()}
             >
               <Upload className="h-3.5 w-3.5" />
-              {enviando ? 'Enviando...' : 'Enviar PDF'}
+              {enviando ? 'Enviando…' : 'Enviar PDF'}
             </Button>
           </>
         )}
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
       {arquivos && arquivos.length === 0 && (
-        <p className="text-sm text-muted-foreground">Nenhum quadrante anexado ainda.</p>
+        <p className="text-sm text-muted-foreground">
+          Nenhum quadrante enviado. Quando a Equipe da Gráfica tiver os PDFs, envie aqui.
+        </p>
       )}
 
       {arquivos && arquivos.length > 0 && (

@@ -50,9 +50,11 @@ export function LogAtividadeDrawer({ montagemId }: { montagemId: string }) {
         </SheetHeader>
 
         <div className="mt-6">
-          {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
+          {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
           {log && log.length === 0 && (
-            <p className="text-sm text-muted-foreground">Nenhuma atividade ainda.</p>
+            <p className="text-sm text-muted-foreground">
+              Nenhuma alteração registrada nesta montagem.
+            </p>
           )}
           {log && log.length > 0 && (
             <ol className="space-y-3">

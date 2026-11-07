@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CirculoBadge } from '@/components/fichas/circulo-badge';
 import { useHistoricoEquipes } from '@/lib/hooks/use-fichas';
 import { useHistoricoEquipesCasal } from '@/lib/hooks/use-fichas-casais';
-import { fotoSrc } from '@/lib/utils';
+import { fotoSrc, iniciais } from '@/lib/utils';
 import type { Ficha, FichaCasal, HistoricoEquipeItem } from '@/lib/types';
 
 export interface ResumoHistorico {
@@ -43,7 +43,7 @@ export function resumirHistorico(itens: HistoricoEquipeItem[]): ResumoHistorico 
 }
 
 function HistoricoResumo({ itens }: { itens: HistoricoEquipeItem[] | undefined }) {
-  if (!itens) return <p className="text-xs text-muted-foreground">Carregando histórico...</p>;
+  if (!itens) return <p className="text-xs text-muted-foreground">Carregando histórico…</p>;
 
   const resumo = resumirHistorico(itens);
   if (resumo.vezesServidas === 0) {
@@ -64,18 +64,12 @@ function HistoricoResumo({ itens }: { itens: HistoricoEquipeItem[] | undefined }
       {(resumo.podeCoordenar.length > 0 || resumo.podePalestrar) && (
         <div className="flex flex-wrap gap-1">
           {resumo.podeCoordenar.length > 0 && (
-            <Badge
-              variant="outline"
-              className="border-transparent bg-green-50 text-green-700 font-medium dark:bg-green-950 dark:text-green-400"
-            >
+            <Badge variant="sucesso" className="font-medium">
               Pode coordenar: {resumo.podeCoordenar.join(', ')}
             </Badge>
           )}
           {resumo.podePalestrar && (
-            <Badge
-              variant="outline"
-              className="border-transparent bg-blue-50 text-blue-700 font-medium dark:bg-blue-950 dark:text-blue-400"
-            >
+            <Badge variant="sucesso" className="font-medium">
               Pode palestrar
             </Badge>
           )}
@@ -128,7 +122,7 @@ export function PessoaPreviewPopover({
             <div className="flex items-center gap-3">
               <Avatar>
                 <AvatarImage src={fotoSrc(ficha.fotoUrl)} alt={ficha.nomeCompleto} />
-                <AvatarFallback>{ficha.nomeCompleto.slice(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback>{iniciais(ficha.nomeCompleto)}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm font-medium leading-tight">{ficha.nomeCompleto}</p>
@@ -150,7 +144,7 @@ export function PessoaPreviewPopover({
             <div className="flex items-center gap-3">
               <Avatar>
                 <AvatarImage src={fotoSrc(fichaCasal.fotoUrl)} alt={fichaCasal.nomeEle} />
-                <AvatarFallback>{fichaCasal.nomeEle.slice(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback>{iniciais(fichaCasal.nomeEle, fichaCasal.nomeEla)}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm font-medium leading-tight">

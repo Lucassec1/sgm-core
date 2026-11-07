@@ -14,15 +14,9 @@ import { AvisoBadges } from './aviso-badges';
 import { AlocarPessoaCombobox } from './alocar-pessoa-combobox';
 import { PessoaPreviewPopover } from './pessoa-preview-popover';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
+import { nomeAlocacao } from '@/lib/montagem';
 
 const STATUS_INATIVO = ['RECUSADO', 'DESISTIU', 'SUBSTITUIDO'];
-
-function nomeAlocacao(alocacao: Alocacao) {
-  return (
-    alocacao.ficha?.nomeCompleto ??
-    (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : '—')
-  );
-}
 
 function plural(n: number, singular: string, plural: string) {
   return `${n} ${n === 1 ? singular : plural}`;
@@ -51,7 +45,7 @@ function LinhaAlocacao({
   return (
     <li className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm">
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-        <div className="min-w-0 truncate">
+        <div className="min-w-0 truncate" title={nomeAlocacao(alocacao)}>
           <PessoaPreviewPopover ficha={alocacao.ficha} fichaCasal={alocacao.fichaCasal}>
             {nomeAlocacao(alocacao)}
           </PessoaPreviewPopover>
@@ -67,8 +61,12 @@ function LinhaAlocacao({
             {/* Cargo de Coordenação (inclusive Comandantes Gerais/Jovens do Comando Geral) não
                 passa por avaliação aqui — pra chegar nesse cargo a pessoa já foi habilitada
                 antes (R3, Grupo A/B), não faz sentido perguntar de novo. */}
-            {alocacao.status === 'ACEITO' && !vaga.cargo.ehCoordenacao && (
+            {alocacao.status === 'ACEITO' && !vaga.cargo.ehCoordenacao ? (
               <AlocacaoAvaliacaoPopover montagemId={montagemId} alocacao={alocacao} />
+            ) : (
+              // Reserva o lugar do ícone de avaliação: sem isso, status e ações mudam de coluna
+              // de uma linha pra outra na lista.
+              <span aria-hidden className="h-6 w-6 shrink-0" />
             )}
             <Button
               variant="ghost"
@@ -148,11 +146,7 @@ export function VagaAlocacoes({
   const blocoJovens = (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        {misto && (
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Jovens
-          </h4>
-        )}
+        {misto && <h4 className="text-xs font-bold text-muted-foreground">Jovens</h4>}
         {contagem(
           jovensPreenchidas,
           jovens.total,
@@ -196,11 +190,7 @@ export function VagaAlocacoes({
   const blocoCasais = (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        {misto && (
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Casais
-          </h4>
-        )}
+        {misto && <h4 className="text-xs font-bold text-muted-foreground">Casais</h4>}
         {contagem(casaisPreenchidas, casais.total, faltamCasais)}
       </div>
       {casais.ativas.length > 0 && (

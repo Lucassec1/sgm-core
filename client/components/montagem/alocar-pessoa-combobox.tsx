@@ -267,7 +267,7 @@ export function AlocarPessoaCombobox({
         </PopoverTrigger>
         <PopoverContent className="w-96 p-0" align="start">
           <Command>
-            <CommandInput placeholder="Buscar por nome..." />
+            <CommandInput placeholder="Buscar por nome…" />
             <CommandList className="max-h-[360px]">
               <CommandEmpty>Ninguém encontrado.</CommandEmpty>
               {(ehCoordenacao ? (['A', 'B', 'outros'] as const) : ([undefined] as const)).map(

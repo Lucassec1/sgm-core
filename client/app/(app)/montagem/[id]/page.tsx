@@ -1,12 +1,8 @@
 'use client';
 
 import { use, useState } from 'react';
-import Link from 'next/link';
-import { Presentation } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAlocacoes, useMontagem } from '@/lib/hooks/use-montagens';
+import { useAlocacoes, useListaSubstituicao, useMontagem } from '@/lib/hooks/use-montagens';
 import { agruparVagasPorEquipe } from '@/lib/utils';
 import { ControleConvitesSection } from '@/components/montagem/controle-convites-section';
 import { EditarTamanhoEncontroDialog } from '@/components/montagem/editar-tamanho-encontro-dialog';
@@ -15,24 +11,28 @@ import { EquipeDrawer } from '@/components/montagem/equipe-drawer';
 import { FinalizarMontagemButton } from '@/components/montagem/finalizar-montagem-button';
 import { ListaCompletaEquipes } from '@/components/montagem/lista-completa-equipes';
 import { ListaSubstituicaoSection } from '@/components/montagem/lista-substituicao-section';
+import { DesistenciasSection } from '@/components/montagem/desistencias-section';
+import { ForaDaMontagemSection } from '@/components/montagem/fora-da-montagem-section';
 import { LogAtividadeDrawer } from '@/components/montagem/log-atividade-drawer';
 import { ObservacoesConselhoCard } from '@/components/montagem/observacoes-conselho-card';
 import { OfflineBanner } from '@/components/montagem/offline-banner';
-import { QuadrantesSection } from '@/components/montagem/quadrantes-section';
 import { ResumoEncontroCard } from '@/components/montagem/resumo-encontro-card';
 import type { Alocacao } from '@/lib/types';
+import { MontagemStatusBadge } from '@/components/montagem/montagem-status-badge';
+import { MetaLista, PageHeader } from '@/components/page-header';
 
 export default function MontagemDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: montagem, isLoading, isError } = useMontagem(id);
   const { data: alocacoes } = useAlocacoes(id);
+  const { data: listaSubstituicao } = useListaSubstituicao(id);
   const [equipeSelecionadaId, setEquipeSelecionadaId] = useState<string | null>(null);
 
-  if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando...</p>;
+  if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando…</p>;
   if (isError || !montagem)
     return (
       <p className="p-6 text-sm text-red-600 dark:text-red-400">
-        Não foi possível carregar a montagem.
+        Não foi possível carregar a montagem. Confira a conexão e recarregue a página.
       </p>
     );
 
@@ -56,61 +56,55 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
     <div className="p-6 space-y-6">
       <OfflineBanner />
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold">{montagem.numeroEncontro}º Encontro</h1>
-          <p className="text-sm text-muted-foreground">
-            {new Date(montagem.data).toLocaleDateString('pt-BR')}
-            {montagem.padroeiro && ` · ${montagem.padroeiro}`} · {montagem.numeroJovensVivenciando}{' '}
-            jovens vivenciando
-            {montagem.ehImplantacao &&
-              ` (implantação${montagem.paroquiaAfilhadaNome ? ` — ${montagem.paroquiaAfilhadaNome}` : ''})`}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={montagem.status === 'EM_ANDAMENTO' ? 'default' : 'outline'}>
-            {montagem.status === 'EM_ANDAMENTO' ? 'Em andamento' : 'Finalizada'}
-          </Badge>
-          <Button variant="outline" size="sm" className="gap-1.5" asChild>
-            <Link href={`/montagem/${id}/telao`} target="_blank">
-              <Presentation className="h-3.5 w-3.5" />
-              Modo telão
-            </Link>
-          </Button>
-          <LogAtividadeDrawer montagemId={id} />
-          {montagem.status === 'EM_ANDAMENTO' && (
-            <EditarTamanhoEncontroDialog montagem={montagem} />
-          )}
-          <FinalizarMontagemButton
-            montagemId={id}
-            status={montagem.status}
-            gruposPorEquipe={gruposPorEquipe}
-            alocacoesPorVaga={alocacoesPorVaga}
+      <PageHeader
+        title={
+          <span className="flex flex-wrap items-center gap-2">
+            {montagem.numeroEncontro}º Encontro
+            <MontagemStatusBadge status={montagem.status} />
+          </span>
+        }
+        description={
+          <MetaLista
+            itens={[
+              new Date(montagem.data).toLocaleDateString('pt-BR'),
+              montagem.padroeiro,
+              `${montagem.numeroJovensVivenciando} jovens vivenciando`,
+              montagem.ehImplantacao &&
+                `Implantação${montagem.paroquiaAfilhadaNome ? ` de ${montagem.paroquiaAfilhadaNome}` : ''}`,
+            ]}
           />
-        </div>
-      </div>
+        }
+        actions={
+          <>
+            <LogAtividadeDrawer montagemId={id} />
+            {montagem.status === 'EM_ANDAMENTO' && (
+              <EditarTamanhoEncontroDialog montagem={montagem} />
+            )}
+            <FinalizarMontagemButton
+              montagemId={id}
+              status={montagem.status}
+              gruposPorEquipe={gruposPorEquipe}
+              alocacoesPorVaga={alocacoesPorVaga}
+            />
+          </>
+        }
+      />
 
       {montagem.status === 'FINALIZADA' && <ResumoEncontroCard montagemId={id} />}
 
       <ObservacoesConselhoCard montagemId={id} />
 
       <Tabs defaultValue="equipes">
-        <TabsList>
-          <TabsTrigger value="equipes">Quadro de Equipes</TabsTrigger>
-          <TabsTrigger value="lista">Lista completa</TabsTrigger>
-          <TabsTrigger value="convites">Convites</TabsTrigger>
-          <TabsTrigger value="substituicoes">Substituições</TabsTrigger>
-          <TabsTrigger value="quadrantes">Quadrantes</TabsTrigger>
-        </TabsList>
+        <div className="-mx-6 overflow-x-auto px-6">
+          <TabsList className="w-max">
+            <TabsTrigger value="equipes">Quadro de equipes</TabsTrigger>
+            <TabsTrigger value="lista">Lista completa</TabsTrigger>
+            <TabsTrigger value="convites">Convites</TabsTrigger>
+            <TabsTrigger value="substituicoes">Substituições</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="equipes" className="space-y-4">
-          {!circulosFechado && (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
-              A Eq. dos Círculos ainda não fechou (nem todos aceitaram). O costume é convidar as
-              outras equipes depois — dá pra rascunhar já, e convidar antes pede confirmação.
-            </div>
-          )}
-
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {gruposPorEquipe.map((vagas) => (
               <EquipeCard
@@ -136,20 +130,26 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
         </TabsContent>
 
         <TabsContent value="convites">
-          <ControleConvitesSection
-            montagemId={id}
-            alocacoes={alocacoes ?? []}
-            todasVagas={montagem.vagas}
-            readOnly={montagem.status === 'FINALIZADA'}
-          />
+          <ControleConvitesSection alocacoes={alocacoes ?? []} />
         </TabsContent>
 
         <TabsContent value="substituicoes">
-          <ListaSubstituicaoSection montagemId={id} readOnly={montagem.status === 'FINALIZADA'} />
-        </TabsContent>
-
-        <TabsContent value="quadrantes">
-          <QuadrantesSection montagemId={id} readOnly={montagem.status === 'FINALIZADA'} />
+          <div className="space-y-10">
+            <ListaSubstituicaoSection montagemId={id} readOnly={montagem.status === 'FINALIZADA'} />
+            {montagem.status !== 'FINALIZADA' && (
+              <DesistenciasSection
+                montagemId={id}
+                alocacoes={alocacoes ?? []}
+                todasVagas={montagem.vagas}
+              />
+            )}
+            <ForaDaMontagemSection
+              montagemId={id}
+              alocacoes={alocacoes ?? []}
+              lista={listaSubstituicao ?? []}
+              readOnly={montagem.status === 'FINALIZADA'}
+            />
+          </div>
         </TabsContent>
       </Tabs>
 
