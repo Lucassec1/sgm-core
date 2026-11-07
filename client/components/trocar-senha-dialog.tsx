@@ -1,10 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -15,7 +13,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,9 +33,14 @@ export const trocarSenhaSchema = z
 
 type TrocarSenhaFormValues = z.infer<typeof trocarSenhaSchema>;
 
-export function TrocarSenhaDialog() {
-  const [open, setOpen] = useState(false);
-
+// Aberto pelo menu da conta (ContaMenu) — o estado de aberto/fechado fica com quem abre.
+export function TrocarSenhaDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (aberto: boolean) => void;
+}) {
   const {
     register,
     handleSubmit,
@@ -50,7 +52,7 @@ export function TrocarSenhaDialog() {
     try {
       await apiClient.alterarSenha(values.senhaAtual, values.senhaNova);
       toast.success('Senha alterada.');
-      setOpen(false);
+      onOpenChange(false);
       reset();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -65,15 +67,10 @@ export function TrocarSenhaDialog() {
     <Dialog
       open={open}
       onOpenChange={(v) => {
-        setOpen(v);
+        onOpenChange(v);
         if (!v) reset();
       }}
     >
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" title="Trocar senha" aria-label="Trocar senha">
-          <KeyRound className="h-[1.1rem] w-[1.1rem]" />
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>

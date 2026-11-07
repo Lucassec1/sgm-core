@@ -3,7 +3,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, UserRound, Users } from 'lucide-react';
+import { FileText, LayoutGrid, UserRound, Users } from 'lucide-react';
+
+import { ContaMenu } from '@/components/conta-menu';
 
 import {
   Sidebar,
@@ -11,6 +13,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -86,10 +89,25 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith('/quadrantes')}
+                  tooltip="Quadrantes"
+                >
+                  <Link href="/quadrantes">
+                    <FileText />
+                    <span>Quadrantes</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <ContaMenu variante="barra-lateral" />
+      </SidebarFooter>
     </Sidebar>
   );
 }

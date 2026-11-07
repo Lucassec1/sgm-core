@@ -13,25 +13,21 @@ import {
   useCriarObservacao,
 } from '@/lib/hooks/use-conselho';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
+import { MetaLista, PageHeader } from '@/components/page-header';
+import { nomeAlocacao } from '@/lib/montagem';
 
 // Visão read-only do Conselho (R8) — mostra TODOS os status de alocação (não só ACEITO, ao
-// contrário do modo Telão, que é público e só mostra quem já aceitou de fato).
-function nomeAlocacao(alocacao: Alocacao) {
-  return (
-    alocacao.ficha?.nomeCompleto ??
-    (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : '—')
-  );
-}
+// diferença do quadro da paróquia, aqui não há edição — só leitura e observações).
 
 export default function ConselhoMontagemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: montagem, isLoading, isError } = useConselhoMontagem(id);
 
-  if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando...</p>;
+  if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando…</p>;
   if (isError || !montagem)
     return (
       <p className="p-6 text-sm text-red-600 dark:text-red-400">
-        Não foi possível carregar a montagem.
+        Não foi possível carregar a montagem. Confira a conexão e recarregue a página.
       </p>
     );
 
@@ -39,15 +35,18 @@ export default function ConselhoMontagemPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 p-6">
-      <div>
-        <h1 className="text-lg font-semibold">
-          {montagem.paroquia.nome} · {montagem.numeroEncontro}º Encontro
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {new Date(montagem.data).toLocaleDateString('pt-BR')}
-          {montagem.padroeiro && ` · ${montagem.padroeiro}`}
-        </p>
-      </div>
+      <PageHeader
+        title={`${montagem.numeroEncontro}º Encontro`}
+        description={
+          <MetaLista
+            itens={[
+              montagem.paroquia.nome,
+              new Date(montagem.data).toLocaleDateString('pt-BR'),
+              montagem.padroeiro,
+            ]}
+          />
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {gruposPorEquipe.map((vagas) => (
@@ -82,7 +81,7 @@ function BlocoEquipe({ vagas }: { vagas: (VagaMontagem & { alocacoes: Alocacao[]
                 {vaga.alocacoes.map((alocacao) => (
                   <Badge
                     key={alocacao.id}
-                    variant={alocacao.status === 'ACEITO' ? 'default' : 'secondary'}
+                    variant={alocacao.status === 'ACEITO' ? 'sucesso' : 'neutro'}
                   >
                     {nomeAlocacao(alocacao)}
                   </Badge>
@@ -98,7 +97,7 @@ function BlocoEquipe({ vagas }: { vagas: (VagaMontagem & { alocacoes: Alocacao[]
   );
 }
 
-// R8 — "pode deixar observações... toda observação exibe o nome de quem a registrou". O nome
+// R8 — "pode deixar observações… toda observação exibe o nome de quem a registrou". O nome
 // nunca é digitado aqui: vem sempre do backend, a partir de quem está autenticado.
 function ObservacoesPanel({ montagemId }: { montagemId: string }) {
   const { data: observacoes, isLoading } = useConselhoObservacoes(montagemId);
@@ -110,7 +109,7 @@ function ObservacoesPanel({ montagemId }: { montagemId: string }) {
       <h2 className="text-sm font-semibold">Observações do Conselho</h2>
 
       <div className="space-y-3">
-        {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
         {observacoes?.map((observacao) => (
           <div key={observacao.id} className="text-sm">
             <p>{observacao.texto}</p>
@@ -127,7 +126,7 @@ function ObservacoesPanel({ montagemId }: { montagemId: string }) {
 
       <div className="space-y-2">
         <Textarea
-          placeholder="Deixar uma observação ou sugestão pra essa montagem..."
+          placeholder="Deixar uma observação ou sugestão pra essa montagem…"
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
         />

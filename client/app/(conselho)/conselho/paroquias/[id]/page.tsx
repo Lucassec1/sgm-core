@@ -2,9 +2,10 @@
 
 import { use } from 'react';
 import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useConselhoMontagens } from '@/lib/hooks/use-conselho';
+import { MontagemStatusBadge } from '@/components/montagem/montagem-status-badge';
+import { PageHeader } from '@/components/page-header';
 
 export default function ConselhoParoquiaMontagensPage({
   params,
@@ -16,12 +17,12 @@ export default function ConselhoParoquiaMontagensPage({
 
   return (
     <div className="p-6 space-y-4">
-      <h1 className="text-lg font-semibold">Montagens</h1>
+      <PageHeader title="Montagens" />
 
-      {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
       {isError && (
         <p className="text-sm text-red-600 dark:text-red-400">
-          Não foi possível carregar as montagens.
+          Não foi possível carregar as montagens. Confira a conexão e recarregue a página.
         </p>
       )}
 
@@ -33,9 +34,7 @@ export default function ConselhoParoquiaMontagensPage({
                 <CardTitle className="text-sm font-medium">
                   {montagem.numeroEncontro}º Encontro
                 </CardTitle>
-                <Badge variant={montagem.status === 'EM_ANDAMENTO' ? 'default' : 'secondary'}>
-                  {montagem.status === 'EM_ANDAMENTO' ? 'Em andamento' : 'Finalizada'}
-                </Badge>
+                <MontagemStatusBadge status={montagem.status} />
               </CardHeader>
               <CardContent className="text-xs text-muted-foreground">
                 {new Date(montagem.data).toLocaleDateString('pt-BR')}
