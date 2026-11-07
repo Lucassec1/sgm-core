@@ -4,9 +4,9 @@ import { useFormContext } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { FichaFormValues } from './ficha-schema';
-import { SectionTitle } from './section-title';
+import { SectionTitle } from '../section-title';
 
-export function EnderecoSection(_props: { bloqueado: boolean }) {
+export function EnderecoSection() {
   const { register } = useFormContext<FichaFormValues>();
 
   return (

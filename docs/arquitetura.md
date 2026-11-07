@@ -30,7 +30,6 @@
       /fichas
       /fichas-casais
       /montagem        ← montagens, alocações, equipes, quadrantes, log
-      /telao           ← endpoint público reduzido (modo telão)
       /health          ← GET /health (checa o Postgres de verdade)
     /common
       /guards          ← JwtAuthGuard, RolesGuard, ParoquiaScopeGuard, MontagemScopeGuard
@@ -58,7 +57,6 @@ Implementado como **guard central** (`ParoquiaScopeGuard` e `MontagemScopeGuard`
   /(app)               ← área da equipe dirigente
     /fichas  /montagem
   /(conselho)/conselho ← área do Conselho (R8)
-  /(telao)             ← modo telão / impressão
   /login
 /client/components
   /ui                  ← componentes shadcn

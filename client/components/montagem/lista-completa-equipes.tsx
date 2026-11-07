@@ -6,15 +6,9 @@ import { Input } from '@/components/ui/input';
 import { EquipeIcon } from '@/components/equipes/equipe-icon';
 import { VagaAlocacoes } from './vaga-alocacoes';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
+import { nomeAlocacao } from '@/lib/montagem';
 
 const STATUS_INATIVO = ['RECUSADO', 'DESISTIU', 'SUBSTITUIDO'];
-
-function nomeAlocacao(alocacao: Alocacao) {
-  return (
-    alocacao.ficha?.nomeCompleto ??
-    (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : '—')
-  );
-}
 
 function plural(n: number, singular: string, plural: string) {
   return `${n} ${n === 1 ? singular : plural}`;
@@ -73,7 +67,7 @@ export function ListaCompletaEquipes({
       <div className="relative max-w-sm">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar pessoa (mostra a equipe dela)..."
+          placeholder="Buscar pessoa (mostra a equipe dela)…"
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           className="pl-8"

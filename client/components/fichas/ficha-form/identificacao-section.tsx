@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import { CORES_CIRCULO } from '@/lib/types';
 import type { FichaFormValues } from './ficha-schema';
-import { SectionTitle } from './section-title';
+import { SectionTitle } from '../section-title';
 
 export function IdentificacaoSection({
   bloqueado,
@@ -34,8 +34,13 @@ export function IdentificacaoSection({
       <div className="grid grid-cols-2 gap-4">
         {!isEdit && (
           <div className="col-span-2">
-            <Label htmlFor="nomeCompleto">Nome completo</Label>
-            <Input id="nomeCompleto" {...register('nomeCompleto')} />
+            <Label
+              htmlFor="nomeCompleto"
+              className="after:ml-0.5 after:text-muted-foreground after:content-['*']"
+            >
+              Nome completo
+            </Label>
+            <Input aria-required="true" id="nomeCompleto" {...register('nomeCompleto')} />
             {errors.nomeCompleto && (
               <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                 {errors.nomeCompleto.message}
@@ -44,14 +49,16 @@ export function IdentificacaoSection({
           </div>
         )}
         <div>
-          <Label>Sexo</Label>
+          <Label className="after:ml-0.5 after:text-muted-foreground after:content-['*']">
+            Sexo
+          </Label>
           <Select
             value={watch('sexo')}
             onValueChange={(v) => setValue('sexo', v as FichaFormValues['sexo'])}
             disabled={bloqueado}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione..." />
+              <SelectValue placeholder="Selecione…" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="RAPAZ">Rapaz</SelectItem>
@@ -63,8 +70,14 @@ export function IdentificacaoSection({
           )}
         </div>
         <div>
-          <Label htmlFor="dataNascimento">Data de nascimento</Label>
+          <Label
+            htmlFor="dataNascimento"
+            className="after:ml-0.5 after:text-muted-foreground after:content-['*']"
+          >
+            Data de nascimento
+          </Label>
           <Input
+            aria-required="true"
             id="dataNascimento"
             type="date"
             disabled={bloqueado}
@@ -81,22 +94,46 @@ export function IdentificacaoSection({
           <Input id="naturalidade" disabled={bloqueado} {...register('naturalidade')} />
         </div>
         <div>
-          <Label htmlFor="telefone">Telefone</Label>
-          <Input id="telefone" {...register('telefone')} />
+          <Label
+            htmlFor="telefone"
+            className="after:ml-0.5 after:text-muted-foreground after:content-['*']"
+          >
+            Telefone
+          </Label>
+          <Input
+            aria-required="true"
+            id="telefone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="off"
+            {...register('telefone')}
+          />
           {errors.telefone && (
             <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.telefone.message}</p>
           )}
         </div>
         <div>
           <Label htmlFor="email">E-mail</Label>
-          <Input id="email" type="email" {...register('email')} />
+          <Input
+            id="email"
+            type="email"
+            autoComplete="off"
+            spellCheck={false}
+            {...register('email')}
+          />
           {errors.email && (
             <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.email.message}</p>
           )}
         </div>
         <div>
-          <Label htmlFor="numeroEncontro">Nº do encontro</Label>
+          <Label
+            htmlFor="numeroEncontro"
+            className="after:ml-0.5 after:text-muted-foreground after:content-['*']"
+          >
+            Nº do encontro
+          </Label>
           <Input
+            aria-required="true"
             id="numeroEncontro"
             type="number"
             disabled={bloqueado}
@@ -109,14 +146,16 @@ export function IdentificacaoSection({
           )}
         </div>
         <div>
-          <Label>Cor do círculo</Label>
+          <Label className="after:ml-0.5 after:text-muted-foreground after:content-['*']">
+            Cor do círculo
+          </Label>
           <Select
             value={watch('corCirculo')}
             onValueChange={(v) => setValue('corCirculo', v as FichaFormValues['corCirculo'])}
             disabled={bloqueado}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione..." />
+              <SelectValue placeholder="Selecione…" />
             </SelectTrigger>
             <SelectContent>
               {CORES_CIRCULO.map((cor) => (

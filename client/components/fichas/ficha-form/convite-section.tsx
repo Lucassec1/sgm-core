@@ -4,7 +4,7 @@ import { useFormContext } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { FichaFormValues } from './ficha-schema';
-import { SectionTitle } from './section-title';
+import { SectionTitle } from '../section-title';
 
 export function ConviteSection({ bloqueado }: { bloqueado: boolean }) {
   const { register } = useFormContext<FichaFormValues>();
@@ -19,7 +19,14 @@ export function ConviteSection({ bloqueado }: { bloqueado: boolean }) {
         </div>
         <div>
           <Label htmlFor="telefoneConvidante">Telefone do convidante</Label>
-          <Input id="telefoneConvidante" disabled={bloqueado} {...register('telefoneConvidante')} />
+          <Input
+            id="telefoneConvidante"
+            type="tel"
+            inputMode="tel"
+            autoComplete="off"
+            disabled={bloqueado}
+            {...register('telefoneConvidante')}
+          />
         </div>
         <div className="col-span-2">
           <Label htmlFor="enderecoConvidante">Endereço do convidante</Label>

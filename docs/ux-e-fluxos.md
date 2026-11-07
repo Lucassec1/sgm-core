@@ -149,8 +149,9 @@ Novo recurso: uma lista **geral** de pessoas cotadas como boas opções de subst
 - **Aba Convites**: tabela de todos os convites da montagem por status (filtro por status) + uma seção **"Saídas registradas"** — recusas e desistências com o **motivo da saída** (tanto recusa quanto desistência exigem registrar o motivo). Essa seção some quando a montagem é finalizada (R9). Cada saída tem um atalho "Substituir" que abre a busca de pessoa pra aquela vaga.
 - **Log de atividade** (R9): drawer "Atividade" no header da montagem — linha do tempo de toda alteração (quem / o quê / quando). Sem Auth real ainda, "quem" é o campo `usuario` informado pelo client.
 
-### Aba "Quadrantes"
+### Página "Quadrantes" (barra lateral)
 
+- Página própria na barra lateral, fora da montagem (decisão de 07/11/2026): os PDFs são consultados, impressos e mandados no grupo sem abrir o quadro. Abre no encontro em andamento (ou no mais recente) e um seletor leva aos anteriores; encontro finalizado fica só leitura.
 - Só anexo de PDF da Equipe da Gráfica, sem campos cadastráveis (requisitos 2.3). Lista (nome, tamanho, data) + enviar (só PDF, até 50 MB) + baixar + remover. O binário fica no S3 (bucket privado, PDFs de 55–70 páginas), o banco guarda só metadados.
 
 ### Alertas visuais
@@ -179,24 +180,24 @@ Novo recurso: uma lista **geral** de pessoas cotadas como boas opções de subst
 
 ## 4. Design System — mapa de uso (shadcn)
 
-| Necessidade do sistema                                                | Componente shadcn                                                          |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Navegação geral (Fichas / Montagem)                                   | Sidebar                                                                    |
-| Seções da Ficha do Jovem/Casal                                        | Separator (empilhadas, sem Tabs)                                           |
-| Abas da Montagem (Quadro, Lista, Convites, Substituições, Quadrantes) | Tabs                                                                       |
-| Grid das 16 equipes                                                   | Card + Progress + Badge                                                    |
-| Detalhe de uma equipe ao clicar no card                               | Drawer                                                                     |
-| Avisos de regra na pessoa (recusou, Nª vez na equipe, nunca serviu)   | Badge (vermelho = foge da regra, âmbar = conferir, verde = ponto positivo) |
-| Confirmação ao convidar antes dos Círculos fecharem (R4)              | Alert Dialog                                                               |
-| Criação de nova montagem/ficha                                        | Dialog                                                                     |
-| Busca de pessoa para vaga                                             | Command (combobox com busca)                                               |
-| Lista de substituição (banco geral de backups da montagem)            | DataTable ou List + Command para adicionar pessoas                         |
-| Lista de Fichas, Histórico de equipes, Controle de Convites           | DataTable                                                                  |
-| Status (Ativa/Inativa, Aceito/Recusado, cor do círculo)               | Badge                                                                      |
-| Foto da pessoa                                                        | Avatar                                                                     |
-| Auto-save, confirmações de ação                                       | Toast                                                                      |
-| % de preenchimento da montagem                                        | Progress                                                                   |
-| Upload de PDF (Quadrantes)                                            | (sem componente shadcn nativo — construir com input file + lista)          |
+| Necessidade do sistema                                              | Componente shadcn                                                          |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Navegação geral (Fichas / Montagem)                                 | Sidebar                                                                    |
+| Seções da Ficha do Jovem/Casal                                      | Separator (empilhadas, sem Tabs)                                           |
+| Abas da Montagem (Quadro, Lista, Convites, Substituições)           | Tabs                                                                       |
+| Grid das 16 equipes                                                 | Card + Progress + Badge                                                    |
+| Detalhe de uma equipe ao clicar no card                             | Drawer                                                                     |
+| Avisos de regra na pessoa (recusou, Nª vez na equipe, nunca serviu) | Badge (vermelho = foge da regra, âmbar = conferir, verde = ponto positivo) |
+| Confirmação ao convidar antes dos Círculos fecharem (R4)            | Alert Dialog                                                               |
+| Criação de nova montagem/ficha                                      | Dialog                                                                     |
+| Busca de pessoa para vaga                                           | Command (combobox com busca)                                               |
+| Lista de substituição (banco geral de backups da montagem)          | DataTable ou List + Command para adicionar pessoas                         |
+| Lista de Fichas, Histórico de equipes, Controle de Convites         | DataTable                                                                  |
+| Status (Ativa/Inativa, Aceito/Recusado, cor do círculo)             | Badge                                                                      |
+| Foto da pessoa                                                      | Avatar                                                                     |
+| Auto-save, confirmações de ação                                     | Toast                                                                      |
+| % de preenchimento da montagem                                      | Progress                                                                   |
+| Upload de PDF (Quadrantes)                                          | (sem componente shadcn nativo — construir com input file + lista)          |
 
 ---
 

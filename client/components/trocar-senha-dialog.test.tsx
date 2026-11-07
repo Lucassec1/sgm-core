@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -18,9 +19,14 @@ import { apiClient, ApiError } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { TrocarSenhaDialog } from './trocar-senha-dialog';
 
-async function abrirDialog(user: ReturnType<typeof userEvent.setup>) {
-  render(<TrocarSenhaDialog />);
-  await user.click(screen.getByRole('button', { name: 'Trocar senha' }));
+// O dialog é controlado por quem abre (menu da conta) — o harness faz esse papel no teste.
+function Harness() {
+  const [open, setOpen] = useState(true);
+  return <TrocarSenhaDialog open={open} onOpenChange={setOpen} />;
+}
+
+function abrirDialog() {
+  render(<Harness />);
 }
 
 describe('TrocarSenhaDialog', () => {
@@ -30,7 +36,7 @@ describe('TrocarSenhaDialog', () => {
 
   it('bloqueia o envio e não chama a API quando nova senha e confirmação não coincidem', async () => {
     const user = userEvent.setup();
-    await abrirDialog(user);
+    abrirDialog();
 
     await user.type(screen.getByLabelText('Senha atual'), 'atual123');
     await user.type(screen.getByLabelText('Nova senha'), 'novaSenha1');
@@ -45,7 +51,7 @@ describe('TrocarSenhaDialog', () => {
     (apiClient.alterarSenha as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
 
     const user = userEvent.setup();
-    await abrirDialog(user);
+    abrirDialog();
 
     await user.type(screen.getByLabelText('Senha atual'), 'atual123');
     await user.type(screen.getByLabelText('Nova senha'), 'novaSenha1');
@@ -67,7 +73,7 @@ describe('TrocarSenhaDialog', () => {
     );
 
     const user = userEvent.setup();
-    await abrirDialog(user);
+    abrirDialog();
 
     await user.type(screen.getByLabelText('Senha atual'), 'errada');
     await user.type(screen.getByLabelText('Nova senha'), 'novaSenha1');

@@ -4,7 +4,7 @@ import { useFormContext } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { FichaFormValues } from './ficha-schema';
-import { SectionTitle } from './section-title';
+import { SectionTitle } from '../section-title';
 
 export function FiliacaoSection({ bloqueado }: { bloqueado: boolean }) {
   const { register } = useFormContext<FichaFormValues>();

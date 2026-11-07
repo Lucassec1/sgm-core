@@ -82,13 +82,13 @@ export function CommandPalette() {
   }
 
   const acoesRapidas = [
-    { label: 'Nova Ficha (Jovem)', Icon: UserRound, onSelect: () => ir('/fichas/novo') },
-    { label: 'Novo Casal', Icon: Users, onSelect: () => ir('/fichas/casais/novo') },
-    { label: 'Ver Quadro de Equipes', Icon: LayoutGrid, onSelect: () => ir('/montagem') },
+    { label: 'Nova ficha de jovem', Icon: UserRound, onSelect: () => ir('/fichas/novo') },
+    { label: 'Novo casal', Icon: Users, onSelect: () => ir('/fichas/casais/novo') },
+    { label: 'Ver quadro de equipes', Icon: LayoutGrid, onSelect: () => ir('/montagem') },
     ...(montagemEmAndamento
       ? [
           {
-            label: `Ir para Montagem em andamento (nº ${montagemEmAndamento.numeroEncontro})`,
+            label: `Ir para a montagem em andamento (nº ${montagemEmAndamento.numeroEncontro})`,
             Icon: LayoutGrid,
             onSelect: () => ir(`/montagem/${montagemEmAndamento.id}`),
           },
@@ -105,10 +105,13 @@ export function CommandPalette() {
         size="sm"
         className="gap-1.5 text-muted-foreground"
         onClick={() => setOpen(true)}
+        aria-label="Buscar ficha, casal ou montagem"
       >
-        <Search className="h-3.5 w-3.5" />
-        Buscar
-        <kbd className="ml-1 rounded border bg-muted px-1.5 py-0.5 text-[10px] font-medium">⌘K</kbd>
+        <Search className="h-3.5 w-3.5" aria-hidden />
+        <span className="hidden sm:inline">Buscar</span>
+        <kbd className="ml-1 hidden rounded border bg-muted px-1.5 py-0.5 text-[10px] font-medium sm:inline">
+          ⌘K
+        </kbd>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -118,7 +121,7 @@ export function CommandPalette() {
             className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5"
           >
             <CommandInput
-              placeholder="Buscar ficha, casal, montagem... ou uma ação"
+              placeholder="Buscar ficha, casal, montagem… ou uma ação"
               value={query}
               onValueChange={setQuery}
             />

@@ -23,7 +23,7 @@ function totalDaVaga(vaga: VagaMontagem) {
   return vaga.quantidadeCasais + vaga.quantidadeRapazes + vaga.quantidadeMocas;
 }
 
-// Fecha o fluxo "Nova Montagem → ... → Montagem 100% preenchida" (docs/ux-e-fluxos.md, 1.2).
+// Fecha o fluxo "Nova montagem → ... → Montagem 100% preenchida" (docs/ux-e-fluxos.md, 1.2).
 // Finalizar não é bloqueado por preenchimento incompleto (fica a critério da equipe
 // dirigente), mas lista as equipes incompletas e exige uma segunda confirmação explícita
 // nesse caso — pra não finalizar por engano sem perceber que faltou gente. Depois de
@@ -89,7 +89,7 @@ export function FinalizarMontagemButton({
   return (
     <>
       <Button size="sm" onClick={() => setOpen(true)}>
-        Finalizar Montagem
+        Finalizar montagem
       </Button>
 
       <AlertDialog

@@ -4,7 +4,7 @@ import { useFormContext } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { FichaFormValues } from './ficha-schema';
-import { SectionTitle } from './section-title';
+import { SectionTitle } from '../section-title';
 
 export function EscolaridadeSection({ bloqueado }: { bloqueado: boolean }) {
   const { register } = useFormContext<FichaFormValues>();
@@ -23,7 +23,7 @@ export function EscolaridadeSection({ bloqueado }: { bloqueado: boolean }) {
             id="situacaoEscolar"
             disabled={bloqueado}
             {...register('situacaoEscolar')}
-            placeholder="Cursando, formado..."
+            placeholder="Cursando, formado…"
           />
         </div>
         <div>

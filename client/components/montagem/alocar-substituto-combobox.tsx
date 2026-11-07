@@ -103,7 +103,7 @@ export function AlocarSubstitutoCombobox({
         </PopoverTrigger>
         <PopoverContent className="w-80 p-0" align="end">
           <Command>
-            <CommandInput placeholder="Vaga em aberto..." />
+            <CommandInput placeholder="Vaga em aberto…" />
             <CommandList className="max-h-72">
               <CommandEmpty>Nenhuma vaga em aberto compatível.</CommandEmpty>
               <CommandGroup>

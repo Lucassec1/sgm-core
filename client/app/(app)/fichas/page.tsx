@@ -1,5 +1,6 @@
 'use client';
 
+import { PageHeader } from '@/components/page-header';
 import { useState } from 'react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,7 +19,7 @@ import { StatusBadge } from '@/components/fichas/status-badge';
 import { FichasFiltros, type FiltrosFichas } from '@/components/fichas/fichas-filtros';
 import { FichasTabsNav } from '@/components/fichas/fichas-tabs-nav';
 import { UploadFotosLoteDialog } from '@/components/fichas/upload-fotos-lote-dialog';
-import { fotoSrc } from '@/lib/utils';
+import { fotoSrc, iniciais } from '@/lib/utils';
 
 export default function FichasListPage() {
   const [filtros, setFiltros] = useState<FiltrosFichas>({});
@@ -27,70 +28,76 @@ export default function FichasListPage() {
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Fichas</h1>
-        <div className="flex gap-2">
-          <UploadFotosLoteDialog tipo="jovem" />
-          <Button asChild>
-            <Link href="/fichas/novo">Nova Ficha</Link>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Fichas"
+        actions={
+          <>
+            <UploadFotosLoteDialog tipo="jovem" />
+            <Button asChild>
+              <Link href="/fichas/novo">Nova ficha</Link>
+            </Button>
+          </>
+        }
+      />
 
       <FichasTabsNav />
 
       <FichasFiltros value={filtros} onChange={setFiltros} />
 
-      {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
       {isError && (
         <p className="text-sm text-red-600 dark:text-red-400">
-          Não foi possível carregar as fichas.
+          Não foi possível carregar as fichas. Confira a conexão e recarregue a página.
         </p>
       )}
 
       {data && (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12"></TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead>Encontro</TableHead>
-              <TableHead>Círculo</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.items.map((ficha) => (
-              <TableRow key={ficha.id}>
-                <TableCell>
-                  <Avatar>
-                    <AvatarImage src={fotoSrc(ficha.fotoUrl)} alt={ficha.nomeCompleto} />
-                    <AvatarFallback>{ficha.nomeCompleto.slice(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                </TableCell>
-                <TableCell>
-                  <Link href={`/fichas/${ficha.id}`} className="font-medium hover:underline">
-                    {ficha.nomeCompleto}
-                  </Link>
-                </TableCell>
-                <TableCell>{ficha.numeroEncontro}º Encontro</TableCell>
-                <TableCell>
-                  <CirculoBadge cor={ficha.corCirculo} />
-                </TableCell>
-                <TableCell>
-                  <StatusBadge situacao={ficha.situacao} />
-                </TableCell>
-              </TableRow>
-            ))}
-            {data.items.length === 0 && (
+        <div className="overflow-hidden rounded-xl border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">
-                  Nenhuma ficha encontrada.
-                </TableCell>
+                <TableHead className="hidden w-12 sm:table-cell"></TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead className="hidden sm:table-cell">Encontro</TableHead>
+                <TableHead>Círculo</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {data.items.map((ficha) => (
+                <TableRow key={ficha.id}>
+                  <TableCell className="hidden sm:table-cell">
+                    <Avatar>
+                      <AvatarImage src={fotoSrc(ficha.fotoUrl)} alt={ficha.nomeCompleto} />
+                      <AvatarFallback>{iniciais(ficha.nomeCompleto)}</AvatarFallback>
+                    </Avatar>
+                  </TableCell>
+                  <TableCell>
+                    <Link href={`/fichas/${ficha.id}`} className="font-medium hover:underline">
+                      {ficha.nomeCompleto}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    {ficha.numeroEncontro}º Encontro
+                  </TableCell>
+                  <TableCell>
+                    <CirculoBadge cor={ficha.corCirculo} />
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge situacao={ficha.situacao} />
+                  </TableCell>
+                </TableRow>
+              ))}
+              {data.items.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">
+                    Nenhuma ficha com esses filtros. Limpe a busca ou cadastre uma nova ficha.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { FichaFormValues } from './ficha-schema';
-import { SectionTitle } from './section-title';
+import { SectionTitle } from '../section-title';
 
 export function ReligiaoSection({ bloqueado }: { bloqueado: boolean }) {
   const { register, watch, setValue } = useFormContext<FichaFormValues>();

@@ -19,17 +19,13 @@ import {
   useCreateListaSubstituicaoItem,
 } from '@/lib/hooks/use-montagens';
 import { useFichasCasais } from '@/lib/hooks/use-fichas-casais';
-import { fotoSrc } from '@/lib/utils';
+import { fotoSrc, iniciais } from '@/lib/utils';
 
 interface PessoaOpcao {
   id: string;
   nome: string;
   tipoPessoa: 'JOVEM' | 'CASAL';
   fotoUrl?: string | null;
-}
-
-function iniciais(nome: string) {
-  return nome.slice(0, 2).toUpperCase();
 }
 
 // Barra de busca fixa no topo da aba Substituições — sempre visível, largura cheia, sem
@@ -101,7 +97,7 @@ export function AdicionarSubstitutoBar({
   return (
     <Command className="rounded-md border shadow-sm">
       <CommandInput
-        placeholder="Buscar jovem ou casal para adicionar à lista..."
+        placeholder="Buscar jovem ou casal para adicionar à lista…"
         value={busca}
         onValueChange={setBusca}
         onFocus={() => setFocado(true)}
@@ -111,7 +107,7 @@ export function AdicionarSubstitutoBar({
       {aberto && (
         <CommandList className="max-h-72">
           {carregando ? (
-            <p className="px-3 py-6 text-center text-sm text-muted-foreground">Carregando...</p>
+            <p className="px-3 py-6 text-center text-sm text-muted-foreground">Carregando…</p>
           ) : (
             <>
               <CommandEmpty>Ninguém encontrado.</CommandEmpty>

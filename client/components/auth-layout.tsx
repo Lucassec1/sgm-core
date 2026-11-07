@@ -1,21 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 // Moldura das telas fora da sessão (login, esqueci a senha, redefinir senha) — painel de
 // identidade à esquerda + coluna do formulário. Extraída do login pra as três ficarem iguais.
 export function AuthLayout({ children }: { children: React.ReactNode }) {
-  // Anima via transição real de estado (opacity/transform mudando depois do mount), não via
-  // classe `animate-in` já presente na primeira renderização — a página é pré-renderizada como
-  // estática, então uma classe de "entrada" já no HTML inicial não tem nenhuma mudança de
-  // estado pra disparar a animação de verdade.
-  const [visivel, setVisivel] = useState(false);
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setVisivel(true));
-    return () => cancelAnimationFrame(id);
-  }, []);
-
   return (
     // `dark` forçado — a tela de login é sempre escura, independente do tema (claro/escuro/
     // sistema) escolhido no resto do app. Sem isso, o painel de identidade (fixo em zinc-950)
@@ -42,16 +31,12 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           priority
           className="relative h-40 w-40 object-contain"
         />
-        <h1 className="relative mt-6 text-xl font-semibold text-white">SGM Core</h1>
+        <p className="relative mt-6 text-xl font-bold text-white">SGM Core</p>
         <p className="relative mt-1 text-sm text-zinc-400">Segue-me — Diocese de Crato</p>
       </div>
 
       <div className="flex flex-1 items-center justify-center p-6">
-        <div
-          className={`w-full max-w-sm transition-all duration-500 ease-out ${
-            visivel ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
-          }`}
-        >
+        <div className="w-full max-w-sm">
           <div className="mb-8 flex justify-center lg:hidden">
             <Image
               src="/logo-segue-me.png"

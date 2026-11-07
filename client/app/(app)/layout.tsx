@@ -4,11 +4,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppSidebar } from '@/components/app-sidebar';
 import { CommandPalette } from '@/components/command-palette';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { Separator } from '@/components/ui/separator';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { LogoutButton } from '@/components/logout-button';
-import { TrocarSenhaDialog } from '@/components/trocar-senha-dialog';
 import { LoadingScreen } from '@/components/loading-screen';
 import { useSessao } from '@/lib/auth-context';
 
@@ -45,17 +42,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger />
           <Separator orientation="vertical" className="h-4" />
-          <span className="text-sm font-medium text-muted-foreground">
-            SGM Core {sessao.paroquia && `· ${sessao.paroquia.nome}`}
+          <span className="min-w-0 truncate text-sm font-medium text-muted-foreground">
+            <span className="hidden sm:inline">SGM Core · </span>
+            {sessao.paroquia?.nome ?? 'SGM Core'}
           </span>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex shrink-0 items-center gap-1">
             <CommandPalette />
-            <ThemeToggle />
-            <TrocarSenhaDialog />
-            <LogoutButton />
           </div>
         </header>
-        <div className="flex flex-1 flex-col">{children}</div>
+        <div id="conteudo" className="flex min-w-0 flex-1 flex-col">
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

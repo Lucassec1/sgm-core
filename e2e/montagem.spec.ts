@@ -9,7 +9,7 @@ test.describe('Fluxo de Montagem', () => {
     await login(page);
 
     await page.goto('/montagem');
-    await page.getByRole('button', { name: 'Nova Montagem' }).click();
+    await page.getByRole('button', { name: 'Nova montagem' }).click();
 
     await page.locator('#data').fill('2027-06-01');
     // R6: 40 a 60 jovens vivenciando fora de implantação (ver nova-montagem-dialog.tsx).
@@ -22,7 +22,7 @@ test.describe('Fluxo de Montagem', () => {
     await expect(page).toHaveURL(/\/montagem\/[a-f0-9-]+$/);
     await expect(page.getByRole('heading', { name: '1º Encontro' })).toBeVisible();
 
-    // Aba "Quadro de Equipes" é a default — as 16 equipes do catálogo (seed-equipes.ts)
+    // Aba "Quadro de equipes" é a default — as 16 equipes do catálogo (seed-equipes.ts)
     // aparecem como cards, incluindo a Eq. dos Círculos (1ª a ser convidada, R4).
     const quadroDeEquipes = page.getByRole('tabpanel');
     await expect(quadroDeEquipes.getByText('Comando Geral')).toBeVisible();

@@ -6,25 +6,19 @@ import type { AvisoRegra } from '@/lib/types';
 
 // Cores das badges de aviso (docs/design-system.md): vermelho = foge da regra, âmbar = vale
 // conferir, verde = ponto positivo (ex.: avaliado "pode coordenar").
-const COR = {
-  grave: 'border-transparent bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400 font-medium',
-  atencao:
-    'border-transparent bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-medium',
-  positivo:
-    'border-transparent bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400 font-medium',
-} as const;
+const VARIANTE = { grave: 'perigo', atencao: 'atencao', positivo: 'sucesso' } as const;
 
 export function BadgeAviso({
   nivel,
   children,
   titulo,
 }: {
-  nivel: keyof typeof COR;
+  nivel: keyof typeof VARIANTE;
   children: React.ReactNode;
   titulo?: string;
 }) {
   const badge = (
-    <Badge variant="outline" className={`whitespace-nowrap text-[11px] ${COR[nivel]}`}>
+    <Badge variant={VARIANTE[nivel]} className="whitespace-nowrap text-[11px] font-medium">
       {children}
     </Badge>
   );

@@ -43,7 +43,7 @@ export default function EsqueciSenhaPage() {
         <div className="space-y-4">
           <MailCheck className="h-8 w-8 text-muted-foreground" />
           <div>
-            <h2 className="text-lg font-semibold">Confira o e-mail</h2>
+            <h1 className="text-2xl font-bold tracking-tight">Confira o e-mail</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Se esse e-mail estiver cadastrado no sistema, enviamos um link para criar a senha. Ele
               vale por 30 minutos.
@@ -60,7 +60,7 @@ export default function EsqueciSenhaPage() {
       ) : (
         <>
           <div className="mb-6">
-            <h2 className="text-lg font-semibold">Criar ou redefinir senha</h2>
+            <h1 className="text-2xl font-bold tracking-tight">Criar ou redefinir senha</h1>
             <p className="text-sm text-muted-foreground">
               Primeiro acesso ou esqueceu a senha? Informe o e-mail da conta e mandamos um link para
               criar a senha.
