@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { FichaCasal } from '@/lib/types';
 import { useCreateFichaCasal, useUpdateFichaCasal } from '@/lib/hooks/use-fichas-casais';
 import { nullsToUndefined } from '@/lib/utils';
+import { SectionTitle } from './section-title';
 
 // Ficha do Casal — mais simples que a do Jovem: sem escolaridade, religião/sacramentos ou
 // convite (ver docs/requisitos.md, 2.1). Seções empilhadas com divider, não em abas — mesmo
@@ -52,10 +53,6 @@ const fichaCasalSchema = z.object({
 });
 
 type FichaCasalFormValues = z.infer<typeof fichaCasalSchema>;
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-sm font-medium text-muted-foreground">{children}</h3>;
-}
 
 export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
   const router = useRouter();
@@ -131,7 +128,8 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
             </AvatarFallback>
           </Avatar>
           <p className="text-xs text-muted-foreground">
-            A foto pode ser adicionada depois de salvar, na página do casal.
+            A foto pode ser adicionada depois de salvar, na página do casal. Campos com * são
+            obrigatórios.
           </p>
         </div>
       )}
@@ -168,8 +166,13 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
           {!isEdit && (
             <>
               <div>
-                <Label htmlFor="nomeEle">Nome (dele)</Label>
-                <Input id="nomeEle" {...register('nomeEle')} />
+                <Label
+                  htmlFor="nomeEle"
+                  className="after:ml-0.5 after:text-muted-foreground after:content-['*']"
+                >
+                  Nome (dele)
+                </Label>
+                <Input aria-required="true" id="nomeEle" {...register('nomeEle')} />
                 {errors.nomeEle && (
                   <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                     {errors.nomeEle.message}
@@ -177,8 +180,13 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
                 )}
               </div>
               <div>
-                <Label htmlFor="nomeEla">Nome (dela)</Label>
-                <Input id="nomeEla" {...register('nomeEla')} />
+                <Label
+                  htmlFor="nomeEla"
+                  className="after:ml-0.5 after:text-muted-foreground after:content-['*']"
+                >
+                  Nome (dela)
+                </Label>
+                <Input aria-required="true" id="nomeEla" {...register('nomeEla')} />
                 {errors.nomeEla && (
                   <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                     {errors.nomeEla.message}
@@ -206,8 +214,20 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
             />
           </div>
           <div>
-            <Label htmlFor="telefoneEle">Telefone (dele)</Label>
-            <Input id="telefoneEle" {...register('telefoneEle')} />
+            <Label
+              htmlFor="telefoneEle"
+              className="after:ml-0.5 after:text-muted-foreground after:content-['*']"
+            >
+              Telefone (dele)
+            </Label>
+            <Input
+              aria-required="true"
+              id="telefoneEle"
+              type="tel"
+              inputMode="tel"
+              autoComplete="off"
+              {...register('telefoneEle')}
+            />
             {errors.telefoneEle && (
               <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                 {errors.telefoneEle.message}
@@ -215,8 +235,20 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
             )}
           </div>
           <div>
-            <Label htmlFor="telefoneEla">Telefone (dela)</Label>
-            <Input id="telefoneEla" {...register('telefoneEla')} />
+            <Label
+              htmlFor="telefoneEla"
+              className="after:ml-0.5 after:text-muted-foreground after:content-['*']"
+            >
+              Telefone (dela)
+            </Label>
+            <Input
+              aria-required="true"
+              id="telefoneEla"
+              type="tel"
+              inputMode="tel"
+              autoComplete="off"
+              {...register('telefoneEla')}
+            />
             {errors.telefoneEla && (
               <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                 {errors.telefoneEla.message}
@@ -225,7 +257,13 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
           </div>
           <div>
             <Label htmlFor="emailEle">E-mail (dele)</Label>
-            <Input id="emailEle" type="email" {...register('emailEle')} />
+            <Input
+              id="emailEle"
+              type="email"
+              autoComplete="off"
+              spellCheck={false}
+              {...register('emailEle')}
+            />
             {errors.emailEle && (
               <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                 {errors.emailEle.message}
@@ -234,7 +272,13 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
           </div>
           <div>
             <Label htmlFor="emailEla">E-mail (dela)</Label>
-            <Input id="emailEla" type="email" {...register('emailEla')} />
+            <Input
+              id="emailEla"
+              type="email"
+              autoComplete="off"
+              spellCheck={false}
+              {...register('emailEla')}
+            />
             {errors.emailEla && (
               <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                 {errors.emailEla.message}
@@ -302,7 +346,7 @@ export function FichaCasalForm({ ficha }: { ficha?: FichaCasal }) {
         <Label htmlFor="observacoes">Observações</Label>
         <Textarea
           id="observacoes"
-          placeholder="Ex.: teve bebê recentemente, não possui transporte próprio..."
+          placeholder="Ex.: teve bebê recentemente, não possui transporte próprio…"
           {...register('observacoes')}
         />
       </div>

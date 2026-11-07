@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { Ficha } from '@/lib/types';
 import { useCreateFicha, useUpdateFicha } from '@/lib/hooks/use-fichas';
-import { nullsToUndefined } from '@/lib/utils';
+import { nullsToUndefined, iniciais } from '@/lib/utils';
 import { fichaSchema, type FichaFormValues } from './ficha-form/ficha-schema';
 import { IdentificacaoSection } from './ficha-form/identificacao-section';
 import { EnderecoSection } from './ficha-form/endereco-section';
@@ -22,6 +22,7 @@ import { EscolaridadeSection } from './ficha-form/escolaridade-section';
 import { ReligiaoSection } from './ficha-form/religiao-section';
 import { ConviteSection } from './ficha-form/convite-section';
 import { SituacaoSection } from './ficha-form/situacao-section';
+import { UserRound } from 'lucide-react';
 
 // Campos seguem docs/requisitos.md (2.1) e docs/ux-e-fluxos.md (2). As seções (Identificação,
 // Endereço, Filiação, Escolaridade, Religião, Convite) ficam empilhadas uma abaixo da outra,
@@ -97,10 +98,17 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
         {!isEdit && (
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarFallback>{(nomeCompleto || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
+              <AvatarFallback>
+                {nomeCompleto ? (
+                  iniciais(nomeCompleto)
+                ) : (
+                  <UserRound className="h-6 w-6" aria-hidden />
+                )}
+              </AvatarFallback>
             </Avatar>
             <p className="text-xs text-muted-foreground">
-              A foto pode ser adicionada depois de salvar, na página da ficha.
+              A foto pode ser adicionada depois de salvar, na página da ficha. Campos com * são
+              obrigatórios.
             </p>
           </div>
         )}
@@ -111,7 +119,7 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
 
         <Separator />
 
-        <EnderecoSection bloqueado={bloqueado} />
+        <EnderecoSection />
 
         <Separator />
 
@@ -135,7 +143,7 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
           <Label htmlFor="observacoes">Observações</Label>
           <Textarea
             id="observacoes"
-            placeholder="Ex.: alergia a amendoim, não possui transporte próprio..."
+            placeholder="Ex.: alergia a amendoim, não possui transporte próprio…"
             {...register('observacoes')}
           />
         </div>

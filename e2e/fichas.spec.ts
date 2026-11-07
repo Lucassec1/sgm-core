@@ -2,13 +2,13 @@ import { test, expect } from '@playwright/test';
 import { login } from './support/login';
 
 // Fluxo de Cadastro de Ficha (docs/ux-e-fluxos.md, 1.1): Dashboard → Lista de Fichas →
-// Nova Ficha → preencher → salva → aparece na Lista de Fichas.
+// Nova ficha → preencher → salva → aparece na Lista de Fichas.
 test.describe('Fluxo de Cadastro de Ficha', () => {
   test('cria uma ficha nova e ela aparece na lista', async ({ page }) => {
     await login(page);
 
     await page.goto('/fichas');
-    await page.getByRole('link', { name: 'Nova Ficha' }).click();
+    await page.getByRole('link', { name: 'Nova ficha' }).click();
     await expect(page).toHaveURL('/fichas/novo');
 
     const nome = `Teste E2E ${Date.now()}`;

@@ -16,7 +16,7 @@ function HistoricoEquipesLista({
   historico?: HistoricoEquipeItem[];
   isLoading: boolean;
 }) {
-  if (isLoading) return <p className="text-sm text-muted-foreground">Carregando...</p>;
+  if (isLoading) return <p className="text-sm text-muted-foreground">Carregando…</p>;
   if (!historico || historico.length === 0) {
     return <p className="text-sm text-muted-foreground">Ainda não serviu em nenhuma equipe.</p>;
   }
@@ -45,18 +45,12 @@ function HistoricoEquipesLista({
           {(item.podeCoordenar || item.podePalestrar) && (
             <div className="flex gap-2">
               {item.podeCoordenar && (
-                <Badge
-                  variant="outline"
-                  className="border-transparent bg-green-50 text-green-700 font-medium dark:bg-green-950 dark:text-green-400"
-                >
+                <Badge variant="sucesso" className="font-medium">
                   Pode coordenar essa equipe
                 </Badge>
               )}
               {item.podePalestrar && (
-                <Badge
-                  variant="outline"
-                  className="border-transparent bg-blue-50 text-blue-700 font-medium"
-                >
+                <Badge variant="sucesso" className="font-medium">
                   Pode palestrar
                 </Badge>
               )}

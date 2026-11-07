@@ -32,7 +32,7 @@ export function FichasFiltros({
   return (
     <div className="flex flex-wrap items-center gap-3">
       <Input
-        placeholder="Buscar por nome..."
+        placeholder="Buscar por nome…"
         value={nome}
         onChange={(e) => setNome(e.target.value)}
         onBlur={() => onChange({ ...value, nome })}
