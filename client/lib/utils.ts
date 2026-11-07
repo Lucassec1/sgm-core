@@ -16,7 +16,7 @@ export function fotoSrc(fotoUrl?: string | null): string | undefined {
 }
 
 // Agrupa as vagas por equipe, na ordem de exibição das 16 equipes (Equipe.ordem) — usado no
-// Quadro de Equipes e no modo telão (docs/historico/propostas.md, proposta #5).
+// Quadro de equipes, no painel do Início e na visão do Conselho.
 export function agruparVagasPorEquipe(vagas: VagaMontagem[]) {
   const grupos = new Map<string, VagaMontagem[]>();
   for (const vaga of vagas) {
@@ -35,4 +35,20 @@ export function nullsToUndefined<T extends object>(
   return Object.fromEntries(
     Object.entries(obj).map(([key, value]) => [key, value === null ? undefined : value]),
   ) as never;
+}
+
+// Iniciais do avatar — uma regra só pro sistema inteiro. Pessoa: primeira letra do primeiro e do
+// último nome ("Beatriz Almeida Santos" → "BS"). Casal: passe os dois nomes, uma letra de cada
+// ("Gabriel", "Yasmin" → "GY").
+export function iniciais(...nomes: string[]): string {
+  const partes =
+    nomes.length > 1
+      ? nomes.map((n) => n.trim().split(/\s+/)[0])
+      : (nomes[0] ?? '').trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return '';
+  const letras = partes.length === 1 ? [partes[0]] : [partes[0], partes[partes.length - 1]];
+  return letras
+    .map((p) => p.charAt(0))
+    .join('')
+    .toUpperCase();
 }

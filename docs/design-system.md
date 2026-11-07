@@ -7,11 +7,20 @@
 ## 1. Base
 
 - **Biblioteca:** shadcn/ui (Radix + Tailwind), estilo "New York" (mais compacto, bom pra telas com bastante dado como a montagem).
-- **Fonte:** Inter.
+- **Fonte:** Figtree (carregada por `next/font` em `app/layout.tsx`), uma família só — geométrica, de formas
+  abertas e boa leitura em tamanho pequeno; escolhida em 07/11/2026 entre Source Sans 3, Public Sans, Lexend
+  e Nunito Sans (a Atkinson Hyperlegible Next, testada antes, foi descartada pelo "q" com gancho).
+  Hierarquia por peso e tamanho: título de página 24px negrito (`PageHeader`), seção 16px negrito,
+  subseção de formulário 14px negrito, corpo 14px. Contadores com `tabular-nums`.
 - **Radius:** 0.5rem (8px) como padrão — mantém consistência com o kit shadcn que você encontrou na Community.
-- **Paleta base:** zinc/neutral (fundo branco, texto zinc-950, bordas zinc-200, texto secundário zinc-500) — paleta neutra de propósito, porque as cores "com significado" do sistema (cor do círculo, status) já competem bastante por atenção visual; a UI em si fica neutra pra não disputar destaque com essas cores funcionais.
+- **Paleta base:** zinc/neutral (fundo branco, texto zinc-950, bordas zinc-200, texto secundário **zinc-600 "Grafite" #52525B** — mais escuro que o zinc-500 do kit, pra ler com pouca luz) — paleta neutra de propósito, porque as cores "com significado" do sistema (cor do círculo, status) já competem bastante por atenção visual; a UI em si fica neutra pra não disputar destaque com essas cores funcionais.
 - **Tema:** claro e escuro, alternável (claro → escuro → automático/SO) pelo botão no header. Implementado com `next-themes` + classe `.dark` no `<html>`; os tokens shadcn (`--background`, `--card`, `--sidebar-*` etc.) têm o par escuro em `app/globals.css`. Escolha do usuário persiste em `localStorage`; sem escolha, segue o SO. O contexto de uso (fim de semana inteiro de tela, período noturno do encontro em salão com pouca luz) torna o escuro mais que estético.
   - Cores funcionais no escuro: badge de círculo não muda (pílula sólida com hex exato + texto de contraste calculado). Badges de status e caixas de aviso âmbar ganham variante `dark:` (tom `-950` de fundo + texto `-400`/`-200`). Texto de erro (formulários e "Não foi possível carregar X") é sempre `text-red-600 dark:text-red-400` — não `text-destructive`: no escuro o token `--destructive` tem ~30% de luminosidade, pensado pra fundo de botão, e fica ilegível como texto.
+
+- **Ouro das equipes (`ouro`, #E8A317) — o único acento do sistema**, tirado dos ícones oficiais das 16
+  equipes. Só em dois lugares: **equipe fechada** (todo mundo aceitou — borda/barra no card do quadro e no
+  painel do Início) e **encontro em andamento** (badge). Nunca decorativo, nunca em botão.
+- **Sombra só no que flutua** (dialog, popover, drawer). Cards ficam só com borda.
 
 ### Cores funcionais (uso restrito, não decorativo)
 
@@ -38,7 +47,7 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 | Cores do círculo (paleta fixa acima) | Badge de identificação do jovem — **só** nesse contexto, sempre com o nome da cor por extenso                               |
 | Verde (tom suave)                    | Status "Ativa" / "Aceito"                                                                                                   |
 | Vermelho (tom suave)                 | Status "Inativa" / "Recusado" / ação destrutiva (Desativar, Remover)                                                        |
-| Amarelo/âmbar (tom suave)            | Avisos não-bloqueantes (já serviu na equipe, aguardando resposta)                                                           |
+| Amarelo/âmbar (tom suave)            | Avisos não-bloqueantes (já serviu na equipe, aguardando resposta — inclusive o status "Convidado")                          |
 | Zinc escuro (neutro)                 | Ações primárias (Salvar, Convidar) — sem usar uma cor "de marca", já que o sistema é interno/operacional, não institucional |
 
 ---
@@ -51,7 +60,7 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 | Seções da Ficha do Jovem/Casal                 | Separator (empilhadas, sem Tabs)                                                   | Ficha do Jovem, Ficha do Casal                                                    |
 | Campos de formulário                           | Input, Select, Textarea, Checkbox                                                  | Fichas, Criação da Montagem                                                       |
 | Grid das 16 equipes                            | Card + Progress + Badge                                                            | Quadro das 16 Equipes                                                             |
-| Visões dentro de uma Montagem                  | Tabs                                                                               | Quadro de Equipes, Lista completa, Convites, Substituições, Quadrantes            |
+| Visões dentro de uma Montagem                  | Tabs                                                                               | Quadro de equipes, Lista completa, Convites, Substituições                        |
 | Detalhe de uma equipe                          | Drawer                                                                             | Ao clicar no card de uma equipe                                                   |
 | Pré-visualização rápida de pessoa              | Popover                                                                            | Busca de pessoa na Distribuição                                                   |
 | Avisos de regra (R1, R2, R3)                   | Badge (`AvisoBadges`/`BadgeAviso`) — vermelho grave, âmbar atenção, verde positivo | Busca de pessoa, vaga (Drawer/Lista completa), aba Convites                       |
@@ -65,17 +74,32 @@ Sendo uma paleta fixa, o campo "Cor do círculo" no cadastro vira um **Select** 
 | Ícone da equipe                                | `EquipeIcon` (PNG em `client/public/equipes/`, nome do arquivo = `slug` da Equipe) | Histórico de Equipes da ficha, cards das 16 equipes, Drawer da equipe             |
 | Auto-save, ações e remanejamento               | Toast                                                                              | Ficha (auto-save), Montagem (remanejamento com Desfazer)                          |
 | % de preenchimento                             | Progress                                                                           | Card de cada equipe, Dashboard da Montagem                                        |
-| Upload/download de PDF                         | Input file + lista                                                                 | Aba Quadrantes (sem componente shadcn nativo pra isso)                            |
+| Upload/download de PDF                         | Input file + lista                                                                 | Página Quadrantes (sem componente shadcn nativo pra isso)                         |
 | Importação em massa de fichas                  | Dialog + DataTable de conferência + Progress                                       | Importador CSV/Excel (fluxo de cadastro em lote)                                  |
 
 ---
 
 ## 3. Padrões de uso
 
+- **Badges de significado vêm de variantes do `Badge`** (`sucesso`, `atencao`, `perigo`, `neutro`, `ouro`),
+  nunca de classes de cor soltas — status de convite só pelo `AlocacaoStatusBadge`, status de ficha pelo
+  `StatusBadge`, status de montagem pelo `MontagemStatusBadge`. Desfecho leva ícone (✓ Aceito, ✕ Recusou).
+- **Cabeçalho de página é sempre o `PageHeader`** (título, descrição, ações que quebram linha no celular).
+  Metadados lado a lado usam `MetaLista` (itens espaçados), não "A · B · C" em série.
+- **Texto:** só a primeira letra maiúscula em títulos e botões ("Nova ficha", "Finalizar montagem");
+  reticências como "…"; casal escrito "Fulano e Fulana" em todo lugar; iniciais do avatar pelo helper
+  `iniciais()` (pessoa: primeiro + último nome; casal: uma letra de cada). Estado vazio e erro dizem o que
+  fazer em seguida. Sem rótulos em caixa alta e sem "PALAVRA — complemento".
+- **Campo travado na edição** fica com o valor legível (texto normal sobre fundo `muted`), nunca esmaecido.
+  Campo obrigatório leva `*` (via CSS) e `aria-required`.
+
 - **Avisos de R1–R3 são badges, não confirmação** (decisão de 14/10/2026): ficam visíveis na busca e na pessoa alocada, com a explicação no tooltip. **Alert Dialog é reservado ao R4** (convidar antes dos Círculos fecharem — dispara convite em lote) e não deve ser usado pra confirmações genéricas de UI. Ações reversíveis (como o remanejamento de equipe) usam Toast com Desfazer.
 - **Badge de cor do círculo** é sempre a mesma badge, reaproveitada em Lista de Fichas, Distribuição e Popover — consistência visual é o que faz a cor funcionar como atalho de reconhecimento.
 - **Ícone da equipe** (`EquipeIcon`): os PNGs oficiais das 16 equipes do Segue-me, usados pequenos (16–24px) e **sempre ao lado do nome da equipe**, nunca sozinhos — mesma regra do badge de círculo. Mantêm a cor original (num tamanho pequeno não competem com as cores funcionais); a UI ao redor continua neutra. Chave de lookup é o `slug` da `Equipe` (mesmo slug do seed), então o arquivo é `public/equipes/<slug>.png`.
 - **DataTable** é o padrão único pra qualquer listagem — Histórico de Fichas, Histórico de Montagens e Controle de Convites usam a mesma configuração de componente (colunas variam, comportamento não).
+- **Conta no rodapé da barra lateral** (`ContaMenu`, um `DropdownMenu`): trocar senha, tema (claro, escuro,
+  automático) e sair. No Conselho, sem barra lateral, o mesmo menu fica no canto do cabeçalho. O cabeçalho
+  da paróquia fica só com abrir/fechar a barra e a busca.
 - **Sidebar fixa**, sem navegação por breadcrumb — o sistema tem poucos níveis de profundidade (Fichas / Montagem, cada um raso), não precisa de trilha de navegação.
 
 ---
