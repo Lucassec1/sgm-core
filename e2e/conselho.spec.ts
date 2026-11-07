@@ -19,13 +19,10 @@ test.describe('Conselho e paróquia', () => {
     expect(resposta.ok()).toBeTruthy();
     const { id } = await resposta.json();
 
-    // Dashboard: atalhos do encontro em andamento (#70)
+    // Início: painel do encontro em andamento (#70)
     await page.goto('/');
-    await expect(page.getByText('1º Encontro em andamento')).toBeVisible();
-    await expect(page.getByRole('link', { name: /Modo telão/ })).toHaveAttribute(
-      'href',
-      `/montagem/${id}/telao`,
-    );
+    await expect(page.getByRole('heading', { name: '1º Encontro' })).toBeVisible();
+    await expect(page.getByText('Em andamento').first()).toBeVisible();
 
     // Sem observação, o card não aparece na montagem (#69)
     await page.goto(`/montagem/${id}`);

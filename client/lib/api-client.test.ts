@@ -294,11 +294,6 @@ describe('apiClient', () => {
         () => apiClient.deleteQuadrante('m1', 'q1'),
         { method: 'DELETE', path: '/montagens/m1/quadrantes/q1' },
       ],
-      [
-        'getTelaoMontagem',
-        () => apiClient.getTelaoMontagem('m1'),
-        { method: 'GET', path: '/telao/montagens/m1' },
-      ],
       ['listParoquias', () => apiClient.listParoquias(), { method: 'GET', path: '/paroquias' }],
       [
         'createParoquia',

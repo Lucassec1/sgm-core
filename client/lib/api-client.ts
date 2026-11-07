@@ -7,7 +7,6 @@ import { fichasApi } from './api/fichas';
 import { fichasCasaisApi } from './api/fichas-casais';
 import { montagensApi } from './api/montagens';
 import { conselhoApi } from './api/conselho';
-import { telaoApi } from './api/telao';
 
 export { ApiError, avisosDoErro } from './api/request';
 export type { Role, SessaoAtual } from './api/auth';
@@ -23,5 +22,4 @@ export const apiClient = {
   ...fichasCasaisApi,
   ...montagensApi,
   ...conselhoApi,
-  ...telaoApi,
 };
