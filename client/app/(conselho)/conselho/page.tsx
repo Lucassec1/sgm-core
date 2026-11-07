@@ -9,6 +9,7 @@ import {
   TrocarEmailParoquiaDialog,
 } from '@/components/conselho/paroquia-conta';
 import { useParoquias } from '@/lib/hooks/use-conselho';
+import { PageHeader } from '@/components/page-header';
 
 // Ponto de entrada do Conselho (R8): escolhe uma paróquia pra ver as montagens dela e gerencia
 // a conta de acesso de cada uma (e-mail da paróquia + primeiro acesso). Sem paginação/busca
@@ -18,15 +19,12 @@ export default function ConselhoPage() {
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold">Paróquias</h1>
-        <NovaParoquiaDialog />
-      </div>
+      <PageHeader title="Paróquias" actions={<NovaParoquiaDialog />} />
 
-      {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
       {isError && (
         <p className="text-sm text-red-600 dark:text-red-400">
-          Não foi possível carregar as paróquias.
+          Não foi possível carregar as paróquias. Confira a conexão e recarregue a página.
         </p>
       )}
 
@@ -52,9 +50,9 @@ export default function ConselhoPage() {
                   <>
                     <p className="break-all">{conta.login}</p>
                     {conta.aguardandoPrimeiroAcesso ? (
-                      <Badge variant="outline">Aguardando primeiro acesso</Badge>
+                      <Badge variant="atencao">Aguardando primeiro acesso</Badge>
                     ) : (
-                      <Badge variant="secondary">Acesso ativo</Badge>
+                      <Badge variant="sucesso">✓ Acesso ativo</Badge>
                     )}
                     {!conta.login.includes('@') && (
                       <p className="text-amber-600 dark:text-amber-400">
@@ -94,7 +92,9 @@ export default function ConselhoPage() {
           );
         })}
         {paroquias?.length === 0 && (
-          <p className="text-sm text-muted-foreground">Nenhuma paróquia cadastrada ainda.</p>
+          <p className="text-sm text-muted-foreground">
+            Nenhuma paróquia cadastrada. Use “Nova paróquia” pra cadastrar a primeira.
+          </p>
         )}
       </div>
     </div>

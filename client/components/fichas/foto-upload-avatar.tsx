@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { iniciais as calcularIniciais } from '@/lib/utils';
 
 const TIPOS_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
 const TAMANHO_MAXIMO_BYTES = 5 * 1024 * 1024;
@@ -24,8 +25,8 @@ export function FotoUploadAvatar({
 }: {
   fotoUrl?: string;
   nome: string;
-  /** Override das iniciais do fallback — por padrão são as 2 primeiras letras de `nome`, mas
-   * pra um casal (ex.: "Fulano & Beltrana") uma letra de cada nome fica melhor. */
+  /** Override das iniciais do fallback — por padrão, `iniciais(nome)` de lib/utils; casal passa
+   * `iniciais(nomeEle, nomeEla)`. */
   iniciais?: string;
   onUpload: (file: File) => void;
   onRemover: () => void;
@@ -53,9 +54,7 @@ export function FotoUploadAvatar({
     <div className="group relative shrink-0">
       <Avatar className="h-20 w-20">
         <AvatarImage src={fotoUrl} alt={nome} />
-        <AvatarFallback className="text-lg">
-          {(iniciais || nome || '??').slice(0, 2).toUpperCase()}
-        </AvatarFallback>
+        <AvatarFallback className="text-lg">{iniciais ?? calcularIniciais(nome)}</AvatarFallback>
       </Avatar>
 
       <input

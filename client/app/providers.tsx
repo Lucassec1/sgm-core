@@ -8,7 +8,7 @@ import { SessaoExpiradaListener } from '@/lib/auth-context';
 import { Toaster } from '@/components/ui/sonner';
 import { criarQueryClient } from '@/lib/query-client';
 
-// Toaster fica aqui (raiz), não dentro de (app)/(conselho) — /login e o modo Telão vivem fora
+// Toaster fica aqui (raiz), não dentro de (app)/(conselho) — /login e as telas de senha vivem fora
 // dos dois grupos, e sem o Toaster montado ali os toast.error()/toast.success() não aparecem
 // (renderizam num portal que só existe se o componente estiver montado em algum lugar).
 export function Providers({ children }: { children: React.ReactNode }) {

@@ -136,6 +136,14 @@ export function useCandidatosJovensGeral(montagemId: string | undefined) {
   });
 }
 
+export function useCandidatosCasaisGeral(montagemId: string | undefined) {
+  return useQuery({
+    queryKey: ['montagens', montagemId, 'candidatos-casais', 'geral'],
+    queryFn: () => apiClient.listCandidatosCasais(montagemId as string),
+    enabled: !!montagemId,
+  });
+}
+
 export function useLog(montagemId: string | undefined) {
   return useQuery({
     queryKey: ['montagens', montagemId, 'log'],

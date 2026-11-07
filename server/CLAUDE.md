@@ -10,7 +10,7 @@ Guard global (`APP_GUARD` em `app.module.ts`, classe `JwtAuthGuard`) exige sess�
 por padrão. Pra criar uma rota nova:
 
 - **Pública** (sem login — hoje só `/auth/login`, `/auth/logout`, `/auth/esqueci-senha`,
-  `/auth/redefinir-senha` e `/telao/montagens/:id`):
+  `/auth/redefinir-senha` e `/health`):
   marque com `@Public()` (`common/decorators/public.decorator.ts`).
 - **De paróquia** (a maioria — Fichas, FichasCasais, Montagem): aplique
   `@UseGuards(ParoquiaScopeGuard)` no controller e use `@ParoquiaAtual()` nos parâmetros dos

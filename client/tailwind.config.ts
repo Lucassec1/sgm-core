@@ -1,5 +1,6 @@
 import tailwindcssAnimate from 'tailwindcss-animate';
 import type { Config } from 'tailwindcss';
+import defaultTheme from 'tailwindcss/defaultTheme';
 
 const config: Config = {
   darkMode: ['class'],
@@ -10,7 +11,17 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-sans)', ...defaultTheme.fontFamily.sans],
+      },
       colors: {
+        // Ouro das equipes — acento único do sistema, tirado dos ícones oficiais das 16 equipes.
+        // Só pra progresso de equipe e encontro em andamento (docs/design-system.md, seção 1).
+        ouro: {
+          DEFAULT: 'hsl(var(--ouro))',
+          foreground: 'hsl(var(--ouro-foreground))',
+          suave: 'hsl(var(--ouro-suave))',
+        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

@@ -83,12 +83,12 @@ export function NovaMontagemDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Nova Montagem</Button>
+        <Button>Nova montagem</Button>
       </DialogTrigger>
       <DialogContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Nova Montagem</DialogTitle>
+            <DialogTitle>Nova montagem</DialogTitle>
             <DialogDescription>
               O número do encontro é calculado automaticamente. Preencha os dados abaixo pra abrir o
               quadro das 16 equipes.

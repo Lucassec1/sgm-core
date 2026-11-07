@@ -27,7 +27,7 @@ export function FichasCasaisFiltros({
   return (
     <div className="flex flex-wrap items-center gap-3">
       <Input
-        placeholder="Buscar por nome (dele ou dela)..."
+        placeholder="Buscar por nome (dele ou dela)…"
         value={nome}
         onChange={(e) => setNome(e.target.value)}
         onBlur={() => onChange({ ...value, nome })}

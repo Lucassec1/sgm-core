@@ -12,7 +12,7 @@ import {
   useListaSubstituicao,
   useMontagem,
 } from '@/lib/hooks/use-montagens';
-import { fotoSrc } from '@/lib/utils';
+import { fotoSrc, iniciais } from '@/lib/utils';
 import { AdicionarSubstitutoBar } from './adicionar-substituto-combobox';
 import { AlocarSubstitutoCombobox } from './alocar-substituto-combobox';
 import { PessoaPreviewPopover } from './pessoa-preview-popover';
@@ -66,11 +66,14 @@ export function ListaSubstituicaoSection({
   }
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Pessoas cotadas como boa opção de substituição em qualquer equipe — consulte aqui primeiro
-        quando alguém sair de uma vaga.
-      </p>
+    <section className="space-y-4">
+      <div className="space-y-1">
+        <h2 className="text-base font-bold">Lista de substituição</h2>
+        <p className="text-sm text-muted-foreground">
+          Quem tem prioridade para entrar quando alguém desistir, em qualquer equipe. Consulte aqui
+          primeiro.
+        </p>
+      </div>
 
       <div className="max-w-xl">
         <AdicionarSubstitutoBar
@@ -80,10 +83,12 @@ export function ListaSubstituicaoSection({
         />
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Carregando...</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
 
       {itens && itens.length === 0 && (
-        <p className="text-sm text-muted-foreground">Ninguém na lista ainda.</p>
+        <p className="text-sm text-muted-foreground">
+          Ninguém na lista. Adicione pela busca acima quem pode cobrir uma saída.
+        </p>
       )}
 
       {itens && itens.length > 0 && (
@@ -92,9 +97,7 @@ export function ListaSubstituicaoSection({
             <li key={item.id} className="flex items-start gap-3 rounded-md border p-3">
               <Avatar className="h-9 w-9 shrink-0">
                 <AvatarImage src={fotoItem(item)} alt={nomeItem(item)} />
-                <AvatarFallback className="text-xs">
-                  {nomeItem(item).slice(0, 2).toUpperCase()}
-                </AvatarFallback>
+                <AvatarFallback className="text-xs">{iniciais(nomeItem(item))}</AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex items-start justify-between gap-1">
@@ -133,6 +136,6 @@ export function ListaSubstituicaoSection({
           ))}
         </ul>
       )}
-    </div>
+    </section>
   );
 }

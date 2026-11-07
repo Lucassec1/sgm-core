@@ -209,7 +209,7 @@ export function UploadFotosLoteDialog({ tipo }: { tipo: Tipo }) {
         {etapa === 'selecionar' && (
           <div className="flex flex-col items-center gap-3 py-6">
             {carregando ? (
-              <p className="text-sm text-muted-foreground">Carregando fichas...</p>
+              <p className="text-sm text-muted-foreground">Carregando fichas…</p>
             ) : (
               <div className="flex gap-2">
                 <Button onClick={() => inputArquivos.current?.click()} className="gap-1.5">
@@ -337,12 +337,7 @@ function LinhaConferencia({
         </span>
 
         {linha.recusa ? (
-          <Badge
-            variant="outline"
-            className="border-transparent bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
-          >
-            {linha.recusa}
-          </Badge>
+          <Badge variant="perigo">{linha.recusa}</Badge>
         ) : (
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <select
@@ -372,33 +367,15 @@ function LinhaConferencia({
               </optgroup>
             </select>
             {repetida ? (
-              <Badge
-                variant="outline"
-                className="border-transparent bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
-              >
-                Ficha escolhida em outra foto
-              </Badge>
+              <Badge variant="perigo">Ficha escolhida em outra foto</Badge>
             ) : !linha.fichaId ? (
-              <Badge
-                variant="outline"
-                className="border-transparent bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
-              >
+              <Badge variant="atencao">
                 {linha.vinculo.tipo === 'ambiguo' ? 'Escolha a ficha' : 'Sem ficha'}
               </Badge>
             ) : sugeridaMantida && linha.vinculo.tipo === 'parcial' ? (
-              <Badge
-                variant="outline"
-                className="border-transparent bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
-              >
-                Confira
-              </Badge>
+              <Badge variant="atencao">Confira</Badge>
             ) : (
-              <Badge
-                variant="outline"
-                className="border-transparent bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400"
-              >
-                OK
-              </Badge>
+              <Badge variant="sucesso">OK</Badge>
             )}
             {escolhida?.temFoto && !repetida && (
               <span className="text-xs text-muted-foreground">substitui a foto atual</span>

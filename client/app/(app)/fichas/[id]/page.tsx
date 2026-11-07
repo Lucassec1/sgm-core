@@ -17,7 +17,7 @@ export default function FichaDetailPage({ params }: { params: Promise<{ id: stri
   const uploadFoto = useUploadFotoFicha(id);
   const removerFoto = useRemoverFotoFicha(id);
 
-  if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando...</p>;
+  if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando…</p>;
   if (isError || !ficha)
     return <p className="p-6 text-sm text-red-600 dark:text-red-400">Ficha não encontrada.</p>;
 
@@ -51,7 +51,9 @@ export default function FichaDetailPage({ params }: { params: Promise<{ id: stri
           isRemovendo={removerFoto.isPending}
         />
         <div className="space-y-1.5">
-          <h1 className="text-xl font-semibold leading-tight">{ficha.nomeCompleto}</h1>
+          <h1 className="text-balance text-2xl font-bold leading-tight tracking-tight">
+            {ficha.nomeCompleto}
+          </h1>
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge situacao={ficha.situacao} />
             <CirculoBadge cor={ficha.corCirculo} />
@@ -63,14 +65,14 @@ export default function FichaDetailPage({ params }: { params: Promise<{ id: stri
       <Separator />
 
       <section>
-        <h2 className="text-sm font-medium mb-3">Histórico de Equipes</h2>
+        <h2 className="mb-3 text-base font-bold">Histórico de equipes</h2>
         <HistoricoEquipesSection fichaId={ficha.id} />
       </section>
 
       <Separator />
 
       <section>
-        <h2 className="text-sm font-medium mb-3">Dados cadastrais</h2>
+        <h2 className="mb-3 text-base font-bold">Dados cadastrais</h2>
         <FichaForm ficha={ficha} />
       </section>
     </div>

@@ -15,7 +15,7 @@ export function LoadingScreen() {
         height={64}
         className="h-16 w-16 animate-breathe object-contain"
       />
-      <p className="text-sm text-muted-foreground">Carregando...</p>
+      <p className="text-sm text-muted-foreground">Carregando…</p>
     </div>
   );
 }

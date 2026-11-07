@@ -19,13 +19,7 @@ import { useUpdateAlocacao } from '@/lib/hooks/use-montagens';
 import { AvisosRegrasDialog } from './avisos-regras-dialog';
 import { VagaAlocacoes } from './vaga-alocacoes';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
-
-function nomeAlocacao(alocacao: Alocacao) {
-  return (
-    alocacao.ficha?.nomeCompleto ??
-    (alocacao.fichaCasal ? `${alocacao.fichaCasal.nomeEle} e ${alocacao.fichaCasal.nomeEla}` : '—')
-  );
-}
+import { nomeAlocacao } from '@/lib/montagem';
 
 // Drawer lateral de distribuição de uma equipe (docs/ux-e-fluxos.md, seção 3) — mantém o
 // Quadro das 16 Equipes visível atrás dele. Cada vaga (cargo) usa VagaAlocacoes, o mesmo

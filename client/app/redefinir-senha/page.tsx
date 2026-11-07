@@ -66,7 +66,7 @@ export default function RedefinirSenhaPage() {
       <AuthLayout>
         <div className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold">Link inválido ou expirado</h2>
+            <h1 className="text-2xl font-bold tracking-tight">Link inválido ou expirado</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               O link vale por 30 minutos e só pode ser usado uma vez. Peça um novo.
             </p>
@@ -82,7 +82,7 @@ export default function RedefinirSenhaPage() {
   return (
     <AuthLayout>
       <div className="mb-6">
-        <h2 className="text-lg font-semibold">Criar senha</h2>
+        <h1 className="text-2xl font-bold tracking-tight">Criar senha</h1>
         <p className="text-sm text-muted-foreground">
           Mínimo de 8 caracteres. Se a conta já tinha senha, quem estiver logado com a antiga será
           desconectado.

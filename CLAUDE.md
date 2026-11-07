@@ -54,8 +54,9 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
 - **Módulo Montagem: quase completo** — schema, backend (montagens, alocações, equipes,
   lista de substituição, log de atividade, quadrantes) com regras R1–R6 e R9 aplicadas (R1–R4 não bloqueiam desde 14/10/2026: R1–R3 viram badge, R4 pede confirmação) e
   testadas (specs em `server/src/modules/montagem/*.spec.ts`); frontend com quadro das 16
-  equipes, drawer por equipe, lista completa, aba Convites (status + saídas/motivos + log),
-  aba Substituições, aba Quadrantes (upload/download de PDF), criar/editar/finalizar
+  equipes, drawer por equipe, lista completa, aba Convites (status + log), aba Substituições
+  (lista de substituição, pessoas que desistiram e nomes fora da montagem), página Quadrantes na
+  barra lateral (upload/download de PDF por encontro), criar/editar/finalizar
   montagem, ícones das equipes (`EquipeIcon`).
   **Falta:** exportação na interface — os endpoints CSV (fichas, casais, montagem) existem no
   backend, mas o card de Exportação foi removido do dashboard em 17/09 e nenhuma tela leva a eles;

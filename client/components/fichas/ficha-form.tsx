@@ -1,94 +1,41 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CORES_CIRCULO } from '@/lib/types';
 import type { Ficha } from '@/lib/types';
 import { useCreateFicha, useUpdateFicha } from '@/lib/hooks/use-fichas';
-import { nullsToUndefined } from '@/lib/utils';
+import { nullsToUndefined, iniciais } from '@/lib/utils';
+import { fichaSchema, type FichaFormValues } from './ficha-form/ficha-schema';
+import { IdentificacaoSection } from './ficha-form/identificacao-section';
+import { EnderecoSection } from './ficha-form/endereco-section';
+import { FiliacaoSection } from './ficha-form/filiacao-section';
+import { EscolaridadeSection } from './ficha-form/escolaridade-section';
+import { ReligiaoSection } from './ficha-form/religiao-section';
+import { ConviteSection } from './ficha-form/convite-section';
+import { SituacaoSection } from './ficha-form/situacao-section';
+import { UserRound } from 'lucide-react';
 
 // Campos seguem docs/requisitos.md (2.1) e docs/ux-e-fluxos.md (2). As seções (Identificação,
 // Endereço, Filiação, Escolaridade, Religião, Convite) ficam empilhadas uma abaixo da outra,
 // separadas por divider — não em abas: a equipe dirigente escaneia a ficha inteira de uma vez
 // e volta pra atualizar seções pontuais, alternar aba só atrapalhava. Histórico de equipes
 // fica fora do formulário — é gerado pelo módulo Montagem e mostrado como seção separada na
-// página de detalhe (HistoricoEquipesSection).
-const fichaSchema = z.object({
-  nomeCompleto: z.string().min(3, 'Informe o nome completo'),
-  sexo: z.enum(['RAPAZ', 'MOCA'], { required_error: 'Selecione o sexo' }),
-  dataNascimento: z.string().min(1, 'Informe a data de nascimento'),
-  naturalidade: z.string().optional(),
-  telefone: z.string().min(1, 'Informe o telefone'),
-  email: z.string().email('E-mail inválido').optional().or(z.literal('')),
-  numeroEncontro: z.coerce.number().int().min(1, 'Informe o número do encontro'),
-  corCirculo: z.enum(['VERMELHO', 'AZUL', 'VERDE', 'AMARELO', 'ROSA', 'LARANJA'], {
-    required_error: 'Selecione a cor do círculo',
-  }),
-  logradouro: z.string().optional(),
-  numero: z.string().optional(),
-  complemento: z.string().optional(),
-  bairro: z.string().optional(),
-  cidade: z.string().optional(),
-  estado: z.string().optional(),
-  cep: z.string().optional(),
-  nomePai: z.string().optional(),
-  nomeMae: z.string().optional(),
-  grauEscolaridade: z.string().optional(),
-  curso: z.string().optional(),
-  instituicao: z.string().optional(),
-  situacaoEscolar: z.string().optional(),
-  religiao: z.string().optional(),
-  igrejaQueFrequenta: z.string().optional(),
-  participaOutroMovimento: z.boolean().optional(),
-  qualMovimento: z.string().optional(),
-  sacramentoBatismo: z.boolean().optional(),
-  sacramentoEucaristia: z.boolean().optional(),
-  sacramentoCrisma: z.boolean().optional(),
-  nomeConvidante: z.string().optional(),
-  telefoneConvidante: z.string().optional(),
-  enderecoConvidante: z.string().optional(),
-  observacoes: z.string().optional(),
-  situacao: z.enum(['ATIVA', 'INATIVA']).optional(),
-  motivoDesativacao: z.string().optional(),
-});
-
-type FichaFormValues = z.infer<typeof fichaSchema>;
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-sm font-medium text-muted-foreground">{children}</h3>;
-}
-
+// página de detalhe (HistoricoEquipesSection). Cada seção mora em ficha-form/ e lê o formulário
+// via useFormContext — este componente só cuida de carregar, salvar e da situação da ficha.
 export function FichaForm({ ficha }: { ficha?: Ficha }) {
   const router = useRouter();
   const isEdit = !!ficha;
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<FichaFormValues>({
+  const methods = useForm<FichaFormValues>({
     resolver: zodResolver(fichaSchema),
     mode: 'onBlur',
     defaultValues: ficha
@@ -101,6 +48,13 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
           situacao: 'ATIVA',
         },
   });
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { isSubmitting },
+  } = methods;
 
   useEffect(() => {
     if (ficha)
@@ -136,349 +90,68 @@ export function FichaForm({ ficha }: { ficha?: Ficha }) {
   const bloqueado = isEdit;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-      {/* Upload de foto real (proposta #4) só é possível depois que a Ficha existe — o
+    <FormProvider {...methods}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        {/* Upload de foto real (proposta #4) só é possível depois que a Ficha existe — o
           arquivo em disco usa o id dela como nome. No cadastro novo, só um preview com as
           iniciais; a foto é adicionada depois, no header da página de detalhe. */}
-      {!isEdit && (
-        <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16">
-            <AvatarFallback>{(nomeCompleto || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <p className="text-xs text-muted-foreground">
-            A foto pode ser adicionada depois de salvar, na página da ficha.
-          </p>
+        {!isEdit && (
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16">
+              <AvatarFallback>
+                {nomeCompleto ? (
+                  iniciais(nomeCompleto)
+                ) : (
+                  <UserRound className="h-6 w-6" aria-hidden />
+                )}
+              </AvatarFallback>
+            </Avatar>
+            <p className="text-xs text-muted-foreground">
+              A foto pode ser adicionada depois de salvar, na página da ficha. Campos com * são
+              obrigatórios.
+            </p>
+          </div>
+        )}
+
+        {isEdit && <SituacaoSection />}
+
+        <IdentificacaoSection bloqueado={bloqueado} isEdit={isEdit} />
+
+        <Separator />
+
+        <EnderecoSection />
+
+        <Separator />
+
+        <FiliacaoSection bloqueado={bloqueado} />
+
+        <Separator />
+
+        <EscolaridadeSection bloqueado={bloqueado} />
+
+        <Separator />
+
+        <ReligiaoSection bloqueado={bloqueado} />
+
+        <Separator />
+
+        <ConviteSection bloqueado={bloqueado} />
+
+        <Separator />
+
+        <div>
+          <Label htmlFor="observacoes">Observações</Label>
+          <Textarea
+            id="observacoes"
+            placeholder="Ex.: alergia a amendoim, não possui transporte próprio…"
+            {...register('observacoes')}
+          />
         </div>
-      )}
 
-      {isEdit && (
-        <div className="grid grid-cols-2 gap-4 rounded-md border p-4">
-          <div>
-            <Label>Situação</Label>
-            <Select
-              value={watch('situacao')}
-              onValueChange={(v) => setValue('situacao', v as 'ATIVA' | 'INATIVA')}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ATIVA">Ativa</SelectItem>
-                <SelectItem value="INATIVA">Inativa</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {watch('situacao') === 'INATIVA' && (
-            <div>
-              <Label htmlFor="motivoDesativacao">Motivo da desativação</Label>
-              <Input id="motivoDesativacao" {...register('motivoDesativacao')} />
-            </div>
-          )}
-        </div>
-      )}
-
-      <section className="space-y-4">
-        <SectionTitle>Identificação</SectionTitle>
-        <div className="grid grid-cols-2 gap-4">
-          {!isEdit && (
-            <div className="col-span-2">
-              <Label htmlFor="nomeCompleto">Nome completo</Label>
-              <Input id="nomeCompleto" {...register('nomeCompleto')} />
-              {errors.nomeCompleto && (
-                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                  {errors.nomeCompleto.message}
-                </p>
-              )}
-            </div>
-          )}
-          <div>
-            <Label>Sexo</Label>
-            <Select
-              value={watch('sexo')}
-              onValueChange={(v) => setValue('sexo', v as FichaFormValues['sexo'])}
-              disabled={bloqueado}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="RAPAZ">Rapaz</SelectItem>
-                <SelectItem value="MOCA">Moça</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.sexo && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.sexo.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="dataNascimento">Data de nascimento</Label>
-            <Input
-              id="dataNascimento"
-              type="date"
-              disabled={bloqueado}
-              {...register('dataNascimento')}
-            />
-            {errors.dataNascimento && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                {errors.dataNascimento.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="naturalidade">Naturalidade</Label>
-            <Input id="naturalidade" disabled={bloqueado} {...register('naturalidade')} />
-          </div>
-          <div>
-            <Label htmlFor="telefone">Telefone</Label>
-            <Input id="telefone" {...register('telefone')} />
-            {errors.telefone && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                {errors.telefone.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="email">E-mail</Label>
-            <Input id="email" type="email" {...register('email')} />
-            {errors.email && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.email.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="numeroEncontro">Nº do encontro</Label>
-            <Input
-              id="numeroEncontro"
-              type="number"
-              disabled={bloqueado}
-              {...register('numeroEncontro')}
-            />
-            {errors.numeroEncontro && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                {errors.numeroEncontro.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label>Cor do círculo</Label>
-            <Select
-              value={watch('corCirculo')}
-              onValueChange={(v) => setValue('corCirculo', v as FichaFormValues['corCirculo'])}
-              disabled={bloqueado}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                {CORES_CIRCULO.map((cor) => (
-                  <SelectItem key={cor.value} value={cor.value}>
-                    {cor.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.corCirculo && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                {errors.corCirculo.message}
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <Separator />
-
-      <section className="space-y-4">
-        <SectionTitle>Endereço</SectionTitle>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <Label htmlFor="logradouro">Logradouro</Label>
-            <Input id="logradouro" {...register('logradouro')} />
-          </div>
-          <div>
-            <Label htmlFor="numero">Número</Label>
-            <Input id="numero" {...register('numero')} />
-          </div>
-          <div>
-            <Label htmlFor="complemento">Complemento</Label>
-            <Input id="complemento" {...register('complemento')} />
-          </div>
-          <div>
-            <Label htmlFor="bairro">Bairro</Label>
-            <Input id="bairro" {...register('bairro')} />
-          </div>
-          <div>
-            <Label htmlFor="cidade">Cidade</Label>
-            <Input id="cidade" {...register('cidade')} />
-          </div>
-          <div>
-            <Label htmlFor="estado">Estado</Label>
-            <Input id="estado" {...register('estado')} />
-          </div>
-          <div>
-            <Label htmlFor="cep">CEP</Label>
-            <Input id="cep" {...register('cep')} />
-          </div>
-        </div>
-      </section>
-
-      <Separator />
-
-      <section className="space-y-4">
-        <SectionTitle>Filiação</SectionTitle>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="nomePai">Nome do pai</Label>
-            <Input id="nomePai" disabled={bloqueado} {...register('nomePai')} />
-          </div>
-          <div>
-            <Label htmlFor="nomeMae">Nome da mãe</Label>
-            <Input id="nomeMae" disabled={bloqueado} {...register('nomeMae')} />
-          </div>
-        </div>
-      </section>
-
-      <Separator />
-
-      <section className="space-y-4">
-        <SectionTitle>Escolaridade</SectionTitle>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="grauEscolaridade">Grau de escolaridade</Label>
-            <Input id="grauEscolaridade" disabled={bloqueado} {...register('grauEscolaridade')} />
-          </div>
-          <div>
-            <Label htmlFor="situacaoEscolar">Situação</Label>
-            <Input
-              id="situacaoEscolar"
-              disabled={bloqueado}
-              {...register('situacaoEscolar')}
-              placeholder="Cursando, formado..."
-            />
-          </div>
-          <div>
-            <Label htmlFor="curso">Curso</Label>
-            <Input id="curso" disabled={bloqueado} {...register('curso')} />
-          </div>
-          <div>
-            <Label htmlFor="instituicao">Instituição</Label>
-            <Input id="instituicao" disabled={bloqueado} {...register('instituicao')} />
-          </div>
-        </div>
-      </section>
-
-      <Separator />
-
-      <section className="space-y-4">
-        <SectionTitle>Religião</SectionTitle>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="religiao">Religião</Label>
-            <Input id="religiao" disabled={bloqueado} {...register('religiao')} />
-          </div>
-          <div>
-            <Label htmlFor="igrejaQueFrequenta">Igreja que frequenta</Label>
-            <Input
-              id="igrejaQueFrequenta"
-              disabled={bloqueado}
-              {...register('igrejaQueFrequenta')}
-            />
-          </div>
-          <div className="col-span-2 flex items-center gap-2">
-            <Checkbox
-              id="participaOutroMovimento"
-              checked={watch('participaOutroMovimento')}
-              onCheckedChange={(v) => setValue('participaOutroMovimento', !!v)}
-              disabled={bloqueado}
-            />
-            <Label htmlFor="participaOutroMovimento">Participa de outro movimento da Igreja</Label>
-          </div>
-          {watch('participaOutroMovimento') && (
-            <div className="col-span-2">
-              <Label htmlFor="qualMovimento">Qual movimento</Label>
-              <Input id="qualMovimento" disabled={bloqueado} {...register('qualMovimento')} />
-            </div>
-          )}
-          <div className="col-span-2 space-y-2">
-            <Label>Sacramentos recebidos</Label>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="sacramentoBatismo"
-                checked={watch('sacramentoBatismo')}
-                onCheckedChange={(v) => setValue('sacramentoBatismo', !!v)}
-                disabled={bloqueado}
-              />
-              <Label htmlFor="sacramentoBatismo" className="font-normal">
-                Batismo
-              </Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="sacramentoEucaristia"
-                checked={watch('sacramentoEucaristia')}
-                onCheckedChange={(v) => setValue('sacramentoEucaristia', !!v)}
-                disabled={bloqueado}
-              />
-              <Label htmlFor="sacramentoEucaristia" className="font-normal">
-                Eucaristia
-              </Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="sacramentoCrisma"
-                checked={watch('sacramentoCrisma')}
-                onCheckedChange={(v) => setValue('sacramentoCrisma', !!v)}
-                disabled={bloqueado}
-              />
-              <Label htmlFor="sacramentoCrisma" className="font-normal">
-                Crisma
-              </Label>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <Separator />
-
-      <section className="space-y-4">
-        <SectionTitle>Convite</SectionTitle>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="nomeConvidante">Nome de quem convidou</Label>
-            <Input id="nomeConvidante" disabled={bloqueado} {...register('nomeConvidante')} />
-          </div>
-          <div>
-            <Label htmlFor="telefoneConvidante">Telefone do convidante</Label>
-            <Input
-              id="telefoneConvidante"
-              disabled={bloqueado}
-              {...register('telefoneConvidante')}
-            />
-          </div>
-          <div className="col-span-2">
-            <Label htmlFor="enderecoConvidante">Endereço do convidante</Label>
-            <Input
-              id="enderecoConvidante"
-              disabled={bloqueado}
-              {...register('enderecoConvidante')}
-            />
-          </div>
-        </div>
-      </section>
-
-      <Separator />
-
-      <div>
-        <Label htmlFor="observacoes">Observações</Label>
-        <Textarea
-          id="observacoes"
-          placeholder="Ex.: alergia a amendoim, não possui transporte próprio..."
-          {...register('observacoes')}
-        />
-      </div>
-
-      <Button type="submit" disabled={isSubmitting}>
-        {isEdit ? 'Salvar alterações' : 'Criar ficha'}
-      </Button>
-    </form>
+        <Button type="submit" disabled={isSubmitting}>
+          {isEdit ? 'Salvar alterações' : 'Criar ficha'}
+        </Button>
+      </form>
+    </FormProvider>
   );
 }

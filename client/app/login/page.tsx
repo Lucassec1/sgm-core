@@ -77,7 +77,7 @@ export default function LoginPage() {
   return (
     <AuthLayout>
       <div className="mb-6">
-        <h2 className="text-lg font-semibold">Entrar</h2>
+        <h1 className="text-2xl font-bold tracking-tight">Entrar</h1>
         <p className="text-sm text-muted-foreground">
           Acesse com sua credencial de paróquia ou do Conselho.
         </p>

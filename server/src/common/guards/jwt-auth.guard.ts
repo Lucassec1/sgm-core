@@ -8,7 +8,7 @@ import { UsuarioAutenticado } from '../types/usuario-autenticado';
 import { COOKIE_MAX_AGE_MS, COOKIE_NAME, cookieOptions } from '../auth/cookie';
 
 // Guard global (ver app.module.ts, APP_GUARD) — toda rota exige JWT válido (cookie httpOnly),
-// exceto as marcadas @Public() (login/logout, endpoints do Telão).
+// exceto as marcadas @Public() (login/logout, esqueci/redefinir senha, health).
 //
 // Sessão "desliza" enquanto em uso: toda requisição autenticada com sucesso reemite o cookie
 // com a expiração renovada (COOKIE_MAX_AGE_MS a partir de agora, não do login original). Só

@@ -11,7 +11,6 @@ import { FichasModule } from './modules/fichas/fichas.module';
 import { FichasCasaisModule } from './modules/fichas-casais/fichas-casais.module';
 import { MontagemModule } from './modules/montagem/montagem.module';
 import { ConselhoModule } from './modules/conselho/conselho.module';
-import { TelaoModule } from './modules/telao/telao.module';
 import { HealthModule } from './modules/health/health.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
@@ -39,7 +38,6 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     FichasCasaisModule,
     MontagemModule,
     ConselhoModule,
-    TelaoModule,
     HealthModule,
   ],
   providers: [
