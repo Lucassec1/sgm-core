@@ -1,4 +1,13 @@
-import { IsBoolean, IsDateString, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 
 // paroquiaId vem do usuário autenticado (@ParoquiaAtual(), ver montagens.controller.ts), não
 // do body — R7.
@@ -10,10 +19,12 @@ export class CreateMontagemDto {
   @IsOptional() @IsString() padroeiro?: string;
   @IsOptional() @IsString() diretorEspiritual?: string;
 
-  // Implantação: quantidadeJovensSementeira (12) e quantidadeCasaisAfilhada (4) NÃO vêm do
-  // body — a Service preenche com os valores fixos quando ehImplantacao = true (ver R6).
-  @IsOptional() @IsBoolean() ehImplantacao?: boolean;
-  @IsOptional() @IsString() paroquiaAfilhadaNome?: string;
+  // Sementeira (R6): encontro da madrinha que recebe jovens da afilhada. A quantidade de jovens é
+  // 12 por padrão e pode ser menor (desistências); os 4 casais da afilhada na Visitação são fixos
+  // e a Service preenche. O vínculo, se informado, tem que estar na fase Sementeira.
+  @IsOptional() @IsBoolean() recebeSementeira?: boolean;
+  @IsOptional() @IsUUID() sementeiraDeImplantacaoId?: string;
+  @IsOptional() @IsInt() @Min(1) @Max(12) quantidadeJovensSementeira?: number;
 
   @IsInt()
   @Min(1)
