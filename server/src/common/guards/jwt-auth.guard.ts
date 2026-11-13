@@ -1,4 +1,4 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
+import { ConflictException, ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
@@ -37,7 +37,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return false;
     }
 
-    const request = context.switchToHttp().getRequest<{ user: UsuarioAutenticado }>();
+    const request = context.switchToHttp().getRequest<{ user: UsuarioAutenticado; url?: string }>();
     const response = context.switchToHttp().getResponse<Response>();
     const { user } = request;
     const token = await this.jwtService.signAsync({
@@ -50,6 +50,16 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       emitidoEm: Date.now(),
     });
     response.cookie(COOKIE_NAME, token, { ...cookieOptions(), maxAge: COOKIE_MAX_AGE_MS });
+
+    // A fase da implantação mudou com a madrinha atuando: o cookie acima já volta pra madrinha,
+    // mas a ação em curso era pra afilhada — não executa (gravaria na paróquia errada). As rotas
+    // de auth seguem, pro client buscar a sessão nova e se reorganizar.
+    if (user.atuacaoEncerrada && !request.url?.startsWith('/auth/')) {
+      throw new ConflictException({
+        code: 'ATUACAO_ENCERRADA',
+        message: 'A implantação mudou de fase: você voltou para a sua paróquia.',
+      });
+    }
 
     return true;
   }

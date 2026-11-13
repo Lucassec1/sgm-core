@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './api-client';
 
@@ -74,6 +75,33 @@ export function SessaoExpiradaListener() {
     window.addEventListener('sgm:sessao-expirada', aoExpirar);
     return () => window.removeEventListener('sgm:sessao-expirada', aoExpirar);
   }, [queryClient]);
+
+  return null;
+}
+
+// Fase da implantação mudou enquanto a madrinha atuava pela afilhada: o server recusou a ação e a
+// sessão já voltou pra madrinha. Descarta tudo da afilhada em memória (recarga completa) e avisa
+// no Início.
+export function AtuacaoEncerradaListener() {
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('atuacao') === 'encerrada') {
+      toast.info('A implantação mudou de fase: você voltou para a sua paróquia.');
+      url.searchParams.delete('atuacao');
+      window.history.replaceState(null, '', url.pathname + url.search);
+    }
+  }, []);
+
+  useEffect(() => {
+    function aoEncerrar() {
+      void limparCacheOffline().finally(() => {
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- recarga completa proposital: descarta o estado da afilhada
+        window.location.href = '/?atuacao=encerrada';
+      });
+    }
+    window.addEventListener('sgm:atuacao-encerrada', aoEncerrar);
+    return () => window.removeEventListener('sgm:atuacao-encerrada', aoEncerrar);
+  }, []);
 
   return null;
 }

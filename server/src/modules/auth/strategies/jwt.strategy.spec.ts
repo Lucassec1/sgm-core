@@ -127,7 +127,7 @@ describe('JwtStrategy', () => {
       });
     });
 
-    it('vínculo que saiu da IMPLANTACAO: volta pra madrinha sem derrubar a sessão', async () => {
+    it('vínculo que saiu da IMPLANTACAO: volta pra madrinha e marca a atuação como encerrada', async () => {
       const { strategy, prisma } = criarStrategy();
       prisma.usuario.findUnique.mockResolvedValue(USUARIO_ATIVO);
       prisma.implantacao.findFirst.mockResolvedValue(null);
@@ -139,7 +139,12 @@ describe('JwtStrategy', () => {
         implantacaoId: 'i1',
       });
 
-      expect(resultado).toEqual({ id: 'u1', role: 'PAROQUIA', paroquiaId: 'p1' });
+      expect(resultado).toEqual({
+        id: 'u1',
+        role: 'PAROQUIA',
+        paroquiaId: 'p1',
+        atuacaoEncerrada: true,
+      });
     });
 
     it('conta do Conselho com implantacaoId no token é ignorada', async () => {

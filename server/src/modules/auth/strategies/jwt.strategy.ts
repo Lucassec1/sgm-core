@@ -59,7 +59,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     // Atuação como afilhada: vale só enquanto o vínculo está em IMPLANTACAO e a paróquia da conta
     // é a madrinha. Conferido a cada requisição — quando o Conselho muda a fase, a sessão volta
-    // sozinha pra madrinha (sem erro); o guard reemite o cookie já sem a atuação.
+    // pra madrinha marcada como `atuacaoEncerrada`; o guard reemite o cookie sem a atuação e
+    // recusa a ação em curso (ver JwtAuthGuard).
     if (payload.implantacaoId && usuario.role === RoleUsuario.PAROQUIA && usuario.paroquiaId) {
       const vinculo = await this.prisma.implantacao.findFirst({
         where: {
@@ -78,6 +79,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         };
       }
     }
-    return sessao;
+    return payload.implantacaoId && usuario.role === RoleUsuario.PAROQUIA
+      ? { ...sessao, atuacaoEncerrada: true }
+      : sessao;
   }
 }
