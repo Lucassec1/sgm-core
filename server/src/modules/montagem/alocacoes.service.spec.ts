@@ -50,6 +50,8 @@ function criarPrismaMock() {
       update: jest.fn(),
       delete: jest.fn(),
     },
+    implantacao: { findFirst: jest.fn().mockResolvedValue(null) },
+    liberacaoFicha: { findMany: jest.fn().mockResolvedValue([]) },
     montagem: { findUnique: jest.fn().mockResolvedValue({ paroquiaId: 'paroquia-1' }) },
     ficha: { findUnique: jest.fn(), findFirst: jest.fn().mockResolvedValue({ id: 'ficha-1' }) },
     fichaCasal: {

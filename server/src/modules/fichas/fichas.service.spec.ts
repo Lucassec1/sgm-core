@@ -369,4 +369,28 @@ describe('FichasService — upload de foto', () => {
       expect(prisma.ficha.update).toHaveBeenCalled();
     });
   });
+
+  describe('historicoEquipes — serviço em outra paróquia (implantação)', () => {
+    it('marca outraParoquia e traz o nome da paróquia do encontro', async () => {
+      const prisma = criarPrismaMock();
+      const service = new FichasService(prisma as unknown as PrismaService);
+      prisma.alocacao.findMany.mockResolvedValue([
+        {
+          id: 'a1',
+          vagaMontagem: { montagem: { paroquiaId: PAROQUIA_ID, paroquia: { nome: 'Paróquia Y' } } },
+        },
+        {
+          id: 'a2',
+          vagaMontagem: { montagem: { paroquiaId: 'afilhada', paroquia: { nome: 'Paróquia X' } } },
+        },
+      ]);
+
+      const historico = await service.historicoEquipes(FICHA_ID, PAROQUIA_ID);
+
+      expect(historico.map((h) => [h.id, h.outraParoquia])).toEqual([
+        ['a1', false],
+        ['a2', true],
+      ]);
+    });
+  });
 });

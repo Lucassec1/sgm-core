@@ -12,6 +12,8 @@ const MONTAGEM_ID = 'montagem-1';
 
 function criarPrismaMock() {
   const mock: Record<string, unknown> = {
+    implantacao: { findFirst: jest.fn().mockResolvedValue(null) },
+    liberacaoFicha: { findMany: jest.fn().mockResolvedValue([]) },
     montagem: {
       findUnique: jest.fn().mockResolvedValue({ id: MONTAGEM_ID, paroquiaId: 'paroquia-1' }),
     },

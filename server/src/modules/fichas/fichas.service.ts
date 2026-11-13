@@ -199,18 +199,32 @@ export class FichasService {
   // ACEITO, pra também mostrar convites em aberto/recusas no histórico.
   async historicoEquipes(id: string, paroquiaId: string) {
     await this.findOne(id, paroquiaId);
-    return this.prisma.alocacao.findMany({
+    const alocacoes = await this.prisma.alocacao.findMany({
       where: { fichaId: id },
       include: {
         vagaMontagem: {
           include: {
             equipe: true,
             cargo: true,
-            montagem: { select: { numeroEncontro: true, data: true, status: true } },
+            montagem: {
+              select: {
+                numeroEncontro: true,
+                data: true,
+                status: true,
+                paroquiaId: true,
+                paroquia: { select: { nome: true } },
+              },
+            },
           },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
+    // Implantação: serviço num encontro de outra paróquia (madrinha <-> afilhada) aparece com o
+    // nome dela.
+    return alocacoes.map((a) => ({
+      ...a,
+      outraParoquia: a.vagaMontagem.montagem.paroquiaId !== paroquiaId,
+    }));
   }
 }

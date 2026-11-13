@@ -1,10 +1,10 @@
 import { NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { filtroElegiveis, pessoasElegiveis } from './pessoas-elegiveis';
 
-// R7 — o MontagemScopeGuard garante que a Montagem é da paróquia de quem pede, mas o
-// fichaId/fichaCasalId vem do body: sem esta checagem, uma paróquia que soubesse o UUID de uma
-// ficha alheia conseguiria alocá-la (e depois ler a ficha inteira pela alocação). NotFound em
-// vez de Forbidden pra não revelar que a ficha existe em outra paróquia (ver server/CLAUDE.md).
+// R7 — a pessoa colocada numa montagem (alocação, lista de substituição) tem que ser da paróquia
+// da montagem, salvo as exceções da implantação (pessoas-elegiveis.ts). NotFound, não Forbidden:
+// não revela que a ficha existe em outra paróquia.
 export async function garantirPessoaDaParoquia(
   db: Prisma.TransactionClient,
   montagemId: string,
@@ -14,27 +14,31 @@ export async function garantirPessoaDaParoquia(
 
   const montagem = await db.montagem.findUnique({
     where: { id: montagemId },
-    select: { paroquiaId: true },
+    select: { paroquiaId: true, implantacaoId: true },
   });
-  const paroquiaId = montagem?.paroquiaId;
+  const elegiveis = montagem ? await pessoasElegiveis(db, montagem) : null;
 
   if (pessoa.fichaId) {
     const ficha =
-      paroquiaId &&
+      elegiveis &&
       (await db.ficha.findFirst({
-        where: { id: pessoa.fichaId, paroquiaId },
+        where: { id: pessoa.fichaId, ...filtroElegiveis(elegiveis, 'fichaIds') },
         select: { id: true },
       }));
-    if (!ficha) throw new NotFoundException(`Ficha ${pessoa.fichaId} não encontrada`);
+    if (!ficha) {
+      throw new NotFoundException(`Ficha ${pessoa.fichaId} não encontrada`);
+    }
   }
 
   if (pessoa.fichaCasalId) {
     const casal =
-      paroquiaId &&
+      elegiveis &&
       (await db.fichaCasal.findFirst({
-        where: { id: pessoa.fichaCasalId, paroquiaId },
+        where: { id: pessoa.fichaCasalId, ...filtroElegiveis(elegiveis, 'fichaCasalIds') },
         select: { id: true },
       }));
-    if (!casal) throw new NotFoundException(`Ficha de casal ${pessoa.fichaCasalId} não encontrada`);
+    if (!casal) {
+      throw new NotFoundException(`Ficha de casal ${pessoa.fichaCasalId} não encontrada`);
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Sexo, StatusConvite } from '@prisma/client';
+import { filtroElegiveis, pessoasElegiveis } from './pessoas-elegiveis';
 import { PrismaService } from '../../prisma/prisma.service';
 import { buscarMontagemComVagas } from './montagem-da-paroquia';
 
@@ -133,33 +134,45 @@ export class SugestoesMontagemService {
       ];
     }
 
+    const elegiveis = await pessoasElegiveis(this.prisma, montagem);
     const [idsSaidas, vezes, fichas] = await Promise.all([
       this.idsQueSairam(montagemId, 'fichaId'),
       vaga ? this.vezesNaEquipe(vaga.equipeId, montagemId, 'fichaId') : Promise.resolve(null),
       this.prisma.ficha.findMany({
         where: {
-          paroquiaId: montagem.paroquiaId,
+          ...filtroElegiveis(elegiveis, 'fichaIds'),
           situacao: 'ATIVA',
           ...(sexos && { sexo: { in: sexos } }),
+        },
+        include: {
+          paroquia: { select: { id: true, nome: true } },
+          sementeiraDe: { select: { afilhadaId: true } },
         },
       }),
     ]);
 
+    // R5 — quem vivenciou como sementeira (na madrinha) e já é da afilhada conta como anterior
+    // ao I encontro dela: numeroEncontro efetivo 0, não o número do encontro da madrinha.
+    const encontroDe = (f: (typeof fichas)[number]) =>
+      f.sementeiraDe && f.sementeiraDe.afilhadaId === f.paroquiaId ? 0 : f.numeroEncontro;
     const encontroAnterior = montagem.numeroEncontro - 1;
     return fichas
-      .map((f) => ({
+      .map(({ paroquia, sementeiraDe, ...f }) => ({
         ...f,
+        numeroEncontroEfetivo: encontroDe({ ...f, paroquia, sementeiraDe }),
+        paroquiaOrigem: paroquia,
         recusouNesteEncontro: idsSaidas.has(f.id),
         vezesNaEquipe: vezes?.get(f.id) ?? 0,
       }))
       .sort((a, b) => {
         if (a.recusouNesteEncontro !== b.recusouNesteEncontro)
           return a.recusouNesteEncontro ? 1 : -1;
-        const aEhAnterior = a.numeroEncontro === encontroAnterior;
-        const bEhAnterior = b.numeroEncontro === encontroAnterior;
+        const aEhAnterior = a.numeroEncontroEfetivo === encontroAnterior;
+        const bEhAnterior = b.numeroEncontroEfetivo === encontroAnterior;
         if (aEhAnterior !== bEhAnterior) return aEhAnterior ? -1 : 1;
-        return b.numeroEncontro - a.numeroEncontro;
-      });
+        return b.numeroEncontroEfetivo - a.numeroEncontroEfetivo;
+      })
+      .map(({ numeroEncontroEfetivo: _, ...f }) => f);
   }
 
   // Casais candidatos a uma vaga — mesmo formato dos jovens (recusou neste encontro, vezes que
@@ -168,18 +181,21 @@ export class SugestoesMontagemService {
     const montagem = await buscarMontagemComVagas(this.prisma, montagemId, paroquiaId);
     const vaga = vagaMontagemId ? this.vagaDaMontagem(montagem, vagaMontagemId) : undefined;
 
+    const elegiveis = await pessoasElegiveis(this.prisma, montagem);
     const [idsSaidas, vezes, casais] = await Promise.all([
       this.idsQueSairam(montagemId, 'fichaCasalId'),
       vaga ? this.vezesNaEquipe(vaga.equipeId, montagemId, 'fichaCasalId') : Promise.resolve(null),
       this.prisma.fichaCasal.findMany({
-        where: { paroquiaId: montagem.paroquiaId, situacao: 'ATIVA' },
+        where: { ...filtroElegiveis(elegiveis, 'fichaCasalIds'), situacao: 'ATIVA' },
+        include: { paroquia: { select: { id: true, nome: true } } },
         orderBy: { nomeEle: 'asc' },
       }),
     ]);
 
     return casais
-      .map((c) => ({
+      .map(({ paroquia, ...c }) => ({
         ...c,
+        paroquiaOrigem: paroquia,
         recusouNesteEncontro: idsSaidas.has(c.id),
         vezesNaEquipe: vezes?.get(c.id) ?? 0,
       }))

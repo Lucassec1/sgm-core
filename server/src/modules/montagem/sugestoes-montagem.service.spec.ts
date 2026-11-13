@@ -13,6 +13,8 @@ const MONTAGEM_ID = 'montagem-1';
 
 function criarPrismaMock() {
   const mock: Record<string, unknown> = {
+    implantacao: { findFirst: jest.fn().mockResolvedValue(null) },
+    liberacaoFicha: { findMany: jest.fn().mockResolvedValue([]) },
     montagem: {
       findFirst: jest.fn(),
       create: jest.fn(),
@@ -161,6 +163,79 @@ describe('SugestoesMontagemService', () => {
         service.candidatosJovens(MONTAGEM_ID, PAROQUIA_ID, 'vaga-inexistente'),
       ).rejects.toThrow(BadRequestException);
       expect(prisma.ficha.findMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('candidatos — implantação (madrinha e afilhada)', () => {
+    const montagemAnexo = {
+      id: MONTAGEM_ID,
+      paroquiaId: 'afilhada',
+      implantacaoId: 'i1',
+      numeroEncontro: 1,
+      vagas: [],
+    };
+    const vinculo = {
+      id: 'i1',
+      madrinhaId: 'madrinha',
+      afilhadaId: 'afilhada',
+      fase: 'IMPLANTACAO',
+    };
+
+    it('encontro de anexo: busca nas duas paróquias e marca a origem de cada candidato', async () => {
+      prisma.montagem.findUnique.mockResolvedValue(montagemAnexo);
+      prisma.implantacao.findFirst.mockResolvedValue(vinculo);
+      prisma.ficha.findMany.mockResolvedValue([
+        {
+          id: 'f-m',
+          numeroEncontro: 20,
+          paroquiaId: 'madrinha',
+          paroquia: { id: 'madrinha', nome: 'Paróquia Y' },
+          sementeiraDe: null,
+        },
+      ]);
+      prisma.fichaCasal.findMany.mockResolvedValue([
+        { id: 'c-a', paroquiaId: 'afilhada', paroquia: { id: 'afilhada', nome: 'Paróquia X' } },
+      ]);
+
+      const jovens = await service.candidatosJovens(MONTAGEM_ID, 'afilhada');
+      const casais = await service.candidatosCasais(MONTAGEM_ID, 'afilhada');
+
+      expect(prisma.ficha.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [{ paroquiaId: { in: ['afilhada', 'madrinha'] } }],
+            situacao: 'ATIVA',
+          }),
+        }),
+      );
+      expect(jovens[0].paroquiaOrigem).toEqual({ id: 'madrinha', nome: 'Paróquia Y' });
+      expect(jovens[0]).not.toHaveProperty('paroquia');
+      expect(casais[0].paroquiaOrigem).toEqual({ id: 'afilhada', nome: 'Paróquia X' });
+    });
+
+    it('R5: quem vivenciou como sementeira conta como anterior ao I encontro', async () => {
+      prisma.montagem.findUnique.mockResolvedValue(montagemAnexo);
+      prisma.implantacao.findFirst.mockResolvedValue(vinculo);
+      prisma.ficha.findMany.mockResolvedValue([
+        {
+          id: 'f-madrinha',
+          numeroEncontro: 20,
+          paroquiaId: 'madrinha',
+          paroquia: null,
+          sementeiraDe: null,
+        },
+        {
+          id: 'f-sementeira',
+          numeroEncontro: 16,
+          paroquiaId: 'afilhada',
+          paroquia: null,
+          sementeiraDe: { afilhadaId: 'afilhada' },
+        },
+      ]);
+
+      const jovens = await service.candidatosJovens(MONTAGEM_ID, 'afilhada');
+
+      expect(jovens.map((j) => j.id)).toEqual(['f-sementeira', 'f-madrinha']);
     });
   });
 
