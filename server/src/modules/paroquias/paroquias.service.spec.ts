@@ -12,6 +12,7 @@ function criarPrismaMock() {
     usuario: {
       findFirst: jest.fn(),
       update: jest.fn(),
+      create: jest.fn(),
     },
     paroquia: { findMany: jest.fn() },
     tokenRedefinicaoSenha: { deleteMany: jest.fn() },
@@ -138,6 +139,28 @@ describe('ParoquiasService', () => {
       expect(prisma.tokenRedefinicaoSenha.deleteMany).toHaveBeenCalledWith({
         where: { usuarioId: 'u1' },
       });
+    });
+  });
+
+  describe('criarConta (paróquia criada sem conta, ex.: afilhada da implantação)', () => {
+    it('cria o usuário PAROQUIA com o e-mail normalizado', async () => {
+      prisma.usuario.findFirst.mockResolvedValue(null);
+      await service.criarConta('p1', ' X@Gmail.com ');
+      expect(prisma.usuario.create).toHaveBeenCalledWith({
+        data: { login: 'x@gmail.com', role: 'PAROQUIA', paroquiaId: 'p1' },
+      });
+    });
+
+    it('paróquia que já tem conta → 409 (usar alterar e-mail)', async () => {
+      prisma.usuario.findFirst.mockResolvedValueOnce({ id: 'u1' });
+      await expect(service.criarConta('p1', 'x@gmail.com')).rejects.toThrow(ConflictException);
+      expect(prisma.usuario.create).not.toHaveBeenCalled();
+    });
+
+    it('e-mail já usado por outra conta → 409', async () => {
+      prisma.usuario.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'outra' });
+      await expect(service.criarConta('p1', 'x@gmail.com')).rejects.toThrow(ConflictException);
+      expect(prisma.usuario.create).not.toHaveBeenCalled();
     });
   });
 });
