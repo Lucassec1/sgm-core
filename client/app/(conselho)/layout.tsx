@@ -38,6 +38,20 @@ export default function ConselhoLayout({ children }: { children: React.ReactNode
         <Link href="/conselho" className="min-w-0 truncate text-sm font-medium">
           <span className="hidden sm:inline">SGM Core · </span>Conselho
         </Link>
+        <nav aria-label="Conselho" className="ml-4 flex items-center gap-1 text-sm">
+          <Link
+            href="/conselho"
+            className="rounded-md px-2 py-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            Paróquias
+          </Link>
+          <Link
+            href="/conselho/implantacoes"
+            className="rounded-md px-2 py-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            Implantações
+          </Link>
+        </nav>
         <div className="ml-auto flex shrink-0 items-center">
           <ContaMenu variante="cabecalho" />
         </div>
