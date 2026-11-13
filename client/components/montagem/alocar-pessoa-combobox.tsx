@@ -52,6 +52,7 @@ interface Opcao {
   avaliadoPodeCoordenar?: boolean;
   recusouNesteEncontro?: boolean;
   vezesNaEquipe?: number;
+  paroquiaOrigem?: { id: string; nome: string };
 }
 
 const TITULO_GRUPO: Record<'A' | 'B' | 'outros', string> = {
@@ -164,6 +165,7 @@ export function AlocarPessoaCombobox({
           grupo: undefined,
           recusouNesteEncontro: f.recusouNesteEncontro,
           vezesNaEquipe: f.vezesNaEquipe,
+          paroquiaOrigem: f.paroquiaOrigem,
         }))
       : (candidatosCasais.data ?? []).map((c) => ({
           id: c.id,
@@ -171,7 +173,12 @@ export function AlocarPessoaCombobox({
           grupo: undefined,
           recusouNesteEncontro: c.recusouNesteEncontro,
           vezesNaEquipe: c.vezesNaEquipe,
+          paroquiaOrigem: c.paroquiaOrigem,
         }));
+
+  // Implantação: quando a busca traz gente da madrinha e da afilhada, cada opção diz de onde é.
+  const mostraParoquia =
+    new Set(opcoesBase.map((o) => o.paroquiaOrigem?.id).filter(Boolean)).size > 1;
 
   // Quem ainda não está em nenhuma equipe desse encontro aparece primeiro na lista — é
   // quem mais precisa de vaga; ordenação por prioridade (R5) e busca por texto continuam
@@ -287,6 +294,11 @@ export function AlocarPessoaCombobox({
                           >
                             <div className="flex min-w-0 flex-col gap-1">
                               <span>{pessoa.nome}</span>
+                              {mostraParoquia && pessoa.paroquiaOrigem && (
+                                <span className="text-xs text-muted-foreground">
+                                  {pessoa.paroquiaOrigem.nome}
+                                </span>
+                              )}
                               <OpcaoBadges pessoa={pessoa} />
                               {jaAlocadaEm && (
                                 <span className="text-xs text-muted-foreground">

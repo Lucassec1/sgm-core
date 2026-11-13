@@ -127,7 +127,8 @@ export class SugestoesMontagemService {
 
     let sexos: Sexo[] | undefined;
     const vaga = vagaMontagemId ? this.vagaDaMontagem(montagem, vagaMontagemId) : undefined;
-    if (vaga) {
+    // Vaga de anexo com "N jovens" sem sexo definido aceita qualquer um — não filtra.
+    if (vaga && !vaga.quantidadeJovens) {
       sexos = [
         ...(vaga.quantidadeRapazes > 0 ? [Sexo.RAPAZ] : []),
         ...(vaga.quantidadeMocas > 0 ? [Sexo.MOCA] : []),
@@ -204,7 +205,13 @@ export class SugestoesMontagemService {
 
   private vagaDaMontagem(
     montagem: {
-      vagas: { id: string; equipeId: string; quantidadeRapazes: number; quantidadeMocas: number }[];
+      vagas: {
+        id: string;
+        equipeId: string;
+        quantidadeRapazes: number;
+        quantidadeMocas: number;
+        quantidadeJovens?: number;
+      }[];
     },
     vagaMontagemId: string,
   ) {

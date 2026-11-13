@@ -19,30 +19,42 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import {
+  SementeiraCampos,
+  camposSementeira,
+  intervaloJovens,
+  payloadSementeira,
+  textoIntervalo,
+} from './sementeira-campos';
 import { useUpdateMontagem } from '@/lib/hooks/use-montagens';
 import type { Montagem } from '@/lib/types';
 
 const schema = z
   .object({
     numeroJovensVivenciando: z.coerce.number().int(),
-    ehImplantacao: z.boolean().optional(),
-    paroquiaAfilhadaNome: z.string().optional(),
+    ...camposSementeira,
   })
-  .refine(
-    (data) => {
-      const minimo = data.ehImplantacao ? 52 : 40;
-      const maximo = data.ehImplantacao ? 72 : 60;
-      return data.numeroJovensVivenciando >= minimo && data.numeroJovensVivenciando <= maximo;
-    },
-    {
-      message:
-        'Fora do intervalo (40-60 jovens, ou 52-72 numa implantação — já contando os 12 sementeira)',
-      path: ['numeroJovensVivenciando'],
-    },
-  );
+  .superRefine((d, ctx) => {
+    const { minimo, maximo } = intervaloJovens(d.recebeSementeira, d.quantidadeJovensSementeira);
+    if (d.numeroJovensVivenciando < minimo || d.numeroJovensVivenciando > maximo) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['numeroJovensVivenciando'],
+        message: `Fora do intervalo: de ${minimo} a ${maximo} jovens`,
+      });
+    }
+  });
 
 type FormValues = z.infer<typeof schema>;
+
+function valoresIniciais(montagem: Montagem): FormValues {
+  return {
+    numeroJovensVivenciando: montagem.numeroJovensVivenciando,
+    recebeSementeira: montagem.recebeSementeira,
+    quantidadeJovensSementeira: montagem.quantidadeJovensSementeira ?? 12,
+    sementeiraDeImplantacaoId: montagem.sementeiraDeImplantacaoId ?? undefined,
+  };
+}
 
 // O nº de jovens vivenciando fecha aos poucos, à medida que as fichas vão sendo cadastradas
 // (a Montagem já é aberta com uma estimativa) — esse ajuste recalcula a Eq. da Visitação
@@ -61,17 +73,31 @@ export function EditarTamanhoEncontroDialog({ montagem }: { montagem: Montagem }
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      numeroJovensVivenciando: montagem.numeroJovensVivenciando,
-      ehImplantacao: montagem.ehImplantacao,
-      paroquiaAfilhadaNome: montagem.paroquiaAfilhadaNome ?? '',
+      ...valoresIniciais(montagem),
     },
   });
 
-  const ehImplantacao = watch('ehImplantacao');
+  const recebeSementeira = watch('recebeSementeira');
+  const quantidadeSementeira = watch('quantidadeJovensSementeira');
+  // Encontro de implantação (vagas do anexo) não recebe sementeira — o server recusa.
+  const ehAnexo = montagem.anexoImplantacao != null;
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await updateMontagem.mutateAsync(values);
+      const { recebeSementeira, quantidadeJovensSementeira, sementeiraDeImplantacaoId, ...dados } =
+        values;
+      await updateMontagem.mutateAsync(
+        ehAnexo
+          ? dados
+          : {
+              ...dados,
+              ...payloadSementeira({
+                recebeSementeira,
+                quantidadeJovensSementeira,
+                sementeiraDeImplantacaoId,
+              }),
+            },
+      );
       toast.success('Encontro atualizado — Eq. da Visitação recalculada.');
       setOpen(false);
     } catch (err) {
@@ -86,9 +112,7 @@ export function EditarTamanhoEncontroDialog({ montagem }: { montagem: Montagem }
         setOpen(v);
         if (v) {
           reset({
-            numeroJovensVivenciando: montagem.numeroJovensVivenciando,
-            ehImplantacao: montagem.ehImplantacao,
-            paroquiaAfilhadaNome: montagem.paroquiaAfilhadaNome ?? '',
+            ...valoresIniciais(montagem),
           });
         }
       }}
@@ -118,7 +142,7 @@ export function EditarTamanhoEncontroDialog({ montagem }: { montagem: Montagem }
                 {...register('numeroJovensVivenciando')}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                {ehImplantacao ? '52 a 72 (já incluindo os 12 sementeira)' : '40 a 60'}
+                {textoIntervalo(recebeSementeira, quantidadeSementeira)}
               </p>
               {errors.numeroJovensVivenciando && (
                 <p className="text-xs text-red-600 dark:text-red-400 mt-1">
@@ -126,27 +150,15 @@ export function EditarTamanhoEncontroDialog({ montagem }: { montagem: Montagem }
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="ehImplantacao"
-                checked={ehImplantacao}
-                onCheckedChange={(v) => setValue('ehImplantacao', !!v)}
+            {!ehAnexo && (
+              <SementeiraCampos
+                recebe={!!recebeSementeira}
+                onRecebeChange={(v) => setValue('recebeSementeira', v)}
+                quantidade={register('quantidadeJovensSementeira')}
+                erroQuantidade={errors.quantidadeJovensSementeira?.message}
+                vinculoId={watch('sementeiraDeImplantacaoId')}
+                onVinculoChange={(id) => setValue('sementeiraDeImplantacaoId', id)}
               />
-              <Label htmlFor="ehImplantacao" className="font-normal">
-                É implantação (lança o Segue-me numa paróquia afilhada)
-              </Label>
-            </div>
-            {ehImplantacao && (
-              <>
-                <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
-                  Soma automaticamente 12 jovens sementeira e 4 casais afilhados na Eq. da Visitação
-                  (fixo).
-                </div>
-                <div>
-                  <Label htmlFor="paroquiaAfilhadaNome">Nome da paróquia afilhada</Label>
-                  <Input id="paroquiaAfilhadaNome" {...register('paroquiaAfilhadaNome')} />
-                </div>
-              </>
             )}
           </div>
 

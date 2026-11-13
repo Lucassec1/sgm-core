@@ -151,6 +151,32 @@ describe('SugestoesMontagemService', () => {
       );
     });
 
+    it('vaga de anexo com jovens sem sexo definido não filtra por sexo', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        numeroEncontro: 1,
+        vagas: [
+          {
+            id: 'vaga-j',
+            equipeId: 'e1',
+            quantidadeRapazes: 0,
+            quantidadeMocas: 0,
+            quantidadeJovens: 5,
+          },
+        ],
+      });
+      prisma.ficha.findMany.mockResolvedValue([]);
+
+      await service.candidatosJovens(MONTAGEM_ID, PAROQUIA_ID, 'vaga-j');
+
+      expect(prisma.ficha.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.not.objectContaining({ sexo: expect.anything() }),
+        }),
+      );
+    });
+
     it('rejeita vagaMontagemId que não pertence à montagem', async () => {
       prisma.montagem.findUnique.mockResolvedValue({
         id: MONTAGEM_ID,
