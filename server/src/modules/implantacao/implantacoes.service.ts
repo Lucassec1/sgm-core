@@ -117,6 +117,73 @@ export class ImplantacoesService {
     return this.paroquias.criarConta(vinculo.afilhadaId, email);
   }
 
+  // Lado da madrinha: vínculos dela ainda não encerrados (menu "Atuar como", marca de sementeira,
+  // liberação de fichas).
+  minhas(paroquiaId: string) {
+    return this.prisma.implantacao.findMany({
+      where: { madrinhaId: paroquiaId, fase: ATIVA },
+      select: { id: true, fase: true, afilhada: { select: { id: true, nome: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async listarLiberacoes(id: string, paroquiaId: string) {
+    await this.vinculoDaMadrinha(id, paroquiaId);
+    return this.prisma.liberacaoFicha.findMany({
+      where: { implantacaoId: id },
+      include: {
+        ficha: { select: { id: true, nomeCompleto: true } },
+        fichaCasal: { select: { id: true, nomeEle: true, nomeEla: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // Acompanhamento: a madrinha cede uma ficha sua ("um jovem aqui e ali") pras montagens da
+  // afilhada. Só as fichas liberadas aparecem pra afilhada — o resto da madrinha continua isolado.
+  async liberar(
+    id: string,
+    paroquiaId: string,
+    pessoa: { fichaId?: string; fichaCasalId?: string },
+  ) {
+    const vinculo = await this.vinculoDaMadrinha(id, paroquiaId);
+    if (!!pessoa.fichaId === !!pessoa.fichaCasalId) {
+      throw new BadRequestException('Informe exatamente uma ficha (jovem ou casal)');
+    }
+    this.exigirFase(vinculo.fase, FaseImplantacao.ACOMPANHAMENTO);
+    const ficha = pessoa.fichaId
+      ? await this.prisma.ficha.findFirst({ where: { id: pessoa.fichaId, paroquiaId } })
+      : await this.prisma.fichaCasal.findFirst({ where: { id: pessoa.fichaCasalId, paroquiaId } });
+    if (!ficha) {
+      throw new NotFoundException('Ficha não encontrada');
+    }
+    return this.prisma.liberacaoFicha.create({
+      data: { implantacaoId: id, fichaId: pessoa.fichaId, fichaCasalId: pessoa.fichaCasalId },
+    });
+  }
+
+  async removerLiberacao(id: string, liberacaoId: string, paroquiaId: string) {
+    await this.vinculoDaMadrinha(id, paroquiaId);
+    const liberacao = await this.prisma.liberacaoFicha.findFirst({
+      where: { id: liberacaoId, implantacaoId: id },
+    });
+    if (!liberacao) {
+      throw new NotFoundException('Liberação não encontrada');
+    }
+    await this.prisma.liberacaoFicha.delete({ where: { id: liberacaoId } });
+    return { ok: true };
+  }
+
+  private async vinculoDaMadrinha(id: string, paroquiaId: string) {
+    const vinculo = await this.prisma.implantacao.findFirst({
+      where: { id, madrinhaId: paroquiaId },
+    });
+    if (!vinculo) {
+      throw new NotFoundException(`Implantação ${id} não encontrada`);
+    }
+    return vinculo;
+  }
+
   private async avancar(
     id: string,
     faseAtual: FaseImplantacao,

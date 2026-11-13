@@ -16,6 +16,14 @@ function criarPrismaMock() {
     tx,
     paroquia: { findUnique: jest.fn() },
     implantacao: { findFirst: jest.fn(), findUnique: jest.fn(), findMany: jest.fn() },
+    ficha: { findFirst: jest.fn() },
+    fichaCasal: { findFirst: jest.fn() },
+    liberacaoFicha: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn((args: any) => ({ id: 'l1', ...args.data })),
+      delete: jest.fn(),
+    },
     $transaction: jest.fn((fn: any) => fn(tx)),
   };
 }
@@ -167,6 +175,63 @@ describe('ImplantacoesService', () => {
         implantacaoIniciadaEm: null,
         acompanhamentoIniciadoEm: null,
         encerradaEm: null,
+      });
+    });
+  });
+
+  describe('lado da madrinha', () => {
+    it('minhas: só vínculos não encerrados em que a paróquia é madrinha', async () => {
+      prisma.implantacao.findMany.mockResolvedValue([]);
+      await service.minhas('madrinha');
+      expect(prisma.implantacao.findMany).toHaveBeenCalledWith({
+        where: { madrinhaId: 'madrinha', fase: { not: 'ENCERRADA' } },
+        select: { id: true, fase: true, afilhada: { select: { id: true, nome: true } } },
+        orderBy: { createdAt: 'desc' },
+      });
+    });
+
+    it('liberar fora do ACOMPANHAMENTO → 400', async () => {
+      prisma.implantacao.findFirst.mockResolvedValue(vinculo('IMPLANTACAO'));
+      await expect(service.liberar('i1', 'madrinha', { fichaId: 'f1' })).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(prisma.liberacaoFicha.create).not.toHaveBeenCalled();
+    });
+
+    it('liberar vínculo de outra madrinha → 404', async () => {
+      prisma.implantacao.findFirst.mockResolvedValue(null);
+      await expect(service.liberar('i1', 'outra', { fichaId: 'f1' })).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(prisma.implantacao.findFirst).toHaveBeenCalledWith({
+        where: { id: 'i1', madrinhaId: 'outra' },
+      });
+    });
+
+    it('liberar ficha que não é da madrinha → 404', async () => {
+      prisma.implantacao.findFirst.mockResolvedValue(vinculo('ACOMPANHAMENTO'));
+      prisma.ficha.findFirst.mockResolvedValue(null);
+      await expect(service.liberar('i1', 'madrinha', { fichaId: 'f-x' })).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(prisma.ficha.findFirst).toHaveBeenCalledWith({
+        where: { id: 'f-x', paroquiaId: 'madrinha' },
+      });
+    });
+
+    it('liberar exige exatamente uma ficha (jovem ou casal) → 400', async () => {
+      prisma.implantacao.findFirst.mockResolvedValue(vinculo('ACOMPANHAMENTO'));
+      await expect(
+        service.liberar('i1', 'madrinha', { fichaId: 'f1', fichaCasalId: 'c1' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('libera ficha de casal da madrinha no acompanhamento', async () => {
+      prisma.implantacao.findFirst.mockResolvedValue(vinculo('ACOMPANHAMENTO'));
+      prisma.fichaCasal.findFirst.mockResolvedValue({ id: 'c1' });
+      await service.liberar('i1', 'madrinha', { fichaCasalId: 'c1' });
+      expect(prisma.liberacaoFicha.create).toHaveBeenCalledWith({
+        data: { implantacaoId: 'i1', fichaId: undefined, fichaCasalId: 'c1' },
       });
     });
   });

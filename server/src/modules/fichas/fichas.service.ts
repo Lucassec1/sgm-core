@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { FaseImplantacao } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   ArquivoRecebido,
@@ -16,11 +17,25 @@ import { toCsv } from '../../common/export/csv.util';
 // Prefixo da chave no S3 (ver common/uploads/foto-storage.ts) — cada tipo de ficha no seu.
 const FOTOS_PREFIXO = 'fichas';
 
+// Origem da sementeira na ficha: "Sementeira de Paróquia X" (madrinha) ou "vivenciou como
+// sementeira na Paróquia Y" (afilhada, depois da transferência).
+const SEMENTEIRA_INCLUDE = {
+  sementeiraDe: {
+    select: {
+      id: true,
+      fase: true,
+      madrinha: { select: { id: true, nome: true } },
+      afilhada: { select: { id: true, nome: true } },
+    },
+  },
+} as const;
+
 @Injectable()
 export class FichasService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateFichaDto, paroquiaId: string) {
+  async create(dto: CreateFichaDto, paroquiaId: string) {
+    await this.validarSementeira(dto.sementeiraDeId, paroquiaId, null);
     return this.prisma.ficha.create({
       data: { ...dto, paroquiaId, dataNascimento: new Date(dto.dataNascimento) },
     });
@@ -39,6 +54,7 @@ export class FichasService {
     const [items, total] = await Promise.all([
       this.prisma.ficha.findMany({
         where,
+        include: SEMENTEIRA_INCLUDE,
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { nomeCompleto: 'asc' },
@@ -98,7 +114,10 @@ export class FichasService {
   // é encontrada por quem pediu se pertencer à mesma paróquia — NotFound, não Forbidden, pra
   // não revelar que o registro existe em outra paróquia.
   async findOne(id: string, paroquiaId?: string) {
-    const ficha = await this.prisma.ficha.findUnique({ where: { id } });
+    const ficha = await this.prisma.ficha.findUnique({
+      where: { id },
+      include: SEMENTEIRA_INCLUDE,
+    });
     if (!ficha || (paroquiaId && ficha.paroquiaId !== paroquiaId)) {
       throw new NotFoundException(`Ficha ${id} não encontrada`);
     }
@@ -106,11 +125,38 @@ export class FichasService {
   }
 
   async update(id: string, dto: UpdateFichaDto, paroquiaId: string) {
-    await this.findOne(id, paroquiaId);
+    const atual = await this.findOne(id, paroquiaId);
+    await this.validarSementeira(dto.sementeiraDeId, paroquiaId, atual.sementeiraDeId ?? null);
     return this.prisma.ficha.update({
       where: { id },
       data: { ...dto, ...(dto.dataNascimento && { dataNascimento: new Date(dto.dataNascimento) }) },
     });
+  }
+
+  // Marca de sementeira: só a madrinha marca, e só com o vínculo na fase Sementeira. Depois que a
+  // implantação começa a marca fica (identifica a origem — R5), então desmarcar também é só na
+  // Sementeira. `undefined` = campo não enviado, nada a validar.
+  private async validarSementeira(
+    novo: string | null | undefined,
+    paroquiaId: string,
+    atual: string | null,
+  ) {
+    if (novo === undefined || novo === atual) return;
+    if (novo === null) {
+      const vinculo = await this.prisma.implantacao.findUnique({ where: { id: atual! } });
+      if (vinculo?.fase !== FaseImplantacao.SEMENTEIRA) {
+        throw new BadRequestException(
+          'A marca de sementeira só pode ser removida antes de a implantação começar',
+        );
+      }
+      return;
+    }
+    const vinculo = await this.prisma.implantacao.findFirst({
+      where: { id: novo, madrinhaId: paroquiaId, fase: FaseImplantacao.SEMENTEIRA },
+    });
+    if (!vinculo) {
+      throw new NotFoundException('Implantação não encontrada');
+    }
   }
 
   async remove(id: string, paroquiaId: string) {

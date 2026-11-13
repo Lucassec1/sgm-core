@@ -29,6 +29,10 @@ function criarPrismaMock() {
     alocacao: {
       findMany: jest.fn().mockResolvedValue([]),
     },
+    implantacao: {
+      findFirst: jest.fn(),
+      findUnique: jest.fn(),
+    },
   };
 }
 
@@ -309,6 +313,60 @@ describe('FichasService — upload de foto', () => {
       await expect(service.historicoEquipes(FICHA_ID, PAROQUIA_ID)).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('marca de sementeira (implantação)', () => {
+    let prisma: ReturnType<typeof criarPrismaMock>;
+    let service: FichasService;
+    const dtoBase = { nomeCompleto: 'Ana', dataNascimento: '2008-01-01' } as any;
+
+    beforeEach(() => {
+      prisma = criarPrismaMock();
+      service = new FichasService(prisma as unknown as PrismaService);
+    });
+
+    it('vínculo de outra madrinha (ou fora da Sementeira) → 404 sem gravar', async () => {
+      prisma.implantacao.findFirst.mockResolvedValue(null);
+      await expect(
+        service.create({ ...dtoBase, sementeiraDeId: 'i-outra' }, PAROQUIA_ID),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.implantacao.findFirst).toHaveBeenCalledWith({
+        where: { id: 'i-outra', madrinhaId: PAROQUIA_ID, fase: 'SEMENTEIRA' },
+      });
+      expect(prisma.ficha.create).not.toHaveBeenCalled();
+    });
+
+    it('vínculo válido grava a marca', async () => {
+      prisma.implantacao.findFirst.mockResolvedValue({ id: 'i1' });
+      await service.update(FICHA_ID, { sementeiraDeId: 'i1' }, PAROQUIA_ID);
+      expect(prisma.ficha.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ sementeiraDeId: 'i1' }) }),
+      );
+    });
+
+    it('desmarcar depois que a implantação começou → 400', async () => {
+      prisma.ficha.findUnique.mockResolvedValue({
+        id: FICHA_ID,
+        paroquiaId: PAROQUIA_ID,
+        sementeiraDeId: 'i1',
+      });
+      prisma.implantacao.findUnique.mockResolvedValue({ id: 'i1', fase: 'IMPLANTACAO' });
+      await expect(service.update(FICHA_ID, { sementeiraDeId: null }, PAROQUIA_ID)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(prisma.ficha.update).not.toHaveBeenCalled();
+    });
+
+    it('null numa ficha sem marca não faz nada de especial', async () => {
+      prisma.ficha.findUnique.mockResolvedValue({
+        id: FICHA_ID,
+        paroquiaId: PAROQUIA_ID,
+        sementeiraDeId: null,
+      });
+      await service.update(FICHA_ID, { sementeiraDeId: null }, PAROQUIA_ID);
+      expect(prisma.implantacao.findUnique).not.toHaveBeenCalled();
+      expect(prisma.ficha.update).toHaveBeenCalled();
     });
   });
 });
