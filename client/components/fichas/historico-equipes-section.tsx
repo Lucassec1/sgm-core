@@ -4,12 +4,13 @@ import { EquipeIcon } from '@/components/equipes/equipe-icon';
 import { useHistoricoEquipes } from '@/lib/hooks/use-fichas';
 import { useHistoricoEquipesCasal } from '@/lib/hooks/use-fichas-casais';
 import type { HistoricoEquipeItem } from '@/lib/types';
+import { MetaLista } from '@/components/page-header';
 
 // Histórico de equipes servidas + avaliação (docs/requisitos.md, 2.1) — um registro por
 // Alocacao (por equipe/encontro que a pessoa serviu). Avaliação aqui é só pode
 // coordenar/palestrar, específicos daquela equipe, não um selo geral. Dado gerado pelo
 // módulo Montagem, não editável aqui.
-function HistoricoEquipesLista({
+export function HistoricoEquipesLista({
   historico,
   isLoading,
 }: {
@@ -33,10 +34,15 @@ function HistoricoEquipesLista({
               />
               <div>
                 <p className="text-sm font-medium">{item.vagaMontagem.equipe.nome}</p>
-                <p className="text-xs text-muted-foreground">
-                  {item.vagaMontagem.cargo.nome} · {item.vagaMontagem.montagem.numeroEncontro}º
-                  Encontro ({new Date(item.vagaMontagem.montagem.data).toLocaleDateString('pt-BR')})
-                </p>
+                <MetaLista
+                  className="text-xs text-muted-foreground"
+                  itens={[
+                    item.vagaMontagem.cargo.nome,
+                    `${item.vagaMontagem.montagem.numeroEncontro}º Encontro (${new Date(item.vagaMontagem.montagem.data).toLocaleDateString('pt-BR')})`,
+                    // Implantação: serviço num encontro de outra paróquia.
+                    item.outraParoquia && item.vagaMontagem.montagem.paroquia?.nome,
+                  ]}
+                />
               </div>
             </div>
             <AlocacaoStatusBadge status={item.status} />

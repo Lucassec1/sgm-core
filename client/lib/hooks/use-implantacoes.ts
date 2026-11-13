@@ -42,3 +42,38 @@ export function useLiberarAcessoAfilhada() {
     },
   });
 }
+
+// Lado da paróquia madrinha.
+export function useMinhasImplantacoes() {
+  return useQuery({
+    queryKey: ['implantacoes', 'minhas'],
+    queryFn: () => apiClient.minhasImplantacoes(),
+  });
+}
+
+export function useLiberacoes(implantacaoId: string | undefined) {
+  return useQuery({
+    queryKey: ['implantacoes', implantacaoId, 'liberacoes'],
+    queryFn: () => apiClient.listLiberacoes(implantacaoId as string),
+    enabled: !!implantacaoId,
+  });
+}
+
+export function useLiberarFicha(implantacaoId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (pessoa: { fichaId?: string; fichaCasalId?: string }) =>
+      apiClient.liberarFicha(implantacaoId, pessoa),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['implantacoes', implantacaoId, 'liberacoes'] }),
+  });
+}
+
+export function useRemoverLiberacao(implantacaoId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (liberacaoId: string) => apiClient.removerLiberacao(implantacaoId, liberacaoId),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['implantacoes', implantacaoId, 'liberacoes'] }),
+  });
+}

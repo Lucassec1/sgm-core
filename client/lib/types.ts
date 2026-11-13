@@ -42,6 +42,9 @@ export interface Ficha {
   motivoDesativacao?: string | null;
   createdAt: string;
   updatedAt: string;
+  // Implantação: jovem da afilhada que vivenciou na madrinha (Sementeira).
+  sementeiraDeId?: string | null;
+  sementeiraDe?: SementeiraDaFicha | null;
 }
 
 export interface FichaListResponse {
@@ -175,6 +178,13 @@ export interface Alocacao {
   updatedAt: string;
 }
 
+export interface SementeiraDaFicha {
+  id: string;
+  fase: 'SEMENTEIRA' | 'IMPLANTACAO' | 'ACOMPANHAMENTO' | 'ENCERRADA';
+  madrinha: { id: string; nome: string };
+  afilhada: { id: string; nome: string };
+}
+
 export interface HistoricoEquipeItem {
   id: string;
   status: StatusConvite;
@@ -185,8 +195,15 @@ export interface HistoricoEquipeItem {
   vagaMontagem: {
     equipe: Equipe;
     cargo: Cargo;
-    montagem: { numeroEncontro: number; data: string; status: StatusMontagem };
+    montagem: {
+      numeroEncontro: number;
+      data: string;
+      status: StatusMontagem;
+      paroquia?: { nome: string };
+    };
   };
+  // Encontro de outra paróquia (implantação: madrinha <-> afilhada).
+  outraParoquia?: boolean;
 }
 
 // Painel "como foi esse encontro" (docs/historico/propostas.md, proposta #2) — agregado a partir do
