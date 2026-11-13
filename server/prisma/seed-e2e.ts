@@ -9,14 +9,15 @@ import { seedEquipesECargos } from './seed-equipes';
 // só o necessário pra logar do zero e montar um encontro do zero (paróquia, credencial de
 // dev — mesma do seed normal, pra reaproveitar o fluxo de login — e o catálogo de
 // equipes/cargos, que R4/R6 dependem de existir).
-const PAROQUIA_ID = 'e2e00000-0000-0000-0000-000000000001';
+// IDs no formato UUID v4 — os DTOs validam com @IsUUID (ex.: madrinhaId da implantação).
+const PAROQUIA_ID = 'e2e00000-0000-4000-8000-000000000001';
 const PAROQUIA_NOME = 'Paróquia E2E';
 const PAROQUIA_LOGIN_DEV = 'paroquia-dev';
 const PAROQUIA_SENHA_DEV = 'paroquia-dev-123';
 // Segunda paróquia + uma conta de Conselho: usadas pelo fluxo Conselho -> paróquia
 // (e2e/conselho.spec.ts), numa paróquia própria pra não depender da ordem dos specs (só existe
 // uma montagem em andamento por paróquia, e o montagem.spec.ts cria a da primeira).
-const PAROQUIA_2_ID = 'e2e00000-0000-0000-0000-000000000002';
+const PAROQUIA_2_ID = 'e2e00000-0000-4000-8000-000000000002';
 const PAROQUIA_2_LOGIN = 'paroquia-e2e-2';
 const PAROQUIA_2_SENHA = 'paroquia-e2e-2-123';
 const CONSELHO_LOGIN = 'conselho-e2e';
@@ -37,8 +38,10 @@ async function limpar() {
   await prisma.montagem.deleteMany();
   await prisma.cargo.deleteMany();
   await prisma.equipe.deleteMany();
+  await prisma.liberacaoFicha.deleteMany();
   await prisma.fichaCasal.deleteMany();
   await prisma.ficha.deleteMany();
+  await prisma.implantacao.deleteMany();
   await prisma.usuario.deleteMany();
   await prisma.paroquia.deleteMany();
 }

@@ -12,7 +12,7 @@ test.describe('Fluxo de Montagem', () => {
     await page.getByRole('button', { name: 'Nova montagem' }).click();
 
     await page.locator('#data').fill('2027-06-01');
-    // R6: 40 a 60 jovens vivenciando fora de implantação (ver nova-montagem-dialog.tsx).
+    // R6: 40 a 60 jovens vivenciando sem sementeira (ver nova-montagem-dialog.tsx).
     await page.locator('#numeroJovensVivenciando').fill('45');
     await page.locator('#padroeiro').fill('Nossa Senhora Aparecida');
 

@@ -16,6 +16,7 @@ import {
 import { useFichas } from '@/lib/hooks/use-fichas';
 import { CirculoBadge } from '@/components/fichas/circulo-badge';
 import { StatusBadge } from '@/components/fichas/status-badge';
+import { marcaSementeira } from '@/lib/sementeira';
 import { FichasFiltros, type FiltrosFichas } from '@/components/fichas/fichas-filtros';
 import { FichasTabsNav } from '@/components/fichas/fichas-tabs-nav';
 import { UploadFotosLoteDialog } from '@/components/fichas/upload-fotos-lote-dialog';
@@ -76,6 +77,9 @@ export default function FichasListPage() {
                     <Link href={`/fichas/${ficha.id}`} className="font-medium hover:underline">
                       {ficha.nomeCompleto}
                     </Link>
+                    {marcaSementeira(ficha) && (
+                      <p className="text-xs text-muted-foreground">{marcaSementeira(ficha)}</p>
+                    )}
                   </TableCell>
                   <TableCell className="hidden sm:table-cell">
                     {ficha.numeroEncontro}º Encontro

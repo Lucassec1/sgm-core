@@ -62,6 +62,14 @@ Sobe Postgres + server (`:3001`) + client (`:3000`). Rodar migrations/seed de de
   backend, mas o card de Exportação foi removido do dashboard em 17/09 e nenhuma tela leva a eles;
   o .xlsx completo também segue pendente (issue #58, `docs/producao.md` item 4). Quadrantes: binário no S3, mesmo
   padrão das fotos de Ficha.
+- **Implantação: pronta** (13/11/2026, `docs/superpowers/specs/2026-11-13-implantacao-design.md`) —
+  o Conselho cria e conduz o vínculo madrinha → afilhada (Sementeira → Implantação →
+  Acompanhamento → Encerrada); a madrinha marca as fichas de sementeira (transferidas pra afilhada
+  ao iniciar), atua como afilhada durante a implantação ("Atuar como" no menu da conta) e libera
+  fichas pontuais no acompanhamento; os encontros 1–3 da afilhada nascem com as vagas dos Anexos
+  I–III (`server/src/modules/implantacao/anexos.ts`). Exceções à R7 concentradas em
+  `server/src/modules/montagem/pessoas-elegiveis.ts`. A opção antiga "Implantação" da montagem virou
+  "Recebe sementeira" (coluna continua `ehImplantacao`).
 - **Auth: pronto** — login JWT (cookie httpOnly) por conta de paróquia (compartilhada, não
   individual; login = e-mail da paróquia, cadastrado pelo Conselho; a senha é criada pela própria
   paróquia no primeiro acesso, por link enviado ao e-mail via Amazon SES — o mesmo link serve pra
@@ -85,6 +93,10 @@ protótipo validar foi substituída por uma decisão explícita do Lucas de impl
 verdade agora — ver `docs/producao.md`, bloqueador #3). R7 (isolamento real entre paróquias) e
 R8 (Conselho: leitura cross-paróquia da Montagem, observações, gestão de credenciais de
 paróquia) estão implementados e testados no backend.
+
+Exceção com prazo à R7: a **implantação** (madrinha atuando como afilhada; candidatos das duas
+paróquias nos encontros de anexo; fichas liberadas no acompanhamento) — ver R7 em
+`docs/regras-imutaveis.md`.
 
 `paroquia_id` chega em toda query via `request.user.paroquiaId` (do JWT), nunca mais do client
 — `ParoquiaScopeGuard`/`MontagemScopeGuard` fazem a garantia central. O client (login,

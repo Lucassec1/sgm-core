@@ -69,8 +69,10 @@ export default function MontagemDetailPage({ params }: { params: Promise<{ id: s
               new Date(montagem.data).toLocaleDateString('pt-BR'),
               montagem.padroeiro,
               `${montagem.numeroJovensVivenciando} jovens vivenciando`,
-              montagem.ehImplantacao &&
-                `Implantação${montagem.paroquiaAfilhadaNome ? ` de ${montagem.paroquiaAfilhadaNome}` : ''}`,
+              montagem.anexoImplantacao &&
+                `Implantação: encontro ${montagem.anexoImplantacao} de 3`,
+              montagem.recebeSementeira &&
+                `Recebe sementeira (${montagem.quantidadeJovensSementeira ?? 12} jovens${montagem.paroquiaAfilhadaNome ? ` de ${montagem.paroquiaAfilhadaNome}` : ''})`,
             ]}
           />
         }

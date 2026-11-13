@@ -57,7 +57,9 @@ export function AlocarSubstitutoCombobox({
         return { vaga: v, falta };
       }
       // jovem: folga é por sexo
-      const cota = sexo === 'MOCA' ? v.quantidadeMocas : v.quantidadeRapazes;
+      // Jovens sem sexo definido (vagas de anexo) contam pra qualquer um.
+      const cota =
+        (sexo === 'MOCA' ? v.quantidadeMocas : v.quantidadeRapazes) + (v.quantidadeJovens ?? 0);
       const ocupadasMesmoSexo = ativas.filter((a) => a.ficha?.sexo === sexo).length;
       return { vaga: v, falta: cota - ocupadasMesmoSexo };
     })

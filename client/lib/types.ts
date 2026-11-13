@@ -42,6 +42,9 @@ export interface Ficha {
   motivoDesativacao?: string | null;
   createdAt: string;
   updatedAt: string;
+  // Implantação: jovem da afilhada que vivenciou na madrinha (Sementeira).
+  sementeiraDeId?: string | null;
+  sementeiraDe?: SementeiraDaFicha | null;
 }
 
 export interface FichaListResponse {
@@ -126,6 +129,9 @@ export interface VagaMontagem {
   quantidadeCasais: number;
   quantidadeRapazes: number;
   quantidadeMocas: number;
+  // Implantação (Anexos I–III): jovens sem sexo definido e de que paróquia a vaga é.
+  quantidadeJovens?: number;
+  origem?: 'MADRINHA' | 'AFILHADA' | null;
 }
 
 export interface Montagem {
@@ -135,11 +141,17 @@ export interface Montagem {
   data: string;
   padroeiro?: string | null;
   diretorEspiritual?: string | null;
-  ehImplantacao: boolean;
+  // Sementeira: encontro da madrinha que recebe jovens da afilhada (R6). paroquiaAfilhadaNome é
+  // legado (texto), só exibição.
+  recebeSementeira: boolean;
+  sementeiraDeImplantacaoId?: string | null;
   paroquiaAfilhadaNome?: string | null;
   quantidadeJovensSementeira?: number | null;
   quantidadeCasaisAfilhada?: number | null;
   numeroJovensVivenciando: number;
+  // Encontro de implantação da afilhada (1, 2 ou 3), com vagas dos anexos.
+  implantacaoId?: string | null;
+  anexoImplantacao?: number | null;
   status: StatusMontagem;
   vagas: VagaMontagem[];
   createdAt: string;
@@ -175,6 +187,13 @@ export interface Alocacao {
   updatedAt: string;
 }
 
+export interface SementeiraDaFicha {
+  id: string;
+  fase: 'SEMENTEIRA' | 'IMPLANTACAO' | 'ACOMPANHAMENTO' | 'ENCERRADA';
+  madrinha: { id: string; nome: string };
+  afilhada: { id: string; nome: string };
+}
+
 export interface HistoricoEquipeItem {
   id: string;
   status: StatusConvite;
@@ -185,8 +204,15 @@ export interface HistoricoEquipeItem {
   vagaMontagem: {
     equipe: Equipe;
     cargo: Cargo;
-    montagem: { numeroEncontro: number; data: string; status: StatusMontagem };
+    montagem: {
+      numeroEncontro: number;
+      data: string;
+      status: StatusMontagem;
+      paroquia?: { nome: string };
+    };
   };
+  // Encontro de outra paróquia (implantação: madrinha <-> afilhada).
+  outraParoquia?: boolean;
 }
 
 // Painel "como foi esse encontro" (docs/historico/propostas.md, proposta #2) — agregado a partir do
@@ -223,6 +249,8 @@ export interface CoordenadoresSugeridos {
 interface InfoCandidato {
   recusouNesteEncontro: boolean;
   vezesNaEquipe: number;
+  // Paróquia da ficha — na implantação os candidatos vêm da madrinha e da afilhada.
+  paroquiaOrigem?: { id: string; nome: string };
 }
 export type CandidatoJovem = Ficha & InfoCandidato;
 export type CandidatoCasal = FichaCasal & InfoCandidato;

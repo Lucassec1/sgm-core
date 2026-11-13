@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { EquipeIcon } from '@/components/equipes/equipe-icon';
 import { VagaAlocacoes } from './vaga-alocacoes';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
-import { nomeAlocacao } from '@/lib/montagem';
+import { jovensDaVaga, nomeAlocacao } from '@/lib/montagem';
 
 const STATUS_INATIVO = ['RECUSADO', 'DESISTIU', 'SUBSTITUIDO'];
 
@@ -25,7 +25,7 @@ function faltaDaEquipe(vagas: VagaMontagem[], alocacoesPorVaga: Map<string, Aloc
     );
     const j = ativas.filter((a) => a.tipoPessoa === 'JOVEM').length;
     const c = ativas.filter((a) => a.tipoPessoa === 'CASAL').length;
-    jovens += Math.max(0, vaga.quantidadeRapazes + vaga.quantidadeMocas - j);
+    jovens += Math.max(0, jovensDaVaga(vaga) - j);
     casais += Math.max(0, vaga.quantidadeCasais - c);
   }
   return { jovens, casais };

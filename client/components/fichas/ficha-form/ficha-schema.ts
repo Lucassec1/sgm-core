@@ -38,6 +38,8 @@ export const fichaSchema = z.object({
   observacoes: z.string().optional(),
   situacao: z.enum(['ATIVA', 'INATIVA']).optional(),
   motivoDesativacao: z.string().optional(),
+  // Sementeira (implantação): marcado pela madrinha; null desmarca.
+  sementeiraDeId: z.string().nullable().optional(),
 });
 
 export type FichaFormValues = z.infer<typeof fichaSchema>;

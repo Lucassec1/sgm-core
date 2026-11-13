@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { ServiceWorkerRegistration } from '@/components/service-worker-registration';
-import { SessaoExpiradaListener } from '@/lib/auth-context';
+import { AtuacaoEncerradaListener, SessaoExpiradaListener } from '@/lib/auth-context';
 import { Toaster } from '@/components/ui/sonner';
 import { criarQueryClient } from '@/lib/query-client';
 
@@ -18,6 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <ServiceWorkerRegistration />
         <SessaoExpiradaListener />
+        <AtuacaoEncerradaListener />
         {children}
         <Toaster />
       </QueryClientProvider>

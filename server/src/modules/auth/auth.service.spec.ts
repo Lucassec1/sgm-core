@@ -14,6 +14,11 @@ function criarPrismaMock() {
       findUnique: jest.fn(),
       update: jest.fn(),
     },
+    implantacao: {
+      findFirst: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     tokenRedefinicaoSenha: {
       findFirst: jest.fn().mockResolvedValue(null),
       findUnique: jest.fn(),
@@ -266,7 +271,66 @@ describe('AuthService', () => {
         role: 'PAROQUIA',
         nome: null,
         paroquia: { id: 'p1', nome: 'Paróquia Dev' },
+        atuando: null,
+        podeAtuarEm: [],
       });
+    });
+
+    it('madrinha: lista as afilhadas em implantação e diz por qual está atuando', async () => {
+      prisma.usuario.findUnique.mockResolvedValue({
+        id: USUARIO_ID,
+        login: EMAIL,
+        role: 'PAROQUIA',
+        nome: null,
+        paroquiaId: 'p1',
+        paroquia: { id: 'p1', nome: 'Paróquia Dev' },
+      });
+      prisma.implantacao.findMany.mockResolvedValue([
+        { id: 'i1', afilhada: { id: 'a1', nome: 'Paróquia X' } },
+      ]);
+
+      const me = await service.me(USUARIO_ID, 'i1');
+
+      expect(prisma.implantacao.findMany).toHaveBeenCalledWith({
+        where: { madrinhaId: 'p1', fase: 'IMPLANTACAO' },
+        select: { id: true, afilhada: { select: { id: true, nome: true } } },
+      });
+      expect(me.podeAtuarEm).toEqual([
+        { implantacaoId: 'i1', afilhada: { id: 'a1', nome: 'Paróquia X' } },
+      ]);
+      expect(me.atuando).toEqual({
+        implantacaoId: 'i1',
+        afilhada: { id: 'a1', nome: 'Paróquia X' },
+      });
+    });
+  });
+
+  describe('validarAtuacao', () => {
+    const madrinha = { id: USUARIO_ID, role: 'PAROQUIA' as const, paroquiaId: 'p1' };
+
+    it('vínculo de outra madrinha ou fora da implantação → 403', async () => {
+      prisma.implantacao.findFirst.mockResolvedValue(null);
+      await expect(service.validarAtuacao(madrinha, 'i1')).rejects.toThrow(ForbiddenException);
+      expect(prisma.implantacao.findFirst).toHaveBeenCalledWith({
+        where: { id: 'i1', madrinhaId: 'p1', fase: 'IMPLANTACAO' },
+      });
+    });
+
+    it('já atuando, confere pela paróquia de origem (a madrinha)', async () => {
+      prisma.implantacao.findFirst.mockResolvedValue({ id: 'i2' });
+      await service.validarAtuacao(
+        { ...madrinha, paroquiaId: 'a1', paroquiaOrigemId: 'p1', implantacaoId: 'i1' },
+        'i2',
+      );
+      expect(prisma.implantacao.findFirst).toHaveBeenCalledWith({
+        where: { id: 'i2', madrinhaId: 'p1', fase: 'IMPLANTACAO' },
+      });
+    });
+
+    it('conta do Conselho → 403', async () => {
+      await expect(
+        service.validarAtuacao({ id: 'c1', role: 'CONSELHO', paroquiaId: null }, 'i1'),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

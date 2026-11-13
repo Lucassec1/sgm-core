@@ -17,3 +17,8 @@
 /playwright-report/
 /test-results/
 /blob-report/
+
+# Artefatos compilados dos seeds (o ts-node/Jest resolveria o .js antes do .ts)
+server/prisma/*.js
+server/prisma/*.js.map
+server/prisma/*.d.ts

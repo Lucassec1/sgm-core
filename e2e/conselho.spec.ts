@@ -44,7 +44,7 @@ test.describe('Conselho e paróquia', () => {
     await page.reload();
     await expect(page.getByText('Observações do Conselho')).toBeVisible();
     await expect(page.getByText(texto)).toBeVisible();
-    await expect(page.getByText(new RegExp(`^${CONSELHO_NOME} ·`))).toBeVisible();
+    await expect(page.getByText(CONSELHO_NOME, { exact: true })).toBeVisible();
 
     // Outra paróquia não enxerga nem que a montagem existe (R7)
     const contextoOutra = await browser.newContext();

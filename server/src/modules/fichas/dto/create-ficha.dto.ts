@@ -5,6 +5,8 @@ import {
   IsEnum,
   IsInt,
   IsOptional,
+  IsUUID,
+  ValidateIf,
   IsString,
   Min,
   MinLength,
@@ -83,4 +85,8 @@ export class CreateFichaDto {
   // Consentimento LGPD — registra que o termo em papel foi coletado (ver docs/producao.md).
   @IsOptional() @IsBoolean() termoAssinado?: boolean;
   @EmptyToUndefined() @IsOptional() @IsDateString() termoAssinadoEm?: string;
+
+  // Sementeira (implantação): jovem da afilhada que vivenciou na madrinha. Marcado pela madrinha
+  // enquanto o vínculo está na Sementeira; null desmarca.
+  @ValidateIf((_, v) => v !== null && v !== undefined) @IsUUID() sementeiraDeId?: string | null;
 }

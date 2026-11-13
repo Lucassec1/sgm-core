@@ -12,6 +12,7 @@ import { FichasCasaisModule } from './modules/fichas-casais/fichas-casais.module
 import { MontagemModule } from './modules/montagem/montagem.module';
 import { ConselhoModule } from './modules/conselho/conselho.module';
 import { HealthModule } from './modules/health/health.module';
+import { ImplantacaoModule } from './modules/implantacao/implantacao.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
 @Module({
@@ -39,6 +40,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     MontagemModule,
     ConselhoModule,
     HealthModule,
+    ImplantacaoModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

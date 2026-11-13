@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { CORES_CIRCULO } from '@/lib/types';
+import { useMinhasImplantacoes } from '@/lib/hooks/use-implantacoes';
 import type { FichaFormValues } from './ficha-schema';
 import { SectionTitle } from '../section-title';
 
@@ -27,6 +28,11 @@ export function IdentificacaoSection({
     setValue,
     formState: { errors },
   } = useFormContext<FichaFormValues>();
+  // Implantação: a madrinha marca quem é jovem da afilhada que vivenciou aqui (Sementeira). Fica
+  // editável mesmo numa ficha já criada — as fichas da sementeira costumam já existir.
+  const { data: implantacoes } = useMinhasImplantacoes();
+  const emSementeira = implantacoes?.filter((i) => i.fase === 'SEMENTEIRA') ?? [];
+  const SEM_SEMENTEIRA = 'nenhuma';
 
   return (
     <section className="space-y-4">
@@ -171,6 +177,31 @@ export function IdentificacaoSection({
             </p>
           )}
         </div>
+        {emSementeira.length > 0 && (
+          <div>
+            <Label htmlFor="sementeiraDeId">Sementeira de</Label>
+            <Select
+              value={watch('sementeiraDeId') ?? SEM_SEMENTEIRA}
+              onValueChange={(v) => setValue('sementeiraDeId', v === SEM_SEMENTEIRA ? null : v)}
+            >
+              <SelectTrigger id="sementeiraDeId">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={SEM_SEMENTEIRA}>Não é sementeira</SelectItem>
+                {emSementeira.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>
+                    {i.afilhada.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Jovem da paróquia afilhada que vivenciou aqui. Quando a implantação começar, a ficha
+              passa para ela.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -3,10 +3,11 @@
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { CirculoBadge } from '@/components/fichas/circulo-badge';
-import { useDeleteAlocacao } from '@/lib/hooks/use-montagens';
+import { useDeleteAlocacao, useMontagem } from '@/lib/hooks/use-montagens';
 import { AlocacaoAvaliacaoPopover } from './alocacao-avaliacao-popover';
 import { AlocacaoRowActions } from './alocacao-row-actions';
 import { AlocacaoStatusBadge } from './alocacao-status-badge';
@@ -14,7 +15,7 @@ import { AvisoBadges } from './aviso-badges';
 import { AlocarPessoaCombobox } from './alocar-pessoa-combobox';
 import { PessoaPreviewPopover } from './pessoa-preview-popover';
 import type { Alocacao, VagaMontagem } from '@/lib/types';
-import { nomeAlocacao } from '@/lib/montagem';
+import { avisoOrigemVaga, jovensDaVaga, nomeAlocacao } from '@/lib/montagem';
 
 const STATUS_INATIVO = ['RECUSADO', 'DESISTIU', 'SUBSTITUIDO'];
 
@@ -41,6 +42,12 @@ function LinhaAlocacao({
   // Badge de círculo só pra quem vivenciou o encontro imediatamente anterior — ajuda a
   // conferir que todo mundo que "deve" servir pela primeira vez está mesmo aqui (R5).
   const destacarCirculo = alocacao.ficha?.numeroEncontro === encontroAnterior;
+  const { data: montagem } = useMontagem(montagemId);
+  const avisoOrigem = avisoOrigemVaga(
+    vaga.origem,
+    (alocacao.ficha ?? alocacao.fichaCasal)?.paroquiaId,
+    montagem?.paroquiaId,
+  );
 
   return (
     <li className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm">
@@ -52,6 +59,7 @@ function LinhaAlocacao({
         </div>
         {destacarCirculo && alocacao.ficha && <CirculoBadge cor={alocacao.ficha.corCirculo} />}
         <AvisoBadges avisos={alocacao.avisos} />
+        {avisoOrigem && <Badge variant="atencao">{avisoOrigem}</Badge>}
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <AlocacaoStatusBadge status={alocacao.status} />
@@ -110,12 +118,12 @@ export function VagaAlocacoes({
   const ativas = alocacoes.filter((a) => !STATUS_INATIVO.includes(a.status));
   const idsJaAlocados = new Set(ativas.map((a) => a.fichaId ?? a.fichaCasalId ?? ''));
 
-  const precisaJovem = vaga.quantidadeRapazes > 0 || vaga.quantidadeMocas > 0;
+  const precisaJovem = jovensDaVaga(vaga) > 0;
   const precisaCasal = vaga.quantidadeCasais > 0;
   const misto = precisaJovem && precisaCasal;
 
   const casais = { ativas: [] as Alocacao[], total: vaga.quantidadeCasais };
-  const jovens = { ativas: [] as Alocacao[], total: vaga.quantidadeRapazes + vaga.quantidadeMocas };
+  const jovens = { ativas: [] as Alocacao[], total: jovensDaVaga(vaga) };
   for (const a of alocacoes) {
     (a.tipoPessoa === 'CASAL' ? casais : jovens).ativas.push(a);
   }
@@ -228,7 +236,15 @@ export function VagaAlocacoes({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium">{vaga.cargo.nome}</h3>
+      <h3 className="flex items-center gap-2 text-sm font-medium">
+        {vaga.cargo.nome}
+        {vaga.origem && (
+          // Encontro de implantação: de qual paróquia a norma prevê essa vaga (só orienta).
+          <span className="text-xs font-normal text-muted-foreground">
+            {vaga.origem === 'MADRINHA' ? 'Madrinha' : 'Afilhada'}
+          </span>
+        )}
+      </h3>
 
       {misto ? (
         <div className="space-y-3">

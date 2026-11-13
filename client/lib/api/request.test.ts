@@ -24,6 +24,22 @@ describe('request', () => {
     vi.unstubAllGlobals();
   });
 
+  it('dispara sgm:atuacao-encerrada no 409 ATUACAO_ENCERRADA (fase da implantação mudou)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          respostaFake(409, { code: 'ATUACAO_ENCERRADA', message: 'A atuação terminou' }),
+        ),
+    );
+    const ouvinte = vi.fn();
+    window.addEventListener('sgm:atuacao-encerrada', ouvinte);
+    await request('/fichas', { method: 'POST' }).catch(() => undefined);
+    window.removeEventListener('sgm:atuacao-encerrada', ouvinte);
+    expect(ouvinte).toHaveBeenCalledTimes(1);
+  });
+
   it('dispara sgm:sessao-expirada quando a API responde 401', async () => {
     vi.stubGlobal(
       'fetch',

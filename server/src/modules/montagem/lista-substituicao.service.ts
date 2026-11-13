@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { LogAtividadeService } from './log-atividade.service';
 import { CreateItemListaSubstituicaoDto } from './dto/create-item-lista-substituicao.dto';
 import { garantirPessoaDaParoquia } from './pessoa-da-paroquia';
+import { comPessoasEmPrevia } from './previa-pessoa';
 
 const ITEM_INCLUDE = { ficha: true, fichaCasal: true };
 
@@ -21,6 +22,7 @@ export class ListaSubstituicaoService {
   private async garantirMontagem(montagemId: string) {
     const montagem = await this.prisma.montagem.findUnique({ where: { id: montagemId } });
     if (!montagem) throw new NotFoundException(`Montagem ${montagemId} não encontrada`);
+    return montagem;
   }
 
   async create(montagemId: string, dto: CreateItemListaSubstituicaoDto) {
@@ -59,12 +61,13 @@ export class ListaSubstituicaoService {
   }
 
   async findAll(montagemId: string) {
-    await this.garantirMontagem(montagemId);
-    return this.prisma.listaSubstituicao.findMany({
+    const montagem = await this.garantirMontagem(montagemId);
+    const itens = await this.prisma.listaSubstituicao.findMany({
       where: { montagemId },
       include: ITEM_INCLUDE,
       orderBy: { createdAt: 'asc' },
     });
+    return itens.map((item) => comPessoasEmPrevia(item, montagem.paroquiaId));
   }
 
   async remove(montagemId: string, id: string) {
