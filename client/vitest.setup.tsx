@@ -13,3 +13,10 @@ vi.mock('next/image', () => ({
     <img {...(props as Record<string, string>)} />
   ),
 }));
+
+// O Select do Radix usa APIs de ponteiro/rolagem que o jsdom não implementa.
+if (typeof window !== 'undefined') {
+  Element.prototype.hasPointerCapture ??= () => false;
+  Element.prototype.releasePointerCapture ??= () => {};
+  Element.prototype.scrollIntoView ??= () => {};
+}

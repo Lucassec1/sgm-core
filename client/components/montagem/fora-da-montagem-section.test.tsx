@@ -19,6 +19,7 @@ vi.mock('@/lib/hooks/use-montagens', () => ({
       ficha('j-saiu', 'Carla Desistiu'),
       ficha('j-lista', 'Davi Na Lista'),
       ficha('j-subst', 'Elisa Substituida'),
+      ficha('j-antigo', 'Jorge Antigo', 1),
     ],
     isLoading: false,
   }),
@@ -63,7 +64,7 @@ describe('ForaDaMontagemSection', () => {
     expect(screen.queryByText('Carla Desistiu')).not.toBeInTheDocument();
     expect(screen.queryByText('Davi Na Lista')).not.toBeInTheDocument();
     expect(screen.queryByText(/Hugo e Iara/)).not.toBeInTheDocument();
-    expect(screen.getByText('3 nomes')).toBeInTheDocument();
+    expect(screen.getByText('4 nomes')).toBeInTheDocument();
   });
 
   it('filtra por tipo e por nome', async () => {
@@ -78,5 +79,23 @@ describe('ForaDaMontagemSection', () => {
     await user.type(screen.getByLabelText('Buscar nos nomes que não estão na montagem'), 'elisa');
     expect(screen.getByText('Elisa Substituida')).toBeInTheDocument();
     expect(screen.queryByText('Ana Livre')).not.toBeInTheDocument();
+  });
+
+  it('filtra por encontro (só jovens têm encontro) e combina com a busca', async () => {
+    const user = userEvent.setup();
+    renderSecao();
+
+    // Pelo teclado: no jsdom o Select do Radix não abre por clique — e tem que funcionar sem mouse.
+    screen.getByRole('combobox', { name: 'Filtrar por encontro' }).focus();
+    await user.keyboard('{Enter}');
+    await user.click(await screen.findByRole('option', { name: '1º Encontro' }));
+
+    expect(screen.getByText('Jorge Antigo')).toBeInTheDocument();
+    expect(screen.queryByText('Ana Livre')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Felipe e Gabi/)).not.toBeInTheDocument();
+    expect(screen.getByText('1 nome')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Buscar nos nomes que não estão na montagem'), 'ana');
+    expect(screen.getByText('Ninguém com esse nome fora da montagem.')).toBeInTheDocument();
   });
 });
