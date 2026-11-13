@@ -39,10 +39,14 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     const request = context.switchToHttp().getRequest<{ user: UsuarioAutenticado }>();
     const response = context.switchToHttp().getResponse<Response>();
+    const { user } = request;
     const token = await this.jwtService.signAsync({
-      sub: request.user.id,
-      role: request.user.role,
-      paroquiaId: request.user.paroquiaId,
+      sub: user.id,
+      role: user.role,
+      // Atuando como afilhada, o token guarda a paróquia da conta (a madrinha) e o vínculo — a
+      // JwtStrategy reconfere a atuação na próxima requisição.
+      paroquiaId: user.paroquiaOrigemId ?? user.paroquiaId,
+      ...(user.implantacaoId && { implantacaoId: user.implantacaoId }),
       emitidoEm: Date.now(),
     });
     response.cookie(COOKIE_NAME, token, { ...cookieOptions(), maxAge: COOKIE_MAX_AGE_MS });

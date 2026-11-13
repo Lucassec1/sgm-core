@@ -1,4 +1,18 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import type { Request } from 'express';
+import { UsuarioAutenticado } from '../../common/types/usuario-autenticado';
+import { autorDoLog } from '../../common/auth/autor-log';
 import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { MontagensService } from './montagens.service';
@@ -21,8 +35,15 @@ export class MontagensController {
   ) {}
 
   @Post()
-  create(@Body() dto: CreateMontagemDto, @ParoquiaAtual() paroquiaId: string) {
-    return this.montagensService.create(dto, paroquiaId);
+  create(
+    @Body() dto: CreateMontagemDto,
+    @ParoquiaAtual() paroquiaId: string,
+    @Req() req: Request & { user: UsuarioAutenticado },
+  ) {
+    return this.montagensService.create(
+      { ...dto, usuario: autorDoLog(req.user, dto.usuario) },
+      paroquiaId,
+    );
   }
 
   @Get()
@@ -40,8 +61,13 @@ export class MontagensController {
     @Param('id') id: string,
     @Body() dto: UpdateMontagemDto,
     @ParoquiaAtual() paroquiaId: string,
+    @Req() req: Request & { user: UsuarioAutenticado },
   ) {
-    return this.montagensService.update(id, dto, paroquiaId);
+    return this.montagensService.update(
+      id,
+      { ...dto, usuario: autorDoLog(req.user, dto.usuario) },
+      paroquiaId,
+    );
   }
 
   @Get(':id/equipes/:equipeId/coordenadores-sugeridos')

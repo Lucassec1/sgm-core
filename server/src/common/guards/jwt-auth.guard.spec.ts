@@ -77,4 +77,35 @@ describe('JwtAuthGuard', () => {
       expect.objectContaining({ httpOnly: true }),
     );
   });
+
+  it('atuando como afilhada, o token renovado mantém a atuação e a paróquia de origem', async () => {
+    const reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue(false),
+    } as unknown as Reflector;
+    const jwtService = {
+      signAsync: jest.fn().mockResolvedValue('token-renovado'),
+    } as unknown as JwtService;
+    const guard = new JwtAuthGuard(reflector, jwtService);
+    jest
+      .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(guard)), 'canActivate')
+      .mockResolvedValue(true);
+
+    const user: UsuarioAutenticado = {
+      id: 'u1',
+      role: 'PAROQUIA',
+      paroquiaId: 'afilhada',
+      paroquiaOrigemId: 'madrinha',
+      implantacaoId: 'i1',
+    };
+    const { context } = criarContexto(user);
+
+    await guard.canActivate(context);
+    expect(jwtService.signAsync).toHaveBeenCalledWith({
+      sub: 'u1',
+      role: 'PAROQUIA',
+      paroquiaId: 'madrinha',
+      implantacaoId: 'i1',
+      emitidoEm: expect.any(Number),
+    });
+  });
 });

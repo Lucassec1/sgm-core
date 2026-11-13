@@ -7,7 +7,8 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { Usuario } from '@prisma/client';
+import { FaseImplantacao, RoleUsuario, Usuario } from '@prisma/client';
+import { UsuarioAutenticado } from '../../common/types/usuario-autenticado';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmailService } from '../../common/email/email.service';
 
@@ -67,14 +68,33 @@ export class AuthService {
     return usuario;
   }
 
-  async login(usuario: { id: string; role: 'PAROQUIA' | 'CONSELHO'; paroquiaId: string | null }) {
+  async login(
+    usuario: { id: string; role: 'PAROQUIA' | 'CONSELHO'; paroquiaId: string | null },
+    implantacaoId?: string,
+  ) {
     const token = await this.jwtService.signAsync({
       sub: usuario.id,
       role: usuario.role,
       paroquiaId: usuario.paroquiaId,
+      ...(implantacaoId && { implantacaoId }),
       emitidoEm: Date.now(),
     });
     return token;
+  }
+
+  // Madrinha pedindo pra atuar como afilhada: só conta de paróquia, só vínculo dela, só na fase
+  // IMPLANTACAO. Já atuando, confere pela paróquia de origem (a madrinha), não pela afilhada.
+  async validarAtuacao(usuario: UsuarioAutenticado, implantacaoId: string) {
+    const madrinhaId = usuario.paroquiaOrigemId ?? usuario.paroquiaId;
+    if (usuario.role !== RoleUsuario.PAROQUIA || !madrinhaId) {
+      throw new ForbiddenException('Só a paróquia madrinha pode atuar pela afilhada');
+    }
+    const vinculo = await this.prisma.implantacao.findFirst({
+      where: { id: implantacaoId, madrinhaId, fase: FaseImplantacao.IMPLANTACAO },
+    });
+    if (!vinculo) {
+      throw new ForbiddenException('Só a paróquia madrinha pode atuar pela afilhada');
+    }
   }
 
   // Self-service — a própria equipe dirigente (ou o Conselho) troca a senha sem depender de
@@ -191,7 +211,7 @@ export class AuthService {
     ]);
   }
 
-  async me(usuarioId: string) {
+  async me(usuarioId: string, implantacaoId?: string) {
     const usuario = await this.prisma.usuario.findUnique({
       where: { id: usuarioId },
       include: { paroquia: { select: { id: true, nome: true } } },
@@ -199,12 +219,23 @@ export class AuthService {
     if (!usuario) {
       throw new UnauthorizedException();
     }
+    // Afilhadas em implantação em que esta paróquia é madrinha (menu "Atuar como").
+    const vinculos =
+      usuario.role === RoleUsuario.PAROQUIA && usuario.paroquiaId
+        ? await this.prisma.implantacao.findMany({
+            where: { madrinhaId: usuario.paroquiaId, fase: FaseImplantacao.IMPLANTACAO },
+            select: { id: true, afilhada: { select: { id: true, nome: true } } },
+          })
+        : [];
+    const podeAtuarEm = vinculos.map((v) => ({ implantacaoId: v.id, afilhada: v.afilhada }));
     return {
       id: usuario.id,
       login: usuario.login,
       role: usuario.role,
       nome: usuario.nome,
       paroquia: usuario.paroquia,
+      atuando: podeAtuarEm.find((v) => v.implantacaoId === implantacaoId) ?? null,
+      podeAtuarEm,
     };
   }
 }
