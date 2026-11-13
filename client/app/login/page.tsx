@@ -90,7 +90,7 @@ export default function LoginPage() {
             id="login"
             inputMode="email"
             autoComplete="username"
-            placeholder="email@daparoquia.com"
+            placeholder="nome@exemplo.com"
             {...register('login')}
           />
           {errors.login && (

@@ -74,7 +74,7 @@ export default function EsqueciSenhaPage() {
                 id="login"
                 inputMode="email"
                 autoComplete="username"
-                placeholder="email@daparoquia.com"
+                placeholder="nome@exemplo.com"
                 autoFocus
                 {...register('login')}
               />
