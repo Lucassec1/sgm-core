@@ -214,7 +214,7 @@ describe('MontagensService', () => {
           paroquiaId: PAROQUIA_ID,
           status: 'EM_ANDAMENTO',
           numeroJovensVivenciando: 40,
-          ehImplantacao: false,
+          recebeSementeira: false,
           vagas: [],
         })
         .mockResolvedValueOnce({
@@ -222,7 +222,7 @@ describe('MontagensService', () => {
           paroquiaId: PAROQUIA_ID,
           status: 'EM_ANDAMENTO',
           numeroJovensVivenciando: 57,
-          ehImplantacao: false,
+          recebeSementeira: false,
           vagas: [vagaDinamica],
         });
       prisma.montagem.update.mockResolvedValue({
@@ -245,7 +245,7 @@ describe('MontagensService', () => {
         paroquiaId: PAROQUIA_ID,
         status: 'EM_ANDAMENTO',
         numeroJovensVivenciando: 40,
-        ehImplantacao: true,
+        recebeSementeira: true,
         vagas: [],
       });
 
@@ -261,7 +261,7 @@ describe('MontagensService', () => {
         paroquiaId: PAROQUIA_ID,
         status: 'EM_ANDAMENTO',
         numeroJovensVivenciando: 40,
-        ehImplantacao: false,
+        recebeSementeira: false,
         vagas: [],
       });
       prisma.montagem.update.mockResolvedValue({
@@ -281,7 +281,7 @@ describe('MontagensService', () => {
         paroquiaId: PAROQUIA_ID,
         status: 'EM_ANDAMENTO',
         numeroJovensVivenciando: 40,
-        ehImplantacao: false,
+        recebeSementeira: false,
         vagas: [],
       });
       prisma.montagem.update.mockResolvedValue({
@@ -305,7 +305,7 @@ describe('MontagensService', () => {
         paroquiaId: PAROQUIA_ID,
         status: 'EM_ANDAMENTO',
         numeroJovensVivenciando: 52,
-        ehImplantacao: false,
+        recebeSementeira: false,
         vagas: [],
       });
       prisma.montagem.update.mockResolvedValue({
@@ -447,7 +447,7 @@ describe('MontagensService', () => {
         paroquiaId: PAROQUIA_ID,
         status: 'EM_ANDAMENTO',
         numeroJovensVivenciando: 40,
-        ehImplantacao: false,
+        recebeSementeira: false,
         vagas: [],
       });
       prisma.montagem.update.mockResolvedValue({

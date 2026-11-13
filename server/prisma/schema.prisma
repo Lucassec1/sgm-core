@@ -20,6 +20,63 @@ model Paroquia {
   fichasCasais FichaCasal[]
   montagens    Montagem[]
   usuarios     Usuario[]
+
+  implantacoesComoMadrinha Implantacao[] @relation("ImplantacaoMadrinha")
+  implantacoesComoAfilhada Implantacao[] @relation("ImplantacaoAfilhada")
+}
+
+// Vínculo de implantação (docs/implantacao.md): o Conselho cria na Sementeira e conduz as fases.
+// Só anda pra frente: SEMENTEIRA → IMPLANTACAO → ACOMPANHAMENTO → ENCERRADA.
+enum FaseImplantacao {
+  SEMENTEIRA
+  IMPLANTACAO
+  ACOMPANHAMENTO
+  ENCERRADA
+}
+
+model Implantacao {
+  id String @id @default(uuid())
+
+  madrinhaId String
+  madrinha   Paroquia @relation("ImplantacaoMadrinha", fields: [madrinhaId], references: [id])
+  afilhadaId String
+  afilhada   Paroquia @relation("ImplantacaoAfilhada", fields: [afilhadaId], references: [id])
+
+  fase FaseImplantacao @default(SEMENTEIRA)
+
+  criadaPorId String
+  criadaPor   Usuario @relation(fields: [criadaPorId], references: [id])
+
+  createdAt                DateTime  @default(now())
+  implantacaoIniciadaEm    DateTime?
+  acompanhamentoIniciadoEm DateTime?
+  encerradaEm              DateTime?
+
+  fichasSementeira    Ficha[]
+  liberacoes          LiberacaoFicha[]
+  montagens           Montagem[]       @relation("MontagemImplantacao")
+  montagensSementeira Montagem[]       @relation("MontagemSementeira")
+
+  @@index([madrinhaId])
+  @@index([afilhadaId])
+}
+
+// Acompanhamento: a madrinha libera uma ficha sua pra afilhada usar nas montagens dela.
+model LiberacaoFicha {
+  id String @id @default(uuid())
+
+  implantacaoId String
+  implantacao   Implantacao @relation(fields: [implantacaoId], references: [id])
+
+  fichaId      String?
+  ficha        Ficha?      @relation(fields: [fichaId], references: [id])
+  fichaCasalId String?
+  fichaCasal   FichaCasal? @relation(fields: [fichaCasalId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([implantacaoId, fichaId])
+  @@unique([implantacaoId, fichaCasalId])
 }
 
 enum RoleUsuario {
@@ -35,16 +92,16 @@ enum RoleUsuario {
 // cada observação. A unicidade de "1 conta por paróquia" é garantida na Service, não aqui —
 // mais barato de relaxar depois (ex. staging de senha nova) do que reforçar.
 model Usuario {
-  id        String      @id @default(uuid())
+  id              String      @id @default(uuid())
   // Conta de paróquia: `login` é o e-mail da paróquia, cadastrado pelo Conselho. Contas antigas
   // (de antes do login por e-mail) podem ter um nome curto aqui até o Conselho trocar.
-  login     String      @unique
+  login           String      @unique
   // Null = conta criada pelo Conselho e ainda sem primeiro acesso: a senha é criada pelo link
   // que o sistema manda pro e-mail (`login`) — ninguém define senha sem provar que lê esse e-mail.
-  senhaHash String?
-  role      RoleUsuario
-  nome      String?
-  ativo     Boolean     @default(true)
+  senhaHash       String?
+  role            RoleUsuario
+  nome            String?
+  ativo           Boolean     @default(true)
   // Toda sessão emitida antes deste instante é recusada (JwtStrategy) — troca/reset de senha
   // derruba quem estava logado com a senha antiga. Null = nunca alterada.
   senhaAlteradaEm DateTime?
@@ -55,8 +112,9 @@ model Usuario {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  observacoes        ObservacaoMontagem[]
-  tokensRedefinicao  TokenRedefinicaoSenha[]
+  observacoes         ObservacaoMontagem[]
+  tokensRedefinicao   TokenRedefinicaoSenha[]
+  implantacoesCriadas Implantacao[]
 
   @@index([paroquiaId])
 }
@@ -169,6 +227,12 @@ model Ficha {
 
   alocacoes          Alocacao[]
   listasSubstituicao ListaSubstituicao[]
+  liberacoes         LiberacaoFicha[]
+
+  // Jovem da afilhada que vivenciou na madrinha (Sementeira). Marcado pela madrinha; continua
+  // preenchido depois que a ficha passa pra afilhada (identifica a origem — R5 conta como anterior).
+  sementeiraDeId String?
+  sementeiraDe   Implantacao? @relation(fields: [sementeiraDeId], references: [id])
 
   @@index([paroquiaId])
 }
@@ -217,6 +281,7 @@ model FichaCasal {
 
   alocacoes          Alocacao[]
   listasSubstituicao ListaSubstituicao[]
+  liberacoes         LiberacaoFicha[]
 
   @@index([paroquiaId])
 }
@@ -302,8 +367,17 @@ model Montagem {
   // 4 casais da Visitação vindos de lá também — ver docs/regras-imutaveis.md, R6.
   // quantidadeJovensSementeira e quantidadeCasaisAfilhada não são digitados pelo usuário:
   // a Service preenche com os valores fixos (12 e 4) sempre que ehImplantacao = true.
-  ehImplantacao              Boolean @default(false)
-  paroquiaAfilhadaNome       String?
+  // Sementeira: encontro da madrinha que recebe jovens da afilhada (era "ehImplantacao" — a
+  // coluna mantém o nome antigo). paroquiaAfilhadaNome é legado, só exibição.
+  recebeSementeira          Boolean      @default(false) @map("ehImplantacao")
+  paroquiaAfilhadaNome      String?
+  sementeiraDeImplantacaoId String?
+  sementeiraDeImplantacao   Implantacao? @relation("MontagemSementeira", fields: [sementeiraDeImplantacaoId], references: [id])
+
+  // Encontro de implantação da afilhada (1, 2 ou 3), com vagas dos Anexos I–III.
+  implantacaoId              String?
+  implantacao                Implantacao? @relation("MontagemImplantacao", fields: [implantacaoId], references: [id])
+  anexoImplantacao           Int?
   quantidadeJovensSementeira Int?
   quantidadeCasaisAfilhada   Int?
 
@@ -362,6 +436,9 @@ model VagaMontagem {
   quantidadeCasais  Int
   quantidadeRapazes Int
   quantidadeMocas   Int
+  // Jovens sem sexo definido — linhas dos anexos de implantação que dizem só "N jovens".
+  quantidadeJovens  Int         @default(0)
+  origem            OrigemVaga?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -370,6 +447,11 @@ model VagaMontagem {
 
   @@index([montagemId])
   @@index([equipeId])
+}
+
+enum OrigemVaga {
+  MADRINHA
+  AFILHADA
 }
 
 enum TipoPessoa {
@@ -479,10 +561,10 @@ model QuadranteArquivo {
   montagemId String
   montagem   Montagem @relation(fields: [montagemId], references: [id])
 
-  nomeOriginal  String
+  nomeOriginal   String
   armazenadoComo String
-  mimeType      String
-  tamanhoBytes  Int
+  mimeType       String
+  tamanhoBytes   Int
 
   usuario   String?
   createdAt DateTime @default(now())

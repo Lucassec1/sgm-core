@@ -66,7 +66,7 @@ export class MontagensService {
           data: new Date(dto.data),
           padroeiro: dto.padroeiro,
           diretorEspiritual: dto.diretorEspiritual,
-          ehImplantacao,
+          recebeSementeira: ehImplantacao,
           paroquiaAfilhadaNome: dto.paroquiaAfilhadaNome,
           quantidadeJovensSementeira: ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : undefined,
           quantidadeCasaisAfilhada: ehImplantacao ? CASAIS_AFILHADA_IMPLANTACAO : undefined,
@@ -157,13 +157,13 @@ export class MontagensService {
 
   async update(id: string, dto: UpdateMontagemDto, paroquiaId: string) {
     const anterior = await this.findOne(id, paroquiaId);
-    const { usuario, ...campos } = dto;
+    const { usuario, ehImplantacao: ehImplantacaoDto, ...campos } = dto;
 
     // Recalcula a vaga dinâmica (Componentes da Visitação, R6) sempre que o nº de jovens
     // vivenciando ou o flag de implantação mudarem — o encontro é montado aos poucos, então
     // o número final de jovens só fecha depois de criada a Montagem (ver docs/ux-e-fluxos.md).
     const numeroJovensVivenciando = dto.numeroJovensVivenciando ?? anterior.numeroJovensVivenciando;
-    const ehImplantacao = dto.ehImplantacao ?? anterior.ehImplantacao;
+    const ehImplantacao = ehImplantacaoDto ?? anterior.recebeSementeira;
     const precisaRecalcular =
       dto.numeroJovensVivenciando !== undefined || dto.ehImplantacao !== undefined;
 
@@ -184,6 +184,7 @@ export class MontagensService {
         data: {
           ...campos,
           ...(dto.data && { data: new Date(dto.data) }),
+          ...(ehImplantacaoDto !== undefined && { recebeSementeira: ehImplantacaoDto }),
           ...(dto.ehImplantacao !== undefined && {
             quantidadeJovensSementeira: dto.ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : null,
             quantidadeCasaisAfilhada: dto.ehImplantacao ? CASAIS_AFILHADA_IMPLANTACAO : null,
