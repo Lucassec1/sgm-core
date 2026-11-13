@@ -239,6 +239,85 @@ describe('SugestoesMontagemService', () => {
       expect(casais[0].paroquiaOrigem).toEqual({ id: 'afilhada', nome: 'Paróquia X' });
     });
 
+    it('candidato da outra paróquia sai só com os dados de prévia (R7)', async () => {
+      prisma.montagem.findUnique.mockResolvedValue(montagemAnexo);
+      prisma.implantacao.findFirst.mockResolvedValue(vinculo);
+      prisma.ficha.findMany.mockResolvedValue([
+        {
+          ...{
+            id: 'f-m',
+            paroquiaId: 'madrinha',
+            nomeCompleto: 'Bia Madrinha',
+            sexo: 'MOCA',
+            fotoUrl: null,
+            numeroEncontro: 20,
+            corCirculo: 'AZUL',
+            situacao: 'ATIVA',
+            jaFoiEquipeDirigente: false,
+            telefone: '88999990000',
+            religiao: 'Católica',
+            nomeMae: 'Maria',
+          },
+          paroquia: { id: 'madrinha', nome: 'Paróquia Y' },
+          sementeiraDe: null,
+        },
+      ]);
+
+      const [c] = await service.candidatosJovens(MONTAGEM_ID, 'afilhada');
+
+      expect(c).toMatchObject({ id: 'f-m', nomeCompleto: 'Bia Madrinha', vezesNaEquipe: 0 });
+      expect(c.paroquiaOrigem).toEqual({ id: 'madrinha', nome: 'Paróquia Y' });
+      expect(c).not.toHaveProperty('telefone');
+      expect(c).not.toHaveProperty('religiao');
+      expect(c).not.toHaveProperty('nomeMae');
+    });
+
+    it('coordenadores sugeridos no encontro de anexo incluem as fichas da madrinha', async () => {
+      prisma.montagem.findUnique.mockResolvedValue(montagemAnexo);
+      prisma.implantacao.findFirst.mockResolvedValue(vinculo);
+      prisma.equipe.findUnique.mockResolvedValue({ id: 'animacao', slug: 'animacao' });
+      prisma.ficha.findMany.mockResolvedValue([]);
+      prisma.fichaCasal.findMany.mockResolvedValue([]);
+
+      await service.coordenadoresSugeridos(MONTAGEM_ID, 'animacao', 'afilhada');
+
+      expect(prisma.ficha.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [{ paroquiaId: { in: ['afilhada', 'madrinha'] } }],
+          }),
+        }),
+      );
+    });
+
+    it('coordenadores: casal da madrinha mantém os nomes (prévia de casal, não de jovem)', async () => {
+      prisma.montagem.findUnique.mockResolvedValue(montagemAnexo);
+      prisma.implantacao.findFirst.mockResolvedValue(vinculo);
+      prisma.equipe.findUnique.mockResolvedValue({ id: 'animacao', slug: 'animacao' });
+      prisma.ficha.findMany.mockResolvedValue([]);
+      prisma.fichaCasal.findMany.mockImplementation(async (args: any) =>
+        args.select
+          ? []
+          : [
+              {
+                id: 'c-m',
+                paroquiaId: 'madrinha',
+                nomeEle: 'João',
+                nomeEla: 'Maria',
+                telefoneEle: '88999990000',
+                jaFoiEquipeDirigente: false,
+                alocacoes: [],
+              },
+            ],
+      );
+
+      const r = await service.coordenadoresSugeridos(MONTAGEM_ID, 'animacao', 'afilhada');
+
+      const [casal] = r.outros.fichasCasais;
+      expect(casal).toMatchObject({ nomeEle: 'João', nomeEla: 'Maria' });
+      expect(casal).not.toHaveProperty('telefoneEle');
+    });
+
     it('R5: quem vivenciou como sementeira conta como anterior ao I encontro', async () => {
       prisma.montagem.findUnique.mockResolvedValue(montagemAnexo);
       prisma.implantacao.findFirst.mockResolvedValue(vinculo);

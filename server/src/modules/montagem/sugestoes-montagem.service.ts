@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Sexo, StatusConvite } from '@prisma/client';
 import { filtroElegiveis, pessoasElegiveis } from './pessoas-elegiveis';
+import { previaCasal, previaFicha } from './previa-pessoa';
 import { PrismaService } from '../../prisma/prisma.service';
 import { buscarMontagemComVagas } from './montagem-da-paroquia';
 
@@ -18,7 +19,8 @@ export class SugestoesMontagemService {
   // - outros: as demais fichas ativas da paróquia (escolher alguém daqui gera aviso de R3).
   // Tudo filtrado pela paróquia da montagem (R7).
   async coordenadoresSugeridos(montagemId: string, equipeId: string, paroquiaId: string) {
-    await buscarMontagemComVagas(this.prisma, montagemId, paroquiaId);
+    const montagem = await buscarMontagemComVagas(this.prisma, montagemId, paroquiaId);
+    const elegiveis = await pessoasElegiveis(this.prisma, montagem);
     const equipe = await this.prisma.equipe.findUnique({ where: { id: equipeId } });
     if (!equipe) {
       throw new NotFoundException(`Equipe ${equipeId} não encontrada`);
@@ -36,7 +38,12 @@ export class SugestoesMontagemService {
       where: { status: StatusConvite.ACEITO, vagaMontagem: { equipeId }, podeCoordenar: true },
       select: { id: true },
     };
-    const ativas = { paroquiaId, situacao: 'ATIVA' as const };
+    // Implantação: no encontro de anexo, a coordenação da madrinha sai das fichas dela também.
+    const ativas = { ...filtroElegiveis(elegiveis, 'fichaIds'), situacao: 'ATIVA' as const };
+    const ativasCasais = {
+      ...filtroElegiveis(elegiveis, 'fichaCasalIds'),
+      situacao: 'ATIVA' as const,
+    };
 
     const [fichas, fichasCasais] = await Promise.all([
       this.prisma.ficha.findMany({
@@ -45,7 +52,7 @@ export class SugestoesMontagemService {
         orderBy: { nomeCompleto: 'asc' },
       }),
       this.prisma.fichaCasal.findMany({
-        where: ativas,
+        where: ativasCasais,
         include: { alocacoes: avaliacoesNaEquipe },
         orderBy: { nomeEle: 'asc' },
       }),
@@ -53,7 +60,10 @@ export class SugestoesMontagemService {
     const soId = { select: { id: true } } as const;
     const [grupoAFichas, grupoACasais, comandoGeralFichas, comandoGeralCasais] = await Promise.all([
       this.prisma.ficha.findMany({ where: { ...ativas, alocacoes: serviuNaEquipe }, ...soId }),
-      this.prisma.fichaCasal.findMany({ where: { ...ativas, alocacoes: serviuNaEquipe }, ...soId }),
+      this.prisma.fichaCasal.findMany({
+        where: { ...ativasCasais, alocacoes: serviuNaEquipe },
+        ...soId,
+      }),
       serviuNoComandoGeral
         ? this.prisma.ficha.findMany({
             where: { ...ativas, alocacoes: serviuNoComandoGeral },
@@ -62,7 +72,7 @@ export class SugestoesMontagemService {
         : Promise.resolve([]),
       serviuNoComandoGeral
         ? this.prisma.fichaCasal.findMany({
-            where: { ...ativas, alocacoes: serviuNoComandoGeral },
+            where: { ...ativasCasais, alocacoes: serviuNoComandoGeral },
             ...soId,
           })
         : Promise.resolve([]),
@@ -87,11 +97,12 @@ export class SugestoesMontagemService {
       grupoA: Set<string>,
       comandoGeralIds: Set<string>,
       vezes: Map<string, number>,
+      previa: <P extends { paroquiaId?: string | null }>(p: P, paroquiaId?: string | null) => P,
     ) => {
       const semAvaliacoes = (i: T) => {
         const { alocacoes, ...resto } = i;
         return {
-          ...resto,
+          ...previa(resto as T & { paroquiaId?: string }, montagem.paroquiaId),
           avaliadoPodeCoordenar: alocacoes.length > 0,
           vezesNaEquipe: vezes.get(i.id) ?? 0,
         };
@@ -108,8 +119,14 @@ export class SugestoesMontagemService {
       return { a, b, outros };
     };
 
-    const jovens = separar(fichas, idsGrupoA, idsComandoGeral, vezesFichas);
-    const casais = separar(fichasCasais, idsGrupoACasais, idsComandoGeralCasais, vezesCasais);
+    const jovens = separar(fichas, idsGrupoA, idsComandoGeral, vezesFichas, previaFicha);
+    const casais = separar(
+      fichasCasais,
+      idsGrupoACasais,
+      idsComandoGeralCasais,
+      vezesCasais,
+      previaCasal,
+    );
 
     return {
       grupoA: { fichas: jovens.a, fichasCasais: casais.a },
@@ -159,7 +176,7 @@ export class SugestoesMontagemService {
     const encontroAnterior = montagem.numeroEncontro - 1;
     return fichas
       .map(({ paroquia, sementeiraDe, ...f }) => ({
-        ...f,
+        ...previaFicha(f, montagem.paroquiaId),
         numeroEncontroEfetivo: encontroDe({ ...f, paroquia, sementeiraDe }),
         paroquiaOrigem: paroquia,
         recusouNesteEncontro: idsSaidas.has(f.id),
@@ -195,7 +212,7 @@ export class SugestoesMontagemService {
 
     return casais
       .map(({ paroquia, ...c }) => ({
-        ...c,
+        ...previaCasal(c, montagem.paroquiaId),
         paroquiaOrigem: paroquia,
         recusouNesteEncontro: idsSaidas.has(c.id),
         vezesNaEquipe: vezes?.get(c.id) ?? 0,

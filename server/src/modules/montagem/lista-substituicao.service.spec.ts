@@ -150,6 +150,38 @@ describe('ListaSubstituicaoService', () => {
     });
   });
 
+  describe('findAll — ficha de outra paróquia só com dados de prévia (R7)', () => {
+    it('item com ficha da madrinha na lista da afilhada sai sem telefone/religião/filiação', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({ id: MONTAGEM_ID, paroquiaId: 'afilhada' });
+      prisma.listaSubstituicao.findMany.mockResolvedValue([
+        {
+          id: 'i1',
+          ficha: {
+            id: 'f-m',
+            paroquiaId: 'madrinha',
+            nomeCompleto: 'Bia Madrinha',
+            sexo: 'MOCA',
+            fotoUrl: null,
+            numeroEncontro: 20,
+            corCirculo: 'AZUL',
+            situacao: 'ATIVA',
+            jaFoiEquipeDirigente: false,
+            telefone: '88999990000',
+            religiao: 'Católica',
+            nomeMae: 'Maria',
+          },
+          fichaCasal: null,
+        },
+      ]);
+
+      const [item] = await service.findAll(MONTAGEM_ID);
+
+      expect(item.ficha).toMatchObject({ nomeCompleto: 'Bia Madrinha' });
+      expect(item.ficha).not.toHaveProperty('telefone');
+      expect(item.ficha).not.toHaveProperty('nomeMae');
+    });
+  });
+
   describe('findAll', () => {
     it('lista os itens da montagem em ordem de criação', async () => {
       prisma.listaSubstituicao.findMany.mockResolvedValue([{ id: 'item-1' }]);

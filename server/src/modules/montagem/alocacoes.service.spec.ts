@@ -134,6 +134,49 @@ describe('AlocacoesService', () => {
     });
   });
 
+  describe('findAll — ficha de outra paróquia (implantação) só com dados de prévia (R7)', () => {
+    it('não expõe telefone, religião nem filiação da ficha da madrinha à afilhada', async () => {
+      prisma.alocacao.findMany.mockResolvedValue([
+        {
+          id: 'a-m',
+          status: StatusConvite.RASCUNHO,
+          tipoPessoa: 'JOVEM',
+          fichaId: 'f-m',
+          fichaCasalId: null,
+          ficha: {
+            id: 'f-m',
+            paroquiaId: 'madrinha',
+            nomeCompleto: 'Bia Madrinha',
+            sexo: 'MOCA',
+            fotoUrl: null,
+            numeroEncontro: 20,
+            corCirculo: 'AZUL',
+            situacao: 'ATIVA',
+            jaFoiEquipeDirigente: false,
+            telefone: '88999990000',
+            religiao: 'Católica',
+            nomeMae: 'Maria',
+          },
+          fichaCasal: null,
+          substituidaPorId: null,
+          vagaMontagem: {
+            montagemId: MONTAGEM_ID,
+            equipe: equipeFake(),
+            cargo: cargoFake(),
+            montagem: { status: 'EM_ANDAMENTO', paroquiaId: 'afilhada' },
+          },
+        },
+      ]);
+
+      const [a] = await service.findAll(MONTAGEM_ID);
+
+      expect(a.ficha).toMatchObject({ nomeCompleto: 'Bia Madrinha', corCirculo: 'AZUL' });
+      expect(a.ficha).not.toHaveProperty('telefone');
+      expect(a.ficha).not.toHaveProperty('religiao');
+      expect(a.ficha).not.toHaveProperty('nomeMae');
+    });
+  });
+
   describe('findAll — avisos de R1–R3 por alocação (badges)', () => {
     const animacao = equipeFake({ id: 'animacao-id', nome: 'Eq. da Animação' });
     const componentes = cargoFake();
