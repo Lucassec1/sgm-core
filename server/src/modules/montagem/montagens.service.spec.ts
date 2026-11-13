@@ -2,6 +2,26 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { MontagensService } from './montagens.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LogAtividadeService } from './log-atividade.service';
+import * as path from 'path';
+
+// Cargos reais do seed (fora do rootDir — require dinâmico só no teste), no formato que o
+// service lê de prisma.cargo.findMany({ include: { equipe: true } }).
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { EQUIPES } = require(path.join(__dirname, '../../../prisma/seed-equipes')) as {
+  EQUIPES: { slug: string; cargos: Record<string, any>[] }[];
+};
+const CARGOS_SEED = EQUIPES.flatMap((e) =>
+  e.cargos.map((c) => ({
+    quantidadeCasais: 0,
+    quantidadeRapazes: 0,
+    quantidadeMocas: 0,
+    quantidadeDinamica: false,
+    ...c,
+    id: `${e.slug}:${c.nome}`,
+    equipeId: e.slug,
+    equipe: { slug: e.slug },
+  })),
+);
 
 // Testes unitários das regras R6 (validação de tamanho do encontro) e R7 (isolamento por
 // paróquia) na MontagensService. PrismaService é totalmente mockado.
@@ -28,6 +48,7 @@ function criarPrismaMock() {
     alocacao: { findMany: jest.fn(), count: jest.fn() },
     logAtividade: { findMany: jest.fn(), findFirst: jest.fn() },
     observacaoMontagem: { findMany: jest.fn() },
+    implantacao: { findFirst: jest.fn().mockResolvedValue(null) },
   };
   // Passthrough: roda o callback com o próprio mock no lugar do client transacional.
   mock.$transaction = jest.fn((arg: unknown) =>
@@ -81,7 +102,7 @@ describe('MontagensService', () => {
         {
           data: '2026-09-10',
           numeroJovensVivenciando: 72,
-          ehImplantacao: true,
+          recebeSementeira: true,
         } as any,
         PAROQUIA_ID,
       );
@@ -94,7 +115,7 @@ describe('MontagensService', () => {
           {
             data: '2026-09-10',
             numeroJovensVivenciando: 73,
-            ehImplantacao: true,
+            recebeSementeira: true,
           } as any,
           PAROQUIA_ID,
         ),
@@ -107,7 +128,7 @@ describe('MontagensService', () => {
           {
             data: '2026-09-10',
             numeroJovensVivenciando: 51,
-            ehImplantacao: true,
+            recebeSementeira: true,
           } as any,
           PAROQUIA_ID,
         ),
@@ -140,13 +161,179 @@ describe('MontagensService', () => {
         {
           data: '2026-09-10',
           numeroJovensVivenciando: 72,
-          ehImplantacao: true,
+          recebeSementeira: true,
         } as any,
         PAROQUIA_ID,
       );
 
       const { data } = prisma.vagaMontagem.createMany.mock.calls[0][0];
       expect(data.find((v: any) => v.cargoId === 'cargo-visitacao').quantidadeCasais).toBe(24);
+    });
+  });
+
+  describe('create — encontros de implantação (Anexos I–III)', () => {
+    const vinculo = {
+      id: 'i1',
+      madrinhaId: 'madrinha',
+      afilhadaId: 'afilhada',
+      fase: 'IMPLANTACAO',
+    };
+
+    beforeEach(() => {
+      prisma.cargo.findMany.mockResolvedValue(CARGOS_SEED);
+      prisma.montagem.create.mockResolvedValue({ id: MONTAGEM_ID, paroquiaId: 'afilhada' });
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: 'afilhada',
+        vagas: [],
+      });
+    });
+
+    it('afilhada em IMPLANTACAO criando o encontro 1: vagas do Anexo I, por origem', async () => {
+      prisma.implantacao.findFirst.mockResolvedValue(vinculo);
+      prisma.montagem.findFirst.mockResolvedValue(null);
+
+      await service.create({ data: '2027-01-10', numeroJovensVivenciando: 60 } as any, 'afilhada');
+
+      expect(prisma.implantacao.findFirst).toHaveBeenCalledWith({
+        where: { afilhadaId: 'afilhada', fase: 'IMPLANTACAO' },
+      });
+      expect(prisma.montagem.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            implantacaoId: 'i1',
+            anexoImplantacao: 1,
+            numeroEncontro: 1,
+          }),
+        }),
+      );
+      const { data } = prisma.vagaMontagem.createMany.mock.calls[0][0];
+      const pessoas = data.reduce(
+        (s: number, v: any) =>
+          s + v.quantidadeCasais * 2 + v.quantidadeRapazes + v.quantidadeMocas + v.quantidadeJovens,
+        0,
+      );
+      expect(pessoas).toBe(232);
+      const visitacao = data.filter((v: any) => v.equipeId === 'visitacao');
+      expect(visitacao.map((v: any) => [v.cargoId, v.origem, v.quantidadeCasais])).toEqual([
+        ['visitacao:Coordenação', 'MADRINHA', 1],
+        ['visitacao:Componentes', 'AFILHADA', 20],
+      ]);
+    });
+
+    it('afilhada criando o encontro 4: vagas normais, sem anexo', async () => {
+      prisma.implantacao.findFirst.mockResolvedValue(vinculo);
+      prisma.montagem.findFirst.mockResolvedValue({ numeroEncontro: 3 });
+
+      await service.create({ data: '2030-01-10', numeroJovensVivenciando: 45 } as any, 'afilhada');
+
+      const { data: montagem } = prisma.montagem.create.mock.calls[0][0];
+      expect(montagem.anexoImplantacao).toBeUndefined();
+      const { data } = prisma.vagaMontagem.createMany.mock.calls[0][0];
+      expect(data).toHaveLength(CARGOS_SEED.length);
+      expect(data.every((v: any) => v.origem === undefined)).toBe(true);
+    });
+
+    it('encontro de anexo não pode receber sementeira → 400', async () => {
+      prisma.implantacao.findFirst.mockResolvedValue(vinculo);
+      prisma.montagem.findFirst.mockResolvedValue(null);
+      await expect(
+        service.create(
+          { data: '2027-01-10', numeroJovensVivenciando: 60, recebeSementeira: true } as any,
+          'afilhada',
+        ),
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.montagem.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('create — sementeira com quantidade', () => {
+    beforeEach(() => {
+      prisma.montagem.findFirst.mockResolvedValue(null);
+      prisma.cargo.findMany.mockResolvedValue([
+        {
+          id: 'cargo-visitacao',
+          equipeId: 'equipe-visitacao',
+          quantidadeDinamica: true,
+          quantidadeCasais: 0,
+          quantidadeRapazes: 0,
+          quantidadeMocas: 0,
+        },
+      ]);
+      prisma.montagem.create.mockResolvedValue({ id: MONTAGEM_ID, paroquiaId: PAROQUIA_ID });
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        vagas: [],
+      });
+    });
+
+    it('com 10 de sementeira aceita até 70 e calcula a Visitação pelos locais', async () => {
+      await service.create(
+        {
+          data: '2026-09-10',
+          numeroJovensVivenciando: 70,
+          recebeSementeira: true,
+          quantidadeJovensSementeira: 10,
+        } as any,
+        PAROQUIA_ID,
+      );
+      const { data } = prisma.vagaMontagem.createMany.mock.calls[0][0];
+      expect(data[0].quantidadeCasais).toBe(24); // ceil(60/3) + 4
+      expect(prisma.montagem.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            quantidadeJovensSementeira: 10,
+            quantidadeCasaisAfilhada: 4,
+          }),
+        }),
+      );
+    });
+
+    it('com 10 de sementeira recusa 71', async () => {
+      await expect(
+        service.create(
+          {
+            data: '2026-09-10',
+            numeroJovensVivenciando: 71,
+            recebeSementeira: true,
+            quantidadeJovensSementeira: 10,
+          } as any,
+          PAROQUIA_ID,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('mais de 12 de sementeira → 400', async () => {
+      await expect(
+        service.create(
+          {
+            data: '2026-09-10',
+            numeroJovensVivenciando: 60,
+            recebeSementeira: true,
+            quantidadeJovensSementeira: 13,
+          } as any,
+          PAROQUIA_ID,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('sementeira de um vínculo em que a paróquia não é madrinha → 404', async () => {
+      prisma.implantacao.findFirst.mockResolvedValue(null);
+      await expect(
+        service.create(
+          {
+            data: '2026-09-10',
+            numeroJovensVivenciando: 60,
+            recebeSementeira: true,
+            sementeiraDeImplantacaoId: 'i-outra',
+          } as any,
+          PAROQUIA_ID,
+        ),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.implantacao.findFirst).toHaveBeenCalledWith({
+        where: { id: 'i-outra', madrinhaId: PAROQUIA_ID, fase: 'SEMENTEIRA' },
+      });
     });
   });
 
@@ -205,7 +392,7 @@ describe('MontagensService', () => {
     });
   });
 
-  describe('update — recalcula a Visitação quando numeroJovensVivenciando/ehImplantacao mudam', () => {
+  describe('update — recalcula a Visitação quando numeroJovensVivenciando/recebeSementeira mudam', () => {
     it('recalcula a vaga dinâmica quando numeroJovensVivenciando muda', async () => {
       const vagaDinamica = { id: 'vaga-visitacao', cargo: { quantidadeDinamica: true } };
       prisma.montagem.findUnique
@@ -214,7 +401,7 @@ describe('MontagensService', () => {
           paroquiaId: PAROQUIA_ID,
           status: 'EM_ANDAMENTO',
           numeroJovensVivenciando: 40,
-          ehImplantacao: false,
+          recebeSementeira: false,
           vagas: [],
         })
         .mockResolvedValueOnce({
@@ -222,7 +409,7 @@ describe('MontagensService', () => {
           paroquiaId: PAROQUIA_ID,
           status: 'EM_ANDAMENTO',
           numeroJovensVivenciando: 57,
-          ehImplantacao: false,
+          recebeSementeira: false,
           vagas: [vagaDinamica],
         });
       prisma.montagem.update.mockResolvedValue({
@@ -245,7 +432,7 @@ describe('MontagensService', () => {
         paroquiaId: PAROQUIA_ID,
         status: 'EM_ANDAMENTO',
         numeroJovensVivenciando: 40,
-        ehImplantacao: true,
+        recebeSementeira: true,
         vagas: [],
       });
 
@@ -261,7 +448,7 @@ describe('MontagensService', () => {
         paroquiaId: PAROQUIA_ID,
         status: 'EM_ANDAMENTO',
         numeroJovensVivenciando: 40,
-        ehImplantacao: false,
+        recebeSementeira: false,
         vagas: [],
       });
       prisma.montagem.update.mockResolvedValue({
@@ -281,7 +468,7 @@ describe('MontagensService', () => {
         paroquiaId: PAROQUIA_ID,
         status: 'EM_ANDAMENTO',
         numeroJovensVivenciando: 40,
-        ehImplantacao: false,
+        recebeSementeira: false,
         vagas: [],
       });
       prisma.montagem.update.mockResolvedValue({
@@ -299,13 +486,13 @@ describe('MontagensService', () => {
       );
     });
 
-    it('grava quantidadeJovensSementeira/quantidadeCasaisAfilhada quando ehImplantacao muda pra true', async () => {
+    it('grava quantidadeJovensSementeira/quantidadeCasaisAfilhada quando recebeSementeira muda pra true', async () => {
       prisma.montagem.findUnique.mockResolvedValue({
         id: MONTAGEM_ID,
         paroquiaId: PAROQUIA_ID,
         status: 'EM_ANDAMENTO',
         numeroJovensVivenciando: 52,
-        ehImplantacao: false,
+        recebeSementeira: false,
         vagas: [],
       });
       prisma.montagem.update.mockResolvedValue({
@@ -314,7 +501,7 @@ describe('MontagensService', () => {
         vagas: [],
       });
 
-      await service.update(MONTAGEM_ID, { ehImplantacao: true } as any, PAROQUIA_ID);
+      await service.update(MONTAGEM_ID, { recebeSementeira: true } as any, PAROQUIA_ID);
 
       expect(prisma.montagem.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -324,6 +511,29 @@ describe('MontagensService', () => {
           }),
         }),
       );
+    });
+  });
+
+  describe('update — encontro de implantação', () => {
+    it('mudar o nº de jovens não recalcula as vagas do anexo', async () => {
+      prisma.montagem.findUnique.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        status: 'EM_ANDAMENTO',
+        numeroJovensVivenciando: 50,
+        recebeSementeira: false,
+        anexoImplantacao: 1,
+        vagas: [{ id: 'vaga-visitacao', cargo: { quantidadeDinamica: true } }],
+      });
+      prisma.montagem.update.mockResolvedValue({
+        id: MONTAGEM_ID,
+        paroquiaId: PAROQUIA_ID,
+        vagas: [{ id: 'vaga-visitacao', cargo: { quantidadeDinamica: true } }],
+      });
+
+      await service.update(MONTAGEM_ID, { numeroJovensVivenciando: 57 } as any, PAROQUIA_ID);
+
+      expect(prisma.vagaMontagem.update).not.toHaveBeenCalled();
     });
   });
 
@@ -447,7 +657,7 @@ describe('MontagensService', () => {
         paroquiaId: PAROQUIA_ID,
         status: 'EM_ANDAMENTO',
         numeroJovensVivenciando: 40,
-        ehImplantacao: false,
+        recebeSementeira: false,
         vagas: [],
       });
       prisma.montagem.update.mockResolvedValue({

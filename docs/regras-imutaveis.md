@@ -42,22 +42,49 @@
 2. 2º: jovens de encontros anteriores a esse.
 
 - Fichas **inativas** não entram nas sugestões de montagem.
+- **Sementeira** (implantação, decisão do Lucas em 13/11/2026): o jovem da afilhada que vivenciou o
+  encontro na paróquia madrinha conta como **anterior ao I encontro** da afilhada — o número do
+  encontro da madrinha não se mistura com a numeração da afilhada.
 
 ## R6 — Tamanho e composição do encontro
 
 - O encontro conta com **233 pessoas** no total nas 16 equipes + Comando Geral, **mais o diretor espiritual** (que não é contabilizado dentro da soma das 16 equipes).
 - Número de jovens vivenciando **locais**: **mínimo 40, máximo 60** — não precisa fechar exatamente 60, inclusive por causa de desistências de última hora.
 - **Eq. da Visitação — tamanho variável (não é uma tabela fixa de 42/50):** a proporção é de aproximadamente **1 casal para cada 3 jovens vivenciando locais**, com distribuição não uniforme quando o número não é múltiplo de 3 (ex.: para 40 jovens, ~14 casais — a maioria levando 3, alguns levando 2 ou 1). O sistema deve calcular esse número **dinamicamente** a partir do total de jovens vivenciando informado, não buscar em uma tabela fixa.
-- **Implantação** — encontro que lança o Segue-me numa **paróquia afilhada**. Quando marcada:
-  - Soma-se **12 jovens "sementeira"** vindos da paróquia afilhada aos jovens locais (mínimo 40, máximo 60) — total do encontro entre 52 e 72 jovens. Esses 12 são fixos, não digitados livremente.
-  - A Eq. da Visitação ganha **4 casais fixos da paróquia afilhada**, somados ao cálculo proporcional de casais locais (que continua sendo ~1 casal para cada 3 jovens **locais**, sem contar os 12 sementeira). Ex.: 60 jovens locais + 12 sementeira = 72 total → 20 casais locais (60/3) + 4 afilhados = 24 casais no total da Visitação.
-  - O sistema deve permitir marcar/desmarcar Implantação numa Montagem a qualquer momento (não só na criação) e recalcular a Visitação de acordo, já que o número final de jovens vivenciando costuma só fechar depois que o encontro já foi montado.
+- **Sementeira** e **Implantação** são coisas diferentes (norma em `docs/implantacao.md`; corrigido
+  por decisão do Lucas em 13/11/2026 — antes o sistema chamava de "Implantação" o que é Sementeira):
+  - **Sementeira** — encontro **da madrinha** que recebe jovens de uma paróquia afilhada (Art. 14).
+    Quando marcado ("Recebe sementeira"):
+    - Somam-se os **jovens da sementeira** aos locais (mínimo 40, máximo 60 locais): **12 por
+      padrão**, informável de **1 a 12** (pode ser menos por desistência). Total do encontro entre
+      40 + sementeira e 60 + sementeira.
+    - A Eq. da Visitação ganha **4 casais fixos da paróquia afilhada**, somados ao cálculo
+      proporcional de casais locais (~1 casal para cada 3 jovens **locais**, sem contar a
+      sementeira). Ex.: 60 locais + 12 sementeira = 72 → 20 casais locais + 4 = 24 casais.
+    - Pode ser marcado/desmarcado a qualquer momento e a Visitação é recalculada.
+  - **Implantação** — os **3 primeiros encontros da afilhada** (Art. 19–21). Com o vínculo em fase
+    de Implantação, os encontros 1, 2 e 3 da afilhada nascem com as vagas dos **Anexos I, II e III**
+    (232 pessoas cada), divididas por origem (madrinha/afilhada). A Visitação segue o anexo (1 casal
+    da madrinha + 20 da afilhada), não o cálculo proporcional; o nº de jovens vivenciando continua
+    informado (40 a 60). A origem da vaga **só orienta** — ocupar a vaga da outra paróquia gera
+    aviso, não bloqueia (Art. 21, parágrafo único). Encontro de implantação não recebe sementeira.
 
 ## R7 — Escala e isolamento entre paróquias
 
 - O sistema atende múltiplas paróquias da diocese de Crato (estimativa: **13 paróquias**).
 - Cada paróquia tem sua **própria equipe dirigente** (login próprio) — ou seja, existem 13 equipes dirigentes ao todo, uma por paróquia, sob supervisão do conselho diocesano.
 - Dados de fichas e montagem de uma paróquia **não são visíveis** para outra paróquia — exceto para o Conselho, que tem visão geral (implementado — ver R8).
+- **Exceção com prazo: implantação** (decisão do Lucas em 13/11/2026), só enquanto existir o vínculo
+  madrinha → afilhada criado pelo Conselho:
+  - **Sementeira:** a madrinha marca as fichas dos jovens da afilhada que vivenciam com ela. Ao
+    iniciar a implantação, essas fichas **passam a ser da afilhada**.
+  - **Implantação** (encontros I a III): a madrinha pode **atuar como afilhada** (mesmas telas, a
+    sessão opera a afilhada; conferido a cada requisição) e, nos encontros de anexo, as fichas das
+    **duas paróquias** são candidatas. A afilhada só ganha conta de acesso para o II encontro.
+  - **Acompanhamento** (depois do III, só a afilhada controla): a madrinha não atua mais; só as
+    fichas que ela **liberar** aparecem nas montagens da afilhada.
+  - **Encerrada** (só o Conselho encerra): isolamento total, como entre quaisquer paróquias.
+  - Fora da busca de candidatos e da alocação, a outra paróquia nunca vê lista nem detalhe de ficha.
 - A lógica de negócio (todas as regras deste documento) é **idêntica** para todas as paróquias.
 
 ## R8 — Conselho (implementado em set/2026)
@@ -66,6 +93,10 @@
 - Acesso **somente leitura**: visualizar a montagem em andamento em tempo real e as montagens finalizadas de qualquer paróquia.
 - Pode deixar observações na montagem de cada paróquia — toda observação exibe o nome de quem a registrou.
 - **Não tem acesso às fichas**, apenas à montagem.
+- **Conduz as implantações** (decisão do Lucas em 13/11/2026): cria o vínculo madrinha → afilhada
+  (a afilhada nasce sem conta), avança as fases (Sementeira → Implantação → Acompanhamento →
+  Encerrada, só para frente), libera o acesso da afilhada e encerra. Da sementeira vê só a
+  **contagem** de fichas, nunca as fichas.
 
 ## R9 — Auto-save e integridade de dados
 

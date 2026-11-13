@@ -108,6 +108,55 @@ describe('AlocarPessoaCombobox', () => {
     expect(screen.queryByRole('alertdialog')).toBeNull();
   });
 
+  it('implantação: candidatos de madrinha e afilhada mostram a paróquia de origem', async () => {
+    vi.mocked(useCandidatosJovens).mockReturnValue({
+      data: [
+        {
+          id: 'm1',
+          nomeCompleto: 'Gil da Madrinha',
+          vezesNaEquipe: 0,
+          paroquiaOrigem: { id: 'm', nome: 'Paróquia Y' },
+        },
+        {
+          id: 'a1',
+          nomeCompleto: 'Hana da Afilhada',
+          vezesNaEquipe: 0,
+          paroquiaOrigem: { id: 'a', nome: 'Paróquia X' },
+        },
+      ],
+    } as never);
+    const user = userEvent.setup();
+    renderizar();
+    await abrir(user);
+
+    expect(within(opcao('Gil da Madrinha')).getByText('Paróquia Y')).toBeInTheDocument();
+    expect(within(opcao('Hana da Afilhada')).getByText('Paróquia X')).toBeInTheDocument();
+  });
+
+  it('candidatos de uma paróquia só não mostram paróquia', async () => {
+    vi.mocked(useCandidatosJovens).mockReturnValue({
+      data: [
+        {
+          id: 'a1',
+          nomeCompleto: 'Ivo',
+          vezesNaEquipe: 0,
+          paroquiaOrigem: { id: 'a', nome: 'Paróquia X' },
+        },
+        {
+          id: 'a2',
+          nomeCompleto: 'Júlia',
+          vezesNaEquipe: 0,
+          paroquiaOrigem: { id: 'a', nome: 'Paróquia X' },
+        },
+      ],
+    } as never);
+    const user = userEvent.setup();
+    renderizar();
+    await abrir(user);
+
+    expect(screen.queryByText('Paróquia X')).toBeNull();
+  });
+
   it('vaga comum de jovem: badges de recusa e de repetição', async () => {
     vi.mocked(useCandidatosJovens).mockReturnValue({
       data: [

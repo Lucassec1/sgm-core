@@ -19,33 +19,36 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import {
+  SementeiraCampos,
+  camposSementeira,
+  intervaloJovens,
+  payloadSementeira,
+  textoIntervalo,
+} from './sementeira-campos';
 import { useCreateMontagem } from '@/lib/hooks/use-montagens';
 
 // Campos seguem docs/ux-e-fluxos.md (1.2, "Dados do encontro") e a validação de tamanho do
 // encontro é a mesma da Service (R6 — ver docs/regras-imutaveis.md): 40 a 60 jovens
-// vivenciando locais, ou 52 a 72 (soma dos 12 sementeira fixos) numa implantação.
+// vivenciando locais, mais os da sementeira quando o encontro recebe sementeira.
 const montagemSchema = z
   .object({
     data: z.string().min(1, 'Informe a data do encontro'),
     padroeiro: z.string().optional(),
     diretorEspiritual: z.string().optional(),
-    ehImplantacao: z.boolean().optional(),
-    paroquiaAfilhadaNome: z.string().optional(),
     numeroJovensVivenciando: z.coerce.number().int(),
+    ...camposSementeira,
   })
-  .refine(
-    (data) => {
-      const minimo = data.ehImplantacao ? 52 : 40;
-      const maximo = data.ehImplantacao ? 72 : 60;
-      return data.numeroJovensVivenciando >= minimo && data.numeroJovensVivenciando <= maximo;
-    },
-    {
-      message:
-        'Fora do intervalo (40-60 jovens, ou 52-72 numa implantação — já contando os 12 sementeira)',
-      path: ['numeroJovensVivenciando'],
-    },
-  );
+  .superRefine((d, ctx) => {
+    const { minimo, maximo } = intervaloJovens(d.recebeSementeira, d.quantidadeJovensSementeira);
+    if (d.numeroJovensVivenciando < minimo || d.numeroJovensVivenciando > maximo) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['numeroJovensVivenciando'],
+        message: `Fora do intervalo: de ${minimo} a ${maximo} jovens`,
+      });
+    }
+  });
 
 type MontagemFormValues = z.infer<typeof montagemSchema>;
 
@@ -63,12 +66,21 @@ export function NovaMontagemDialog() {
     formState: { errors, isSubmitting },
   } = useForm<MontagemFormValues>({
     resolver: zodResolver(montagemSchema),
-    defaultValues: { ehImplantacao: false },
+    defaultValues: { recebeSementeira: false, quantidadeJovensSementeira: 12 },
   });
 
   const onSubmit = async (values: MontagemFormValues) => {
     try {
-      const montagem = await createMontagem.mutateAsync({ ...values });
+      const { recebeSementeira, quantidadeJovensSementeira, sementeiraDeImplantacaoId, ...dados } =
+        values;
+      const montagem = await createMontagem.mutateAsync({
+        ...dados,
+        ...payloadSementeira({
+          recebeSementeira,
+          quantidadeJovensSementeira,
+          sementeiraDeImplantacaoId,
+        }),
+      });
       toast.success('Montagem criada.');
       setOpen(false);
       reset();
@@ -78,7 +90,8 @@ export function NovaMontagemDialog() {
     }
   };
 
-  const ehImplantacao = watch('ehImplantacao');
+  const recebeSementeira = watch('recebeSementeira');
+  const quantidadeSementeira = watch('quantidadeJovensSementeira');
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -111,7 +124,7 @@ export function NovaMontagemDialog() {
                 {...register('numeroJovensVivenciando')}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                {ehImplantacao ? '52 a 72 (já incluindo os 12 sementeira)' : '40 a 60'}
+                {textoIntervalo(recebeSementeira, quantidadeSementeira)}
               </p>
               {errors.numeroJovensVivenciando && (
                 <p className="text-xs text-red-600 dark:text-red-400 mt-1">
@@ -127,28 +140,15 @@ export function NovaMontagemDialog() {
               <Label htmlFor="diretorEspiritual">Diretor espiritual</Label>
               <Input id="diretorEspiritual" {...register('diretorEspiritual')} />
             </div>
-            <div className="col-span-2 flex items-center gap-2">
-              <Checkbox
-                id="ehImplantacao"
-                checked={ehImplantacao}
-                onCheckedChange={(v) => setValue('ehImplantacao', !!v)}
-              />
-              <Label htmlFor="ehImplantacao" className="font-normal">
-                É implantação (lança o Segue-me numa paróquia afilhada)
-              </Label>
-            </div>
-            {ehImplantacao && (
-              <>
-                <div className="col-span-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
-                  Soma automaticamente 12 jovens sementeira da paróquia afilhada e 4 casais
-                  afilhados na Eq. da Visitação (fixo, não editável).
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="paroquiaAfilhadaNome">Nome da paróquia afilhada</Label>
-                  <Input id="paroquiaAfilhadaNome" {...register('paroquiaAfilhadaNome')} />
-                </div>
-              </>
-            )}
+            <SementeiraCampos
+              className="col-span-2"
+              recebe={!!recebeSementeira}
+              onRecebeChange={(v) => setValue('recebeSementeira', v)}
+              quantidade={register('quantidadeJovensSementeira')}
+              erroQuantidade={errors.quantidadeJovensSementeira?.message}
+              vinculoId={watch('sementeiraDeImplantacaoId')}
+              onVinculoChange={(id) => setValue('sementeiraDeImplantacaoId', id)}
+            />
           </div>
 
           <DialogFooter>

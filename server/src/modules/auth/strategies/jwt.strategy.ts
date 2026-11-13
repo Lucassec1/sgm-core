@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import type { Request } from 'express';
+import { FaseImplantacao, RoleUsuario } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UsuarioAutenticado } from '../../../common/types/usuario-autenticado';
 
@@ -13,6 +14,8 @@ interface JwtPayload {
   iat?: number;
   // Momento da emissão em ms (o `iat` padrão é em segundos) — ver validate().
   emitidoEm?: number;
+  // Madrinha atuando como afilhada (implantação) — ver validate().
+  implantacaoId?: string;
 }
 
 // Lê o token do cookie httpOnly (sgm_token), não do header Authorization — decisão de produto:
@@ -52,6 +55,32 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (usuario.senhaAlteradaEm && emitidoEm < usuario.senhaAlteradaEm.getTime()) {
       throw new UnauthorizedException();
     }
-    return { id: usuario.id, role: usuario.role, paroquiaId: usuario.paroquiaId };
+    const sessao = { id: usuario.id, role: usuario.role, paroquiaId: usuario.paroquiaId };
+
+    // Atuação como afilhada: vale só enquanto o vínculo está em IMPLANTACAO e a paróquia da conta
+    // é a madrinha. Conferido a cada requisição — quando o Conselho muda a fase, a sessão volta
+    // pra madrinha marcada como `atuacaoEncerrada`; o guard reemite o cookie sem a atuação e
+    // recusa a ação em curso (ver JwtAuthGuard).
+    if (payload.implantacaoId && usuario.role === RoleUsuario.PAROQUIA && usuario.paroquiaId) {
+      const vinculo = await this.prisma.implantacao.findFirst({
+        where: {
+          id: payload.implantacaoId,
+          madrinhaId: usuario.paroquiaId,
+          fase: FaseImplantacao.IMPLANTACAO,
+        },
+        select: { afilhadaId: true },
+      });
+      if (vinculo) {
+        return {
+          ...sessao,
+          paroquiaId: vinculo.afilhadaId,
+          paroquiaOrigemId: usuario.paroquiaId,
+          implantacaoId: payload.implantacaoId,
+        };
+      }
+    }
+    return payload.implantacaoId && usuario.role === RoleUsuario.PAROQUIA
+      ? { ...sessao, atuacaoEncerrada: true }
+      : sessao;
   }
 }

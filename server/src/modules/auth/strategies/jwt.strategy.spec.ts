@@ -7,7 +7,7 @@ function criarStrategy() {
   const config = {
     getOrThrow: jest.fn().mockReturnValue('segredo-fake'),
   } as unknown as ConfigService;
-  const prisma = { usuario: { findUnique: jest.fn() } };
+  const prisma = { usuario: { findUnique: jest.fn() }, implantacao: { findFirst: jest.fn() } };
   const strategy = new JwtStrategy(config, prisma as unknown as PrismaService);
   return { strategy, prisma };
 }
@@ -98,6 +98,72 @@ describe('JwtStrategy', () => {
 
       expect(extractor({ cookies: {} })).toBeNull();
       expect(extractor({})).toBeNull();
+    });
+  });
+
+  describe('atuando como afilhada (implantação)', () => {
+    it('vínculo em IMPLANTACAO com a paróquia como madrinha troca o paroquiaId da sessão', async () => {
+      const { strategy, prisma } = criarStrategy();
+      prisma.usuario.findUnique.mockResolvedValue(USUARIO_ATIVO);
+      prisma.implantacao.findFirst.mockResolvedValue({ afilhadaId: 'afilhada' });
+
+      const resultado = await strategy.validate({
+        sub: 'u1',
+        role: 'PAROQUIA',
+        paroquiaId: 'p1',
+        implantacaoId: 'i1',
+      });
+
+      expect(prisma.implantacao.findFirst).toHaveBeenCalledWith({
+        where: { id: 'i1', madrinhaId: 'p1', fase: 'IMPLANTACAO' },
+        select: { afilhadaId: true },
+      });
+      expect(resultado).toEqual({
+        id: 'u1',
+        role: 'PAROQUIA',
+        paroquiaId: 'afilhada',
+        paroquiaOrigemId: 'p1',
+        implantacaoId: 'i1',
+      });
+    });
+
+    it('vínculo que saiu da IMPLANTACAO: volta pra madrinha e marca a atuação como encerrada', async () => {
+      const { strategy, prisma } = criarStrategy();
+      prisma.usuario.findUnique.mockResolvedValue(USUARIO_ATIVO);
+      prisma.implantacao.findFirst.mockResolvedValue(null);
+
+      const resultado = await strategy.validate({
+        sub: 'u1',
+        role: 'PAROQUIA',
+        paroquiaId: 'p1',
+        implantacaoId: 'i1',
+      });
+
+      expect(resultado).toEqual({
+        id: 'u1',
+        role: 'PAROQUIA',
+        paroquiaId: 'p1',
+        atuacaoEncerrada: true,
+      });
+    });
+
+    it('conta do Conselho com implantacaoId no token é ignorada', async () => {
+      const { strategy, prisma } = criarStrategy();
+      prisma.usuario.findUnique.mockResolvedValue({
+        ...USUARIO_ATIVO,
+        role: 'CONSELHO',
+        paroquiaId: null,
+      });
+
+      const resultado = await strategy.validate({
+        sub: 'u1',
+        role: 'CONSELHO',
+        paroquiaId: null,
+        implantacaoId: 'i1',
+      });
+
+      expect(prisma.implantacao.findFirst).not.toHaveBeenCalled();
+      expect(resultado).toEqual({ id: 'u1', role: 'CONSELHO', paroquiaId: null });
     });
   });
 });

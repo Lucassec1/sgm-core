@@ -27,7 +27,14 @@ por padrão. Pra criar uma rota nova:
   outra paróquia). Ver `MontagensService` como referência desse padrão.
 
 `request.user` (populado pela `JwtStrategy` a partir do cookie `sgm_token`) tem o formato de
-`UsuarioAutenticado` (`common/types/usuario-autenticado.ts`): `{ id, role, paroquiaId }`.
+`UsuarioAutenticado` (`common/types/usuario-autenticado.ts`): `{ id, role, paroquiaId }`, mais
+`paroquiaOrigemId`/`implantacaoId` quando a madrinha está **atuando como afilhada** (implantação):
+aí `paroquiaId` já é a afilhada, então guards e services não mudam. A atuação é conferida a cada
+requisição na `JwtStrategy` (vínculo em fase IMPLANTACAO e conta da madrinha); fora disso a sessão
+volta sozinha pra madrinha. Rotas: `POST/DELETE /auth/atuar`, `GET /implantacoes/minhas`,
+`/implantacoes/:id/liberacoes` (madrinha) e `/conselho/implantacoes/*` (Conselho). Quem pode entrar
+numa montagem (candidatos, alocação, lista de substituição) passa por
+`modules/montagem/pessoas-elegiveis.ts` — é o único lugar das exceções da implantação à R7.
 
 Login de paróquia é uma credencial **compartilhada** (não individual por pessoa) — por isso o
 campo `usuario` do `LogAtividade`/R9 continua sendo texto livre digitado na tela, não vem do

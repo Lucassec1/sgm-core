@@ -10,9 +10,16 @@ import { LogAtividadeService } from './log-atividade.service';
 import { CreateAlocacaoDto } from './dto/create-alocacao.dto';
 import { UpdateAlocacaoDto } from './dto/update-alocacao.dto';
 import { garantirPessoaDaParoquia } from './pessoa-da-paroquia';
+import { comPessoasEmPrevia } from './previa-pessoa';
 
 const ALOCACAO_INCLUDE = {
-  vagaMontagem: { include: { equipe: true, cargo: true, montagem: { select: { status: true } } } },
+  vagaMontagem: {
+    include: {
+      equipe: true,
+      cargo: true,
+      montagem: { select: { status: true, paroquiaId: true } },
+    },
+  },
   ficha: true,
   fichaCasal: true,
 };
@@ -277,7 +284,10 @@ export class AlocacoesService {
     });
     const avisos = await this.avisosDasAlocacoes(montagemId, alocacoes);
     return alocacoes.map((a) => ({
-      ...this.ocultarSubstituicaoSeFinalizada(a),
+      ...comPessoasEmPrevia(
+        this.ocultarSubstituicaoSeFinalizada(a),
+        a.vagaMontagem.montagem?.paroquiaId,
+      ),
       avisos: avisos.get(a.id) ?? [],
     }));
   }
@@ -290,7 +300,10 @@ export class AlocacoesService {
     if (!alocacao || alocacao.vagaMontagem.montagemId !== montagemId) {
       throw new NotFoundException(`Alocação ${id} não encontrada na montagem ${montagemId}`);
     }
-    return this.ocultarSubstituicaoSeFinalizada(alocacao);
+    return comPessoasEmPrevia(
+      this.ocultarSubstituicaoSeFinalizada(alocacao),
+      alocacao.vagaMontagem.montagem?.paroquiaId,
+    );
   }
 
   async update(montagemId: string, id: string, dto: UpdateAlocacaoDto) {

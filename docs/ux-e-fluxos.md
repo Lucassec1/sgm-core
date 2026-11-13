@@ -67,6 +67,35 @@ Exportar (.xlsx) + Visualizar no Histórico
 
 ---
 
+### 1.3 Fluxo — Implantação (madrinha → afilhada)
+
+Norma em `docs/implantacao.md`; regras em `docs/regras-imutaveis.md` (R5–R8). Decisões de
+13/11/2026. Quem conduz é o **Conselho** (Conselho → Implantações); as fases só andam pra frente.
+
+1. **Sementeira** — Conselho → Implantações → **Nova implantação**: nome da paróquia afilhada (criada
+   aqui, **sem conta**) + paróquia madrinha. Na madrinha, a ficha do jovem ganha o campo **"Sementeira
+   de"** (editável mesmo em ficha já criada) — marca quem é da afilhada e vivenciou na madrinha. O
+   encontro da madrinha que recebe esses jovens usa **"Recebe sementeira"** (12 jovens por padrão, de
+   1 a 12, + 4 casais da afilhada na Visitação).
+2. **Iniciar implantação** (Conselho; o diálogo mostra só a contagem de fichas) — as fichas marcadas
+   passam pra afilhada. No menu da conta da madrinha aparece **"Atuar como {afilhada}"**: a sessão
+   passa a operar a afilhada pelas mesmas telas, com a faixa **"Atuando como {afilhada}"** e o botão
+   "Voltar para a minha paróquia". Os encontros 1, 2 e 3 da afilhada nascem com as vagas dos Anexos
+   I–III; cada vaga mostra "Madrinha" ou "Afilhada", e a busca de candidatos traz fichas das duas
+   paróquias (com a paróquia de cada uma). Pessoa da outra paróquia na vaga → aviso "Vaga da
+   madrinha/afilhada", sem bloquear.
+3. **Liberar acesso** (Conselho, para o II encontro) — cadastra o e-mail da afilhada; ela cria a senha
+   no primeiro acesso.
+4. **Passar para acompanhamento** (depois do III) — a afilhada controla tudo; a madrinha não atua
+   mais. Na ficha da madrinha aparece **"Liberar para {afilhada}"** / "Desfazer liberação": só as
+   fichas liberadas aparecem nas montagens da afilhada.
+5. **Encerrar** (só o Conselho) — isolamento total; não reabre.
+
+**Caso real em andamento (13/11/2026):** a paróquia do Lucas é madrinha e o I encontro de implantação
+está acontecendo. Para registrá-lo: Conselho cria a implantação → madrinha marca as 24 fichas de
+sementeira (dois encontros de 12) → Conselho inicia a implantação → madrinha "Atua como" a afilhada,
+cadastra os jovens novos e os casais dela e cria o 1º encontro (vagas do Anexo I).
+
 ## 2. UX Specification — Módulo Fichas
 
 ### Ficha do Jovem/Casal

@@ -1,4 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { FaseImplantacao } from '@prisma/client';
+import { ANEXOS } from '../implantacao/anexos';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LogAtividadeService } from './log-atividade.service';
 import { CreateMontagemDto } from './dto/create-montagem.dto';
@@ -11,22 +13,34 @@ import {
   garantirMontagemDaParoquia,
 } from './montagem-da-paroquia';
 
-// Implantação: encontro que lança o Segue-me numa paróquia afilhada. Traz sempre 12 jovens
-// "sementeiras" de lá (somados aos jovens locais) e exige 4 casais afilhados na Visitação —
-// números fixos, não digitados pelo usuário. Ver docs/regras-imutaveis.md, R6.
-const JOVENS_SEMENTEIRA_IMPLANTACAO = 12;
-const CASAIS_AFILHADA_IMPLANTACAO = 4;
+// Sementeira (R6): o encontro da madrinha recebe jovens da afilhada (12 por padrão, pode ser
+// menos por desistência — docs/regras-imutaveis.md) e 4 casais fixos dela na Visitação.
+const JOVENS_SEMENTEIRA_PADRAO = 12;
+const CASAIS_AFILHADA_SEMENTEIRA = 4;
 
 // Quantidade de casais da Eq. da Visitação — proporcional aos jovens vivenciando LOCAIS
-// (~1 casal para cada 3 jovens, distribuição não uniforme quando não é múltiplo de 3). Numa
-// implantação, os 12 jovens sementeira não entram nessa conta (eles não são "nossos"), mas
-// somam-se 4 casais fixos da paróquia afilhada. Ver docs/regras-imutaveis.md, R6.
-function calcularCasaisVisitacao(numeroJovensVivenciando: number, ehImplantacao: boolean): number {
-  if (ehImplantacao) {
-    const jovensLocais = numeroJovensVivenciando - JOVENS_SEMENTEIRA_IMPLANTACAO;
-    return Math.ceil(jovensLocais / 3) + CASAIS_AFILHADA_IMPLANTACAO;
+// (~1 casal para cada 3 jovens, distribuição não uniforme quando não é múltiplo de 3). Com
+// sementeira, os jovens da afilhada não entram nessa conta, mas somam-se 4 casais fixos dela.
+function calcularCasaisVisitacao(
+  numeroJovensVivenciando: number,
+  jovensSementeira: number,
+): number {
+  const jovensLocais = numeroJovensVivenciando - jovensSementeira;
+  return Math.ceil(jovensLocais / 3) + (jovensSementeira > 0 ? CASAIS_AFILHADA_SEMENTEIRA : 0);
+}
+
+// R6 — 40 a 60 jovens locais, mais os da sementeira quando houver.
+function validarJovensVivenciando(numeroJovensVivenciando: number, jovensSementeira: number) {
+  if (jovensSementeira < 0 || jovensSementeira > JOVENS_SEMENTEIRA_PADRAO) {
+    throw new BadRequestException('A sementeira tem de 1 a 12 jovens');
   }
-  return Math.ceil(numeroJovensVivenciando / 3);
+  const minimo = 40 + jovensSementeira;
+  const maximo = 60 + jovensSementeira;
+  if (numeroJovensVivenciando < minimo || numeroJovensVivenciando > maximo) {
+    throw new BadRequestException(
+      `numeroJovensVivenciando deve estar entre ${minimo} e ${maximo}${jovensSementeira ? ` (40-60 locais + ${jovensSementeira} sementeira)` : ''}`,
+    );
+  }
 }
 
 @Injectable()
@@ -37,15 +51,17 @@ export class MontagensService {
   ) {}
 
   async create(dto: CreateMontagemDto, paroquiaId: string) {
-    const ehImplantacao = dto.ehImplantacao ?? false;
-    // R6 — mínimo 40, máximo 60 jovens locais; numa implantação somam-se os 12 sementeira.
-    const minimo = 40 + (ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : 0);
-    const maximo = 60 + (ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : 0);
-    if (dto.numeroJovensVivenciando < minimo || dto.numeroJovensVivenciando > maximo) {
-      throw new BadRequestException(
-        `numeroJovensVivenciando deve estar entre ${minimo} e ${maximo}${ehImplantacao ? ' (implantação: 40-60 locais + 12 sementeira)' : ''}`,
-      );
+    const jovensSementeira = dto.recebeSementeira
+      ? (dto.quantidadeJovensSementeira ?? JOVENS_SEMENTEIRA_PADRAO)
+      : 0;
+    validarJovensVivenciando(dto.numeroJovensVivenciando, jovensSementeira);
+    if (dto.recebeSementeira && dto.sementeiraDeImplantacaoId) {
+      await this.garantirVinculoDeSementeira(dto.sementeiraDeImplantacaoId, paroquiaId);
     }
+    // Afilhada com vínculo em implantação: os encontros 1–3 dela seguem os Anexos I–III.
+    const implantacao = await this.prisma.implantacao.findFirst({
+      where: { afilhadaId: paroquiaId, fase: FaseImplantacao.IMPLANTACAO },
+    });
 
     // Montagem + vagas + log numa transação só: sem isso, uma falha no createMany deixaria
     // uma Montagem sem nenhuma vaga, e uma falha no log deixaria a criação sem rastro (R9).
@@ -56,6 +72,10 @@ export class MontagensService {
         select: { numeroEncontro: true },
       });
       const numeroEncontro = (ultimaMontagem?.numeroEncontro ?? 0) + 1;
+      const anexo = implantacao && numeroEncontro <= 3 ? (numeroEncontro as 1 | 2 | 3) : undefined;
+      if (anexo && dto.recebeSementeira) {
+        throw new BadRequestException('Encontro de implantação não recebe sementeira');
+      }
 
       const cargos = await tx.cargo.findMany({ include: { equipe: true } });
 
@@ -66,32 +86,39 @@ export class MontagensService {
           data: new Date(dto.data),
           padroeiro: dto.padroeiro,
           diretorEspiritual: dto.diretorEspiritual,
-          ehImplantacao,
-          paroquiaAfilhadaNome: dto.paroquiaAfilhadaNome,
-          quantidadeJovensSementeira: ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : undefined,
-          quantidadeCasaisAfilhada: ehImplantacao ? CASAIS_AFILHADA_IMPLANTACAO : undefined,
+          recebeSementeira: !!dto.recebeSementeira,
+          sementeiraDeImplantacaoId: dto.recebeSementeira
+            ? dto.sementeiraDeImplantacaoId
+            : undefined,
+          quantidadeJovensSementeira: dto.recebeSementeira ? jovensSementeira : undefined,
+          quantidadeCasaisAfilhada: dto.recebeSementeira ? CASAIS_AFILHADA_SEMENTEIRA : undefined,
           numeroJovensVivenciando: dto.numeroJovensVivenciando,
+          ...(anexo && { implantacaoId: implantacao!.id, anexoImplantacao: anexo }),
         },
       });
 
       await tx.vagaMontagem.createMany({
-        data: cargos.map((cargo) => ({
-          montagemId: criada.id,
-          equipeId: cargo.equipeId,
-          cargoId: cargo.id,
-          quantidadeCasais: cargo.quantidadeDinamica
-            ? calcularCasaisVisitacao(dto.numeroJovensVivenciando, ehImplantacao)
-            : cargo.quantidadeCasais,
-          quantidadeRapazes: cargo.quantidadeRapazes,
-          quantidadeMocas: cargo.quantidadeMocas,
-        })),
+        data: anexo
+          ? vagasDoAnexo(anexo, cargos, criada.id)
+          : cargos.map((cargo) => ({
+              montagemId: criada.id,
+              equipeId: cargo.equipeId,
+              cargoId: cargo.id,
+              quantidadeCasais: cargo.quantidadeDinamica
+                ? calcularCasaisVisitacao(dto.numeroJovensVivenciando, jovensSementeira)
+                : cargo.quantidadeCasais,
+              quantidadeRapazes: cargo.quantidadeRapazes,
+              quantidadeMocas: cargo.quantidadeMocas,
+            })),
       });
 
       await this.logAtividade.registrar(
         criada.id,
         dto.usuario,
         'CRIOU_MONTAGEM',
-        `Encontro nº ${numeroEncontro}`,
+        anexo
+          ? `Encontro nº ${numeroEncontro} (implantação, Anexo ${'I'.repeat(anexo)})`
+          : `Encontro nº ${numeroEncontro}`,
         tx,
       );
 
@@ -157,24 +184,37 @@ export class MontagensService {
 
   async update(id: string, dto: UpdateMontagemDto, paroquiaId: string) {
     const anterior = await this.findOne(id, paroquiaId);
-    const { usuario, ...campos } = dto;
+    const {
+      usuario,
+      recebeSementeira: recebeDto,
+      quantidadeJovensSementeira: quantidadeDto,
+      sementeiraDeImplantacaoId: vinculoDto,
+      ...campos
+    } = dto;
 
     // Recalcula a vaga dinâmica (Componentes da Visitação, R6) sempre que o nº de jovens
-    // vivenciando ou o flag de implantação mudarem — o encontro é montado aos poucos, então
-    // o número final de jovens só fecha depois de criada a Montagem (ver docs/ux-e-fluxos.md).
+    // vivenciando ou a sementeira mudarem — o encontro é montado aos poucos, então o número
+    // final de jovens só fecha depois de criada a Montagem (ver docs/ux-e-fluxos.md). Encontro
+    // de implantação não recalcula: as vagas vêm do anexo.
     const numeroJovensVivenciando = dto.numeroJovensVivenciando ?? anterior.numeroJovensVivenciando;
-    const ehImplantacao = dto.ehImplantacao ?? anterior.ehImplantacao;
+    const recebeSementeira = recebeDto ?? anterior.recebeSementeira;
+    const jovensSementeira = recebeSementeira
+      ? (quantidadeDto ?? anterior.quantidadeJovensSementeira ?? JOVENS_SEMENTEIRA_PADRAO)
+      : 0;
+    const ehAnexo = anterior.anexoImplantacao != null;
+    if (ehAnexo && recebeDto) {
+      throw new BadRequestException('Encontro de implantação não recebe sementeira');
+    }
     const precisaRecalcular =
-      dto.numeroJovensVivenciando !== undefined || dto.ehImplantacao !== undefined;
+      dto.numeroJovensVivenciando !== undefined ||
+      recebeDto !== undefined ||
+      quantidadeDto !== undefined;
 
     if (precisaRecalcular) {
-      const minimo = 40 + (ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : 0);
-      const maximo = 60 + (ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : 0);
-      if (numeroJovensVivenciando < minimo || numeroJovensVivenciando > maximo) {
-        throw new BadRequestException(
-          `numeroJovensVivenciando deve estar entre ${minimo} e ${maximo}${ehImplantacao ? ' (implantação: 40-60 locais + 12 sementeira)' : ''}`,
-        );
-      }
+      validarJovensVivenciando(numeroJovensVivenciando, jovensSementeira);
+    }
+    if (recebeSementeira && vinculoDto) {
+      await this.garantirVinculoDeSementeira(vinculoDto, paroquiaId);
     }
 
     // update da Montagem + recálculo da vaga dinâmica (R6) + log numa transação só.
@@ -184,21 +224,23 @@ export class MontagensService {
         data: {
           ...campos,
           ...(dto.data && { data: new Date(dto.data) }),
-          ...(dto.ehImplantacao !== undefined && {
-            quantidadeJovensSementeira: dto.ehImplantacao ? JOVENS_SEMENTEIRA_IMPLANTACAO : null,
-            quantidadeCasaisAfilhada: dto.ehImplantacao ? CASAIS_AFILHADA_IMPLANTACAO : null,
+          ...((recebeDto !== undefined || quantidadeDto !== undefined) && {
+            recebeSementeira,
+            quantidadeJovensSementeira: recebeSementeira ? jovensSementeira : null,
+            quantidadeCasaisAfilhada: recebeSementeira ? CASAIS_AFILHADA_SEMENTEIRA : null,
           }),
+          ...(vinculoDto !== undefined && { sementeiraDeImplantacaoId: vinculoDto }),
         },
         include: VAGAS_INCLUDE,
       });
 
-      if (precisaRecalcular) {
+      if (precisaRecalcular && !ehAnexo) {
         const vagaDinamica = atualizada.vagas.find((v) => v.cargo.quantidadeDinamica);
         if (vagaDinamica) {
           await tx.vagaMontagem.update({
             where: { id: vagaDinamica.id },
             data: {
-              quantidadeCasais: calcularCasaisVisitacao(numeroJovensVivenciando, ehImplantacao),
+              quantidadeCasais: calcularCasaisVisitacao(numeroJovensVivenciando, jovensSementeira),
             },
           });
         }
@@ -221,4 +263,39 @@ export class MontagensService {
 
     return precisaRecalcular ? this.findOne(id, paroquiaId) : montagem;
   }
+
+  // Vínculo escolhido em "Recebe sementeira": a paróquia tem que ser a madrinha e o vínculo
+  // estar na Sementeira.
+  private async garantirVinculoDeSementeira(implantacaoId: string, paroquiaId: string) {
+    const vinculo = await this.prisma.implantacao.findFirst({
+      where: { id: implantacaoId, madrinhaId: paroquiaId, fase: FaseImplantacao.SEMENTEIRA },
+    });
+    if (!vinculo) {
+      throw new NotFoundException('Implantação não encontrada');
+    }
+  }
+}
+
+// Vagas de um encontro de implantação: uma por linha do anexo (equipe + cargo + origem).
+function vagasDoAnexo(
+  anexo: 1 | 2 | 3,
+  cargos: { id: string; equipeId: string; nome: string; equipe: { slug: string } }[],
+  montagemId: string,
+) {
+  return ANEXOS[anexo].map((linha) => {
+    const cargo = cargos.find((c) => c.equipe.slug === linha.equipe && c.nome === linha.cargo);
+    if (!cargo) {
+      throw new Error(`Cargo ${linha.cargo} da equipe ${linha.equipe} não existe no catálogo`);
+    }
+    return {
+      montagemId,
+      equipeId: cargo.equipeId,
+      cargoId: cargo.id,
+      quantidadeCasais: linha.casais,
+      quantidadeRapazes: linha.rapazes,
+      quantidadeMocas: linha.mocas,
+      quantidadeJovens: linha.jovens,
+      origem: linha.origem,
+    };
+  });
 }

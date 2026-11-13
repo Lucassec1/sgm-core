@@ -48,6 +48,23 @@ export class ParoquiasService {
     });
   }
 
+  // Paróquia criada sem conta (afilhada da implantação, criada pelo vínculo na Sementeira): o
+  // Conselho libera o acesso depois, quando a equipe dirigente dela é formada (II encontro).
+  async criarConta(paroquiaId: string, emailNovo: string) {
+    const existente = await this.prisma.usuario.findFirst({
+      where: { paroquiaId, role: RoleUsuario.PAROQUIA },
+    });
+    if (existente) {
+      throw new ConflictException('Essa paróquia já tem conta — use alterar e-mail');
+    }
+    const email = normalizarEmail(emailNovo);
+    await this.garantirEmailLivre(email);
+    await this.prisma.usuario.create({
+      data: { login: email, role: RoleUsuario.PAROQUIA, paroquiaId },
+    });
+    return { ok: true };
+  }
+
   // Também serve pra migrar conta antiga (login = nome curto) pro e-mail da paróquia. A senha
   // atual continua valendo; links pendentes (mandados pro e-mail antigo) deixam de valer.
   async alterarEmail(paroquiaId: string, emailNovo: string) {

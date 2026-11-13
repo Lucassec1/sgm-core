@@ -7,7 +7,49 @@ export interface ParoquiaComConta {
   usuarios: { id: string; login: string; ativo: boolean; aguardandoPrimeiroAcesso: boolean }[];
 }
 
+export type FaseImplantacao = 'SEMENTEIRA' | 'IMPLANTACAO' | 'ACOMPANHAMENTO' | 'ENCERRADA';
+
+// Vínculo madrinha → afilhada visto pelo Conselho: nunca traz fichas, só a contagem (R8).
+export interface ImplantacaoConselho {
+  id: string;
+  fase: FaseImplantacao;
+  madrinha: { id: string; nome: string };
+  afilhada: { id: string; nome: string };
+  afilhadaTemConta: boolean;
+  fichasSementeira: number;
+  createdAt: string;
+  implantacaoIniciadaEm: string | null;
+  acompanhamentoIniciadoEm: string | null;
+  encerradaEm: string | null;
+}
+
+export type AcaoImplantacao = 'iniciar' | 'acompanhamento' | 'encerrar';
+
 export const conselhoApi = {
+  listImplantacoes() {
+    return request<ImplantacaoConselho[]>('/conselho/implantacoes');
+  },
+
+  criarImplantacao(data: { afilhadaNome: string; madrinhaId: string }) {
+    return request<{ id: string }>('/conselho/implantacoes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Fases só andam pra frente: iniciar (Sementeira → Implantação, transfere as fichas),
+  // acompanhamento, encerrar.
+  avancarImplantacao(id: string, acao: AcaoImplantacao) {
+    return request<unknown>(`/conselho/implantacoes/${id}/${acao}`, { method: 'POST' });
+  },
+
+  liberarAcessoAfilhada(id: string, email: string) {
+    return request<{ ok: true }>(`/conselho/implantacoes/${id}/acesso`, {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
   // Conselho (R8) — leitura cross-paróquia de Montagem + observações.
   listParoquias() {
     return request<ParoquiaComConta[]>('/paroquias');

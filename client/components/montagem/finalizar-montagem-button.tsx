@@ -18,9 +18,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useUpdateMontagem } from '@/lib/hooks/use-montagens';
 import type { Alocacao, StatusMontagem, VagaMontagem } from '@/lib/types';
+import { jovensDaVaga } from '@/lib/montagem';
 
 function totalDaVaga(vaga: VagaMontagem) {
-  return vaga.quantidadeCasais + vaga.quantidadeRapazes + vaga.quantidadeMocas;
+  return vaga.quantidadeCasais + jovensDaVaga(vaga);
 }
 
 // Fecha o fluxo "Nova montagem → ... → Montagem 100% preenchida" (docs/ux-e-fluxos.md, 1.2).

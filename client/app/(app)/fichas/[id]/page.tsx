@@ -8,6 +8,9 @@ import { FotoUploadAvatar } from '@/components/fichas/foto-upload-avatar';
 import { HistoricoEquipesSection } from '@/components/fichas/historico-equipes-section';
 import { Separator } from '@/components/ui/separator';
 import { StatusBadge } from '@/components/fichas/status-badge';
+import { LiberarFichaButton } from '@/components/fichas/liberar-ficha-button';
+import { Badge } from '@/components/ui/badge';
+import { marcaSementeira } from '@/lib/sementeira';
 import { CirculoBadge } from '@/components/fichas/circulo-badge';
 import { fotoSrc } from '@/lib/utils';
 
@@ -58,7 +61,9 @@ export default function FichaDetailPage({ params }: { params: Promise<{ id: stri
             <StatusBadge situacao={ficha.situacao} />
             <CirculoBadge cor={ficha.corCirculo} />
             <span className="text-xs text-muted-foreground">{ficha.numeroEncontro}º Encontro</span>
+            {marcaSementeira(ficha) && <Badge variant="neutro">{marcaSementeira(ficha)}</Badge>}
           </div>
+          <LiberarFichaButton fichaId={ficha.id} />
         </div>
       </header>
 

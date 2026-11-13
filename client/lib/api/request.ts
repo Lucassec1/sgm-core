@@ -57,6 +57,11 @@ export async function request<T>(path: string, options?: RequestInit): Promise<T
   if (!res.ok) {
     if (res.status === 401) markSessaoExpirada();
     const body = await res.json().catch(() => null);
+    // Implantação: a madrinha estava atuando pela afilhada e o Conselho mudou a fase — o server
+    // não executou a ação e a sessão voltou pra madrinha (ver AtuacaoEncerradaListener).
+    if (res.status === 409 && body?.code === 'ATUACAO_ENCERRADA' && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('sgm:atuacao-encerrada'));
+    }
     const message = (body?.message as string) ?? `Erro ${res.status} ao chamar ${path}`;
     throw new ApiError(Array.isArray(message) ? message.join(', ') : message, res.status, body);
   }

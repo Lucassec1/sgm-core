@@ -12,6 +12,7 @@ import { FotoUploadAvatar } from '@/components/fichas/foto-upload-avatar';
 import { HistoricoEquipesCasalSection } from '@/components/fichas/historico-equipes-section';
 import { Separator } from '@/components/ui/separator';
 import { StatusBadge } from '@/components/fichas/status-badge';
+import { LiberarFichaButton } from '@/components/fichas/liberar-ficha-button';
 import { fotoSrc, iniciais } from '@/lib/utils';
 
 export default function FichaCasalDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -63,6 +64,7 @@ export default function FichaCasalDetailPage({ params }: { params: Promise<{ id:
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge situacao={ficha.situacao} />
           </div>
+          <LiberarFichaButton fichaCasalId={ficha.id} />
         </div>
       </header>
 
