@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTheme } from 'next-themes';
-import { ChevronsUpDown, KeyRound, LogOut } from 'lucide-react';
+import { ArrowLeftRight, ChevronsUpDown, KeyRound, LogOut } from 'lucide-react';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { TrocarSenhaDialog } from '@/components/trocar-senha-dialog';
-import { useLogout, useSessao } from '@/lib/auth-context';
+import { useAtuar, useLogout, useSessao } from '@/lib/auth-context';
 import { iniciais } from '@/lib/utils';
 
 const TEMAS = [
@@ -33,6 +33,7 @@ export function ContaMenu({ variante }: { variante: 'barra-lateral' | 'cabecalho
   const { data: sessao } = useSessao();
   const { theme, setTheme } = useTheme();
   const logout = useLogout();
+  const atuar = useAtuar();
   const [trocandoSenha, setTrocandoSenha] = useState(false);
 
   if (!sessao) return null;
@@ -60,10 +61,30 @@ export function ContaMenu({ variante }: { variante: 'barra-lateral' | 'cabecalho
         {identificacao}
       </DropdownMenuLabel>
       <DropdownMenuSeparator />
-      <DropdownMenuItem onSelect={() => setTrocandoSenha(true)}>
-        <KeyRound aria-hidden />
-        Trocar senha
-      </DropdownMenuItem>
+      {sessao.atuando ? (
+        // Atuando pela afilhada: a conta é da madrinha — senha só se troca de volta nela.
+        <DropdownMenuItem onSelect={() => atuar.mutate(null)} disabled={atuar.isPending}>
+          <ArrowLeftRight aria-hidden />
+          Voltar para {sessao.paroquia?.nome}
+        </DropdownMenuItem>
+      ) : (
+        <>
+          {sessao.podeAtuarEm?.map((a) => (
+            <DropdownMenuItem
+              key={a.implantacaoId}
+              onSelect={() => atuar.mutate(a.implantacaoId)}
+              disabled={atuar.isPending}
+            >
+              <ArrowLeftRight aria-hidden />
+              Atuar como {a.afilhada.nome}
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuItem onSelect={() => setTrocandoSenha(true)}>
+            <KeyRound aria-hidden />
+            Trocar senha
+          </DropdownMenuItem>
+        </>
+      )}
       <DropdownMenuSeparator />
       <DropdownMenuLabel className="pb-1 text-xs text-muted-foreground">Tema</DropdownMenuLabel>
       <DropdownMenuRadioGroup value={theme ?? 'system'} onValueChange={setTheme}>

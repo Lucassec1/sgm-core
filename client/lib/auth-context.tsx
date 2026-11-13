@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './api-client';
 
@@ -33,6 +34,24 @@ export function useLogout() {
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- recarga completa proposital: descarta todo estado em memória da sessão anterior
       window.location.href = '/login';
+    },
+  });
+}
+
+// Madrinha passando a atuar como afilhada (implantacaoId) ou voltando pra própria paróquia
+// (null). A sessão troca de paróquia, então nenhum dado em cache pode sobreviver: limpa tudo,
+// já grava a sessão nova e volta pro Início.
+export function useAtuar() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  return useMutation({
+    mutationFn: (implantacaoId: string | null) =>
+      implantacaoId ? apiClient.atuar(implantacaoId) : apiClient.pararDeAtuar(),
+    onSuccess: async (sessao) => {
+      await limparCacheOffline();
+      queryClient.clear();
+      queryClient.setQueryData(['auth', 'me'], sessao);
+      router.push('/');
     },
   });
 }

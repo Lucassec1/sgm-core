@@ -8,6 +8,15 @@ export interface SessaoAtual {
   role: Role;
   nome: string | null;
   paroquia: { id: string; nome: string } | null;
+  // Implantação: madrinha atuando como afilhada (a sessão opera a afilhada) e as afilhadas em
+  // que ela pode atuar. `paroquia` continua sendo a própria (a madrinha).
+  atuando: AtuacaoImplantacao | null;
+  podeAtuarEm: AtuacaoImplantacao[];
+}
+
+export interface AtuacaoImplantacao {
+  implantacaoId: string;
+  afilhada: { id: string; nome: string };
 }
 
 export const authApi = {
@@ -47,5 +56,16 @@ export const authApi = {
 
   me() {
     return request<SessaoAtual>('/auth/me');
+  },
+
+  atuar(implantacaoId: string) {
+    return request<SessaoAtual>('/auth/atuar', {
+      method: 'POST',
+      body: JSON.stringify({ implantacaoId }),
+    });
+  },
+
+  pararDeAtuar() {
+    return request<SessaoAtual>('/auth/atuar', { method: 'DELETE' });
   },
 };
